@@ -1,0 +1,14 @@
+# Assumptions
+
+Each entry gives the date, the phase, and the assumption.
+
+## 2026-09-29, constitution
+
+- The bin index is (v - 1) mod N². This rule is the only one I found that matches both brief examples and the example input (e) in the brief picture.
+- Row 0 is at the bottom of the grid and column 0 is at the left, as in the brief picture.
+- The value 0 goes to cell <N-1, N-1>, because (0 - 1) mod N² is N² - 1.
+- A count of 1 is full blue and the max count is full red, as in the 1 to 10 scale of the brief picture. When the max count is 1, every non-empty cell is full blue.
+- The reviewers are the only users of the system.
+- The server settings come from environment variables at start.
+- Python 3.13.15 is the project version because `python3` on my PATH points to it, although Python 3.14.7 is also on the laptop.
+- Accessibility is out of scope. A live color heat map cannot convey its data to a screen reader user, so an aria-label on the canvas would not fix the premise.

@@ -63,4 +63,5 @@ For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends o
 - The docs/assumptions.md file records the assumptions I made.
 - The docs/trade-offs.md file records the trade-offs I made.
 - The docs/ai-changes.md file records where I changed the AI output, and why.
+- The docs/logs/ folder holds my Claude Code session logs, with one folder for each roadmap feature.
 - The context/ folder holds the brief, the HTML design, and my design notes.

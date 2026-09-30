@@ -90,3 +90,8 @@ Each entry gives the date, the phase, the choice, and what it costs.
 ## 2026-09-30, validate feature 3, frontend
 
 - The error line compares the frame rate with a fixed target of 60 fps instead of the peak since load. A page that loads under heavy load now shows the drop. The cost is that a 120 Hz display running at 60 fps shows no line, and a browser capped at 30 fps shows the line at all times.
+
+## 2026-09-30, replan after feature 3, frontend
+
+- The hotspot mode is removed from the roadmap. The project ends with the testing feature. The cost is that the heat map stays nearly flat under the uniform generator.
+- Feature 7 writes its findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.

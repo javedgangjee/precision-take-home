@@ -40,3 +40,12 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 ## 2026-09-30, compact the batch payload, backend
 
 - The AI encoded each batch with the default `json.dumps` separators, which put a space after each comma. I asked for a way to make the payload smaller that still works as a string over SSE. The AI timed five formats. I kept the compact separators, which cut a default batch by 20 percent at no extra cost and keep the JSON array. The formats that save more break the JSON array in R2, and trade-offs.md records them.
+
+## 2026-09-30, plan for feature 3, frontend
+
+- The AI proposed fields in the side panel to set the test source rate for the stress test. I chose settings in the URL query, so the panel stays as the HTML design shows it.
+- The AI proposed a color scale from pure blue (#0000FF) to pure red (#FF0000) through cyan and yellow. I widened the ends to #1E00FF and #FF0033 to make the colors easier to tell apart, and asked the AI to adjust the other colors to match. The AI made the scale an even hue sweep between the two ends. It also offered to keep cyan and yellow in the middle, and I kept the hue sweep.
+- The AI proposed five scale labels, as in the HTML design. I cut them to three, which are the max, the midpoint, and 1.
+- The AI proposed a frame rate readout with no warning. I asked for a red error line below the frame rate when it drops below the expected rate. The AI asked what the expected rate is, and I chose the peak reading since the page loaded, so the rule works on any display. The AI used the design red #B33A3A, which passes WCAG AA on the white panel.
+- The AI proposed disabled N buttons at the limits, as in the HTML design. I had the AI hide them instead.
+- The AI proposed a store service but put the render loop, the drawing, and the color scale in one heat map component. I asked for thin components with the state in its own unit. The AI moved the drawing into a plain renderer class, moved the scale into its own component, and made the store the only owner of the state.

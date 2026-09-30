@@ -40,3 +40,13 @@ Each entry gives the date, the phase, and the assumption.
 
 - The backend will be served at https://api.precision.jgangjee.com in feature 5. That address is the backend's own origin, so it does not go in `CORS_ORIGINS`. The frontend's public origin goes there, and feature 5 decides it.
 - Some browsers may send a preflight request when EventSource reconnects with the `Last-Event-ID` header. The CORS rule allows that header, so the reconnect works in either case. Feature 4 checks it in real browsers.
+
+## 2026-09-30, plan for feature 3, frontend
+
+- Where the HTML design differs from the brief or the specs, the client follows the brief and the specs. N runs from 1 to 64, the grid has row and column labels, row 0 is at the bottom, cells use (count - 1) / (max - 1), and the frame rate is measured.
+- The test source in the browser reads `rate`, `interval`, and `max` from the URL query. The defaults match the server. The rate goes up to 10,000,000 samples per second so that the stress test can go past the server limit of 100,000.
+- The test source is the only source in feature 3. Feature 4 decides how the user picks the test source or the server.
+- The colors of the brief picture are a sketch. Cell (b), with 5 of 10 hits, looks yellow in the picture and is green on the client scale.
+- The expected frame rate is the highest one-second reading since the page loaded. On an idle page that reading is the display refresh rate, so the rule works on 60 Hz and 120 Hz screens.
+- The fonts come from the HTML design bundle. The repo is private and will not be released, so it has no license files for the fonts.
+- The client uses the light theme only.

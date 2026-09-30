@@ -1,0 +1,1446 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/…/_precision/precision-take-home/specs/features/03-frontend
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven plan Build the frontend plan. Remember brief take precendence    
+over the html.                                                                  
+Note that I also want the test source from the frontend to be built in this     
+phase at the end. I want to stress test the browser and watch the frame rate.   
+The tie in with the backend happens in the next phase.                          
+
+  Read 1 file, listed 1 directory, ran 4 shell commands (ctrl+o to expand)
+
+⏺ I am reading the HTML design so the plan matches its look.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ Before I draft the files, one choice changes the plan shape.
+
+⏺ User answered Claude's questions:
+  ⎿  · How should you set the test source rate for the stress test? → URL query
+
+⏺ Write(requirements.md)
+  ⎿  Wrote 40 lines to requirements.md
+       1 # Feature 3 requirements: Frontend
+       3 ## Requirements from the sources
+       5 - R1. The client renders an N by N grid on a canvas, and N is co
+         nfigurable. (B1; tech-stack.md, Frontend)
+         es, all counts reset to zero. (N3)
+         w = index div N, and column = index mod N. For a 4 by 4 grid, 17
+         ,3>. (B3, N1)
+       8 - R4. Row 0 is at the bottom of the grid, and column 0 is at the
+       9 - R5. Each cell keeps a running cumulative count of hits as a 64
+      10 - R6. The color position of
+     … +114 lines (ctrl+o to expand)
+
+⏺ Write(plan.md)
+  ⎿  Wrote 20 lines to plan.md
+      1 # Feature 3 plan: Frontend
+      3 The steps follow the answers to G1 to G10 in requirements.md. All
+         paths are under frontend/ unless a step says otherwise. Each ste
+        p that adds code also adds its spec file next to it.
+      5 1. Extract the six woff2 fonts from the design bundle into public
+        /fonts/. Write the design tokens, the font faces, and the page st
+        e to "Bin There, Done That". This step creates public/fonts/ and 
+        changes src/styles.scss and src/index.html.
+      6 2. Write the binning functions. `binIndex(v, n)` returns (v - 1) 
+        mn. This step creates src/app/heatmap/binnin
+     … +62 lines (ctrl+o to expand)
+
+⏺ Write(validation.md)
+  ⎿  Wrote 125 lines to validation.md
+      1 # Feature 3 validation: Frontend
+      2 
+        amples for a 4 by 4 grid, the example input (e) in the brief pict
+        ure, and the default batch size in N11. They are cases V1.1, V1.2
+        , V3.1, and V7.1.
+      5 ## Automated checks
+      6 
+      7 The command for V1 to V9 is `make test`. The command for V10 is `
+      8 
+      9 ### V1. Binning follows (v - 1) mod N²
+     … +176 lines (ctrl+o to expand)
+
+⏺ Bash(sed -i '' 's/D2, and D3. The status is planned./D2, and D3. The status is
+      in progress./' specs/roadmap.md && grep -n "Frontend" specs/roadmap.md)
+  ⎿  7:3. **Frontend.** The goal is an Angular client that bins values, kee
+     ps counts, and draws the grid, the axis labels, the color scale, and t
+     he side panel. It covers B1, B3, B4, B5, B6, N1, N2, N3, N4, D2, and D
+     3. The status is in progress.
+  ⎿  Updated
+     ~/Documents/Projects/_precision/precision-take-home/specs/roadmap.md
+     (+1 -1)
+       4  
+       5  1. **Scaffold.** The goal is a repo where the backend, the fron
+          tend, and the CDK app exist, the tests run, the linters pass, a
+          nd the CDK app synthesizes, all from the Makefile. It covers N1
+          3 and S2. The status is done.
+       6  2. **Backend.** The goal is a FastAPI server that generates ran
+          dom integers and sends them in batches over Server-Sent Events.
+           The backend allows cross-origin calls with CORSMiddleware. It 
+          reads the allowed origins from an environment variable, and the
+           default is http://localhost:4200. It covers B2, N5, N7, N8, an
+          d N11. The status is done.
+       7 -3. **Frontend.** The goal is an Angular client that bins values
+         -, keeps counts, and draws the grid, the axis labels, the color 
+         -scale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2
+         -, N3, N4, D2, and D3. The status is planned.                   
+       7 +3. **Frontend.** The goal is an Angular client that bins values
+         +, keeps counts, and draws the grid, the axis labels, the color 
+         +scale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2
+         +, N3, N4, D2, and D3. The status is in progress.               
+       8  4. **Stream.** The goal is a client that shows the stream state
+          , reconnects with backoff, and keeps counts on screen during a 
+          reconnect. The feature also adds a Dockerfile for the backend a
+          nd a Makefile target that runs the stream in Docker Desktop on 
+          my laptop, so the client can connect to the same image that fea
+          ture 5 deploys. It covers N9, N10, and D1. The status is planne
+          d.
+       9  5. **Deploy.** The goal is the backend running on ECS Fargate b
+          ehind an ALB at my domain, deployed with CDK from the Makefile.
+           It covers B2 and N13. The status is planned.
+      10  6. **Admin Page.** The goal is a backend page that changes the 
+          stream settings while the server runs, so that a test of a new 
+          sample rate needs no restart. It covers no required item. The s
+          tatus is planned.
+
+⏺ I wrote the plan for feature 3 in specs/features/03-frontend/. The branch
+  feature/03-frontend already existed and its working tree was clean, so I used
+  it. I also set the feature status to in progress in specs/roadmap.md.
+
+  - requirements.md has R1 to R14. It also lists six places where the brief or
+    the specs override the HTML design:
+    - N runs from 1 to 64.
+    - The grid has row and column labels.
+    - Cell colors use (count - 1) / (max - 1).
+    - Row 0 is at the bottom.
+    - The frame rate is measured.
+    - The status badge waits for feature 4.
+  - plan.md has 16 steps. The test source comes last, in steps 11 to 13, as you
+    asked.
+  - validation.md has 11 automated checks and 4 manual checks. The brief
+    examples 17 → <0,0> and 8 → <1,3> are test cases. So are the example input
+    (e) and the default batch of 5,000. M3 is the stress test. It runs at 100k,
+    1M, 5M, and 10M samples per second with N at 64, and you record the frame
+    rate for each.
+
+  Two points need your review:
+
+  - G3 differs from the brief picture. In the picture, cell (b) with 5 of 10
+    hits looks yellow. The color map in G3 runs from full blue to full red, as
+    N4 requires, and it makes that cell cyan green. I treat the picture colors
+    as a sketch.
+  - The roadmap does not name the test source. The line for feature 3 does not
+    mention it yet. I left the roadmap as it is for replan to update, unless you
+    want it added now.
+
+  G1 records your choice of URL query settings. The rest of G1 and all of G2 to
+  G10 are my proposals. Which of them do you want to change? Implement waits
+  until you approve the plan.
+
+✻ Cogitated for 3m 44s · done 12:43 PM
+
+※ recap: I drafted the feature 3 frontend plan in specs/features/03-frontend, and the last part builds the stress test source you asked for. Next, review the proposals G1 to G10 and tell me which to change before implement starts. (disable recaps in /config)
+
+❯ G3 - I want to expand the the range slightly, start with #1e00ff for blue and 
+  #ff0033 for red and  adjust the other colours accordingly. This will          
+  increase the colour differences while still staying true to the blue to red   
+  requirement in the brief                                                      
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      import re…)
+  ⎿  requirements.md:33:- G3. **Agreed with a change.** The user widened th
+     e scale at both ends to make the colors easier to tell apart. The blue
+      end is #1E00FF, which is hue 247°, and the red end is #FF0033, which
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated requirements.md (+3 -3)
+       7  - R3. The client bins each value with index = (v - 1) mod N², r
+          ow = index div N, and column = index mod N. For a 4 by 4 grid, 
+          17 goes to cell <0,0>, 8 goes to cell <1,3>, and 0 goes to cell
+           <3,3>. (B3, N1)
+       8  - R4. Row 0 is at the bottom of the grid, and column 0 is at th
+          e left. (N1)
+       9  - R5. Each cell keeps a running cumulative count of hits as a 6
+          4-bit float. (B4; tech-stack.md, Frontend)
+      10 -- R6. The color position of a non-empty cell is (count - 1) / (
+         -max - 1). A count of 1 is full blue, the max count is full red,
+         - and a cell with zero count has no color. When the max count is
+         - 1, every non-empty cell is full blue. (B5, N4)                
+      10 +- R6. The color position of a non-empty cell is (count - 1) / (
+         +max - 1). A count of 1 gets the blue end of the scale, the max 
+         +count gets the red end, and a cell with zero count has no color
+         +. When the max count is 1, every non-empty cell gets the blue e
+         +nd. G3 sets the end colors. (B5, N4)                           
+      11  - R7. A color scale beside the grid shows the colors from blue 
+          to red, with labels that run from 1 at the bottom to the max co
+          unt at the top. (B5, N4; brief picture item d)
+      12  - R8. The grid shows row numbers on the left and column numbers
+           along the bottom. When N is too large to label every row and c
+          olumn, the labels appear at a fixed interval. (N2)
+      13  - R9. The client applies each batch to the counts when the batc
+          h arrives, and it redraws at most once per display frame with r
+          equestAnimationFrame. The grid and the color scale update in re
+          al time. (B6; tech-stack.md, Frontend)
+     ...
+      21  
+      22  - The HTML design allows N from 4 to 100. The client uses 1 to 
+          64 (N3).
+      23  - The HTML design has no row or column labels. The client adds 
+          them, as in the brief picture (N2).
+      24 -- The HTML design colors a cell by count / max on a jet scale f
+         -rom dark blue to dark red. The client uses (count - 1) / (max -
+         - 1) from full blue to full red (N4).                           
+      24 +- The HTML design colors a cell by count / max on a jet scale f
+         +rom dark blue to dark red. The client uses (count - 1) / (max -
+         + 1) on the scale in G3 (N4).                                   
+      25  - The HTML design draws row 0 at the top. The client draws row 
+          0 at the bottom (N1).
+      26  - The HTML design shows a fixed "30 fps". The client measures t
+          he frame rate (D3).
+      27  - The HTML design has a stream status badge. Feature 4 adds it 
+          (D1), so this feature leaves it out.
+     ...
+      30  
+      31  - G1. **Agreed.** The test source reads its settings from the U
+          RL query, as the user chose. The names are `rate` for samples p
+          er second, `interval` for the batch interval in ms, and `max` f
+          or the maximum value. An example is http://localhost:4200/?rate
+          =1000000&interval=50&max=1024. A change needs a reload, which a
+          lso resets the counts. **Proposed:** The defaults match the ser
+          ver, which are 100,000 samples per second, 50 ms, and 1,024. Th
+          e interval and the max value have the server ranges. The rate g
+          oes up to 10,000,000 so that the stress test can go past the se
+          rver limit. A value that is out of range or not a number falls 
+          back to its default, and the client logs a warning to the conso
+          le.
+      32  - G2. **Proposed.** The test source runs in a Web Worker. The w
+          orker makes each batch, encodes it to a JSON string, and posts 
+          the string to the main thread. The main thread parses the strin
+          g and bins the values. This matches the cost on the main thread
+           of the SSE path in feature 4, where the browser receives text 
+          and the client parses it. The generator carries the fractional 
+          sample count to the next batch, as the server does (feature 2, 
+          G4). In this feature the test source always runs. Feature 4 dec
+          ides how the user picks the test source or the server.
+      33 -- G3. **Proposed.** The color map is piecewise linear in RGB fr
+         -om blue (#0000FF) to cyan (#00FFFF) to yellow (#FFFF00) to red 
+         -(#FF0000), in three equal parts. This is the jet map without it
+         -s dark ends, so count 1 is full blue and the max is full red, a
+         -s N4 says. The scale bar uses the same stops as a CSS gradient,
+         - so the bar and the cells match. In the brief picture, cell (b)
+         - with count 5 of 10 looks yellow. This map makes it a cyan gree
+         -n. I treat the picture colors as a sketch.                     
+      33 +- G3. **Agreed with a change.** The user widened the scale at b
+         +oth ends to make the colors easier to tell apart. The blue end 
+         +is #1E00FF, which is hue 247°, and the red end is #FF0033, whic
+         +h is hue 348°. The map sweeps the hue from 247° down through cy
+         +an, green, and yellow to 348°, at full saturation and full brig
+         +htness, in equal steps of hue. The hue span is 259°, where the 
+         +jet map without its dark ends spans 240°. The colors at the thi
+         +rds of the scale are #00FFAD and #C2FF00. A 256-entry table hol
+         +ds the colors. The scale bar uses `linear-gradient(to top in hs
+         +l longer hue, #1E00FF, #FF0033)`, which follows the same hue pa
+         +th, so the bar and the cells match. N4 in specs/mission.md says
+         + full blue and full red. The replan step updates it to name the
+         +se end colors. In the brief picture, cell (b) with count 5 of 1
+         +0 looks yellow. This map makes it green, at #00FF33. I treat th
+         +e picture colors as a sketch.                                  
+      34  - G4. **Proposed.** The scale shows five labels, at 1 + f × (ma
+          x - 1) for f of 1, 0.75, 0.5, 0.25, and 0, rounded to whole num
+          bers. When the max is 2 to 4, the scale shows each whole number
+           from the max down to 1. When the max is 1, it shows only 1. Wh
+          en the max is 0, it shows no labels. The numbers use en-US digi
+          t groups, such as 1,024.
+      35  - G5. **Proposed.** The axis label step is 1 when N is 16 or le
+          ss, 2 when N is 17 to 32, and 4 when N is 33 to 64. The client 
+          labels each row and column whose number is a multiple of the st
+          ep, so a 64 by 64 grid shows 16 labels on each axis. The client
+           draws the labels on the same canvas as the cells, so they stay
+           lined up with the cells at any size.
+      36  - G6. **Proposed.** The frame rate is the number of requestAnim
+          ationFrame callbacks in the last full second. The loop runs on 
+          every frame, and it draws the grid only when the counts or the 
+          size changed. When the main thread is too busy to keep up, the 
+          frame rate drops, which is what the stress test must show.
+  ⎿  Updated validation.md (+5 -4)
+      33  
+      34  - `colorPosition(0, 10)` is null, so the cell has no color.
+      35  - `colorPosition(1, 10)` is 0, `colorPosition(10, 10)` is 1, an
+          d `colorPosition(5, 10)` is 4/9.
+      36 -- `colorPosition(1, 1)` is 0, so a lone hit is full blue.      
+      37 -- The color at position 0 is rgb(0,0,255), at 1/3 it is rgb(0,2
+         -55,255), at 2/3 it is rgb(255,255,0), and at 1 it is rgb(255,0,
+         -0).                                                            
+      36 +- `colorPosition(1, 1)` is 0, so a lone hit gets the blue end. 
+      37 +- The color at position 0 is rgb(30,0,255), at 1/3 it is rgb(0,
+         +255,173), at 2/3 it is rgb(194,255,0), and at 1 it is rgb(255,0
+         +,51). Each channel may differ by 1 from these values because of
+         + rounding.                                                     
+      38 +- The color at position 4/9, which is cell (b) of the brief pic
+         +ture, is rgb(0,255,51) within 1 per channel.                   
+      39  - `scaleLabels(0)` is an empty list, and `scaleLabels(1)` is ["
+          1"].
+      40  - `scaleLabels(3)` is ["3", "2", "1"].
+      41  - `scaleLabels(10)` is ["10", "8", "6", "3", "1"], which matche
+          s the 1 to 10 scale of the brief picture at its ends.
+     ...
+      72  
+      73  The tests use a fake 2D context that records each fill.
+      74  
+      74 -- With N = 4 and the example input from V3.1, the draw fills ce
+         -ll <0,3> with rgb(0,0,255), cell <2,2> with rgb(255,0,0), and e
+         -ach empty cell with white.                                     
+      75 +- With N = 4 and the example input from V3.1, the draw fills ce
+         +ll <0,3> with rgb(30,0,255), cell <2,2> with rgb(255,0,51), and
+         + each empty cell with white.                                   
+      76  - After the example input, the scale shows the labels 10, 8, 6,
+           3, and 1 from top to bottom.
+      77  - With no data, the scale shows no labels, and every cell is wh
+          ite.
+      78  - The draw writes the row labels 0 to 3 on the left and the col
+          umn labels 0 to 3 along the bottom for N = 4.
+     ...
+      109  1. Click the plus button until N is 64.
+      110  2. The expected result is that the plus button is disabled, th
+           e counts reset on each click, and the axis labels appear at ev
+           ery 4th row and column.
+      111  3. Click the minus button until N is 1.
+      111 -4. The expected result is that the minus button is disabled, a
+          -nd the one cell is full red, because its count is the max coun
+          -t.                                                            
+      112 +4. The expected result is that the minus button is disabled, a
+          +nd the one cell is the red end color #FF0033, because its coun
+          +t is the max count.                                           
+      113  
+      114  ### M3. Stress test the browser
+      115  
+
+⏺ I changed G3 in requirements.md and updated the color checks in validation.md
+  to match.
+
+  "Adjust the other colours" could mean two things, so I picked one. The scale
+  now sweeps the hue at full saturation from #1E00FF (hue 247°) down through
+  cyan, green, and yellow to #FF0033 (hue 348°), in equal steps of hue. That
+  moves the colors at the thirds of the scale to #00FFAD and #C2FF00. The scale
+  bar uses the CSS gradient in hsl longer hue between the two end colors, which
+  follows the same hue path, so the bar matches the cells.
+
+  If you meant to keep cyan (#00FFFF) and yellow (#FFFF00) as the middle colors
+  and change only the two ends, tell me and I will switch it.
+
+  - Updated checks. V4 now expects rgb(30,0,255) at the blue end and
+    rgb(255,0,51) at the red end. It also has a new case for cell (b) of the
+    brief picture, which comes out green at rgb(0,255,51). V8 and M2 use the new
+    end colors.
+  - Mission wording. N4 in specs/mission.md still says "full blue" and "full
+    red". I noted in G3 that replan updates it, so the constitution files stay
+    unchanged during this feature.
+
+  G2 and G4 to G10 are still waiting for your review.
+
+✻ Cooked for 47s · done 1:03 PM
+
+❯ Simplify G5. Just put one tick at the midpoint if max >=2                     
+
+⏺ You wrote G5, but the scale labels are in G4. G5 is the step between the row
+  and column labels. I changed G4.
+
+⏺ Bash(python3 - <<'EOF'
+      p='requirements.md'; s=open(p).read()…)
+  ⎿  38:- The color at position 4/9, which is cell (b) of the brief picture
+     , is rgb(0,255,51) within 1 per channel.
+     39:- `scaleLabels(0)` is an empty list, and `scaleLabels(1)` is ["1"].
+     … +7 lines (ctrl+o to expand)
+  ⎿  Updated requirements.md (+1 -1)
+      31  - G1. **Agreed.** The test source reads its settings from the U
+          RL query, as the user chose. The names are `rate` for samples p
+          er second, `interval` for the batch interval in ms, and `max` f
+          or the maximum value. An example is http://localhost:4200/?rate
+          =1000000&interval=50&max=1024. A change needs a reload, which a
+          lso resets the counts. **Proposed:** The defaults match the ser
+          ver, which are 100,000 samples per second, 50 ms, and 1,024. Th
+          e interval and the max value have the server ranges. The rate g
+          oes up to 10,000,000 so that the stress test can go past the se
+          rver limit. A value that is out of range or not a number falls 
+          back to its default, and the client logs a warning to the conso
+          le.
+      32  - G2. **Proposed.** The test source runs in a Web Worker. The w
+          orker makes each batch, encodes it to a JSON string, and posts 
+          the string to the main thread. The main thread parses the strin
+          g and bins the values. This matches the cost on the main thread
+           of the SSE path in feature 4, where the browser receives text 
+          and the client parses it. The generator carries the fractional 
+          sample count to the next batch, as the server does (feature 2, 
+          G4). In this feature the test source always runs. Feature 4 dec
+          ides how the user picks the test source or the server.
+      33  - G3. **Agreed with a change.** The user widened the scale at b
+          oth ends to make the colors easier to tell apart. The blue end 
+          is #1E00FF, which is hue 247°, and the red end is #FF0033, whic
+          h is hue 348°. The map sweeps the hue from 247° down through cy
+          an, green, and yellow to 348°, at full saturation and full brig
+          htness, in equal steps of hue. The hue span is 259°, where the 
+          jet map without its dark ends spans 240°. The colors at the thi
+          rds of the scale are #00FFAD and #C2FF00. A 256-entry table hol
+          ds the colors. The scale bar uses `linear-gradient(to top in hs
+          l longer hue, #1E00FF, #FF0033)`, which follows the same hue pa
+          th, so the bar and the cells match. N4 in specs/mission.md says
+           full blue and full red. The replan step updates it to name the
+          se end colors. In the brief picture, cell (b) with count 5 of 1
+          0 looks yellow. This map makes it green, at #00FF33. I treat th
+          e picture colors as a sketch.
+      34 -- G4. **Proposed.** The scale shows five labels, at 1 + f × (ma
+         -x - 1) for f of 1, 0.75, 0.5, 0.25, and 0, rounded to whole num
+         -bers. When the max is 2 to 4, the scale shows each whole number
+         - from the max down to 1. When the max is 1, it shows only 1. Wh
+         -en the max is 0, it shows no labels. The numbers use en-US digi
+         -t groups, such as 1,024.                                       
+      34 +- G4. **Agreed with a change.** The user simplified the scale l
+         +abels. When the max is 2 or more, the scale shows three labels.
+         + They are the max at the top, the midpoint (max + 1) / 2 at the
+         + middle, and 1 at the bottom. The midpoint shows one decimal pl
+         +ace when it is not a whole number, such as 5.5 for a max of 10,
+         + so the label matches its place on the bar and never repeats th
+         +e max or 1. When the max is 1, the scale shows only 1. When the
+         + max is 0, it shows no labels. The numbers use en-US digit grou
+         +ps, such as 1,024.                                             
+      35  - G5. **Proposed.** The axis label step is 1 when N is 16 or le
+          ss, 2 when N is 17 to 32, and 4 when N is 33 to 64. The client 
+          labels each row and column whose number is a multiple of the st
+          ep, so a 64 by 64 grid shows 16 labels on each axis. The client
+           draws the labels on the same canvas as the cells, so they stay
+           lined up with the cells at any size.
+      36  - G6. **Proposed.** The frame rate is the number of requestAnim
+          ationFrame callbacks in the last full second. The loop runs on 
+          every frame, and it draws the grid only when the counts or the 
+          size changed. When the main thread is too busy to keep up, the 
+          frame rate drops, which is what the stress test must show.
+      37  - G7. **Proposed.** The panel readouts update at most once ever
+          y 150 ms, as the HTML design does, so text updates do not cost 
+          a frame. The grid itself redraws on each frame that has new dat
+          a.
+  ⎿  Updated validation.md (+4 -4)
+      37  - The color at position 0 is rgb(30,0,255), at 1/3 it is rgb(0,
+          255,173), at 2/3 it is rgb(194,255,0), and at 1 it is rgb(255,0
+          ,51). Each channel may differ by 1 from these values because of
+           rounding.
+      38  - The color at position 4/9, which is cell (b) of the brief pic
+          ture, is rgb(0,255,51) within 1 per channel.
+      39  - `scaleLabels(0)` is an empty list, and `scaleLabels(1)` is ["
+          1"].
+      40 -- `scaleLabels(3)` is ["3", "2", "1"].                         
+      41 -- `scaleLabels(10)` is ["10", "8", "6", "3", "1"], which matche
+         -s the 1 to 10 scale of the brief picture at its ends.          
+      42 -- `scaleLabels(1025)` is ["1,025", "769", "513", "257", "1"].  
+      40 +- `scaleLabels(2)` is ["2", "1.5", "1"], and `scaleLabels(3)` i
+         +s ["3", "2", "1"].                                             
+      41 +- `scaleLabels(10)` is ["10", "5.5", "1"], which matches the 1 
+         +to 10 scale of the brief picture at its ends.                  
+      42 +- `scaleLabels(1025)` is ["1,025", "513", "1"].                
+      43  
+      44  ### V5. The layout puts row 0 at the bottom and spaces the labe
+          ls
+      45  
+     ...
+      73  The tests use a fake 2D context that records each fill.
+      74  
+      75  - With N = 4 and the example input from V3.1, the draw fills ce
+          ll <0,3> with rgb(30,0,255), cell <2,2> with rgb(255,0,51), and
+           each empty cell with white.
+      76 -- After the example input, the scale shows the labels 10, 8, 6,
+         - 3, and 1 from top to bottom.                                  
+      76 +- After the example input, the scale shows the labels 10, 5.5, 
+         +and 1 from top to bottom.                                      
+      77  - With no data, the scale shows no labels, and every cell is wh
+          ite.
+      78  - The draw writes the row labels 0 to 3 on the left and the col
+          umn labels 0 to 3 along the bottom for N = 4.
+      79  
+
+⏺ I simplified G4 in requirements.md and changed V4 and V8 in validation.md to
+  match. When the max is 2 or more, the scale now shows three labels. They are
+  the max at the top, (max + 1) / 2 at the middle, and 1 at the bottom. When the
+  max is 1, it shows only 1, and when the max is 0, it shows no labels.
+
+  When the max is an even number, the midpoint falls halfway between two whole
+  numbers. I show it with one decimal place, such as 5.5 for a max of 10. At a
+  max of 2, rounding would give a middle label of 2, the same as the top label.
+  A whole-number midpoint would also sit a little away from its true place on
+  the bar. If you want whole numbers only, tell me what the scale should show at
+  a max of 2.
+
+  G5 is unchanged. G2 and G5 to G10 are still waiting for your review.
+
+✻ Brewed for 21s · done 1:04 PM
+
+❯ G7 - I want to visually see an error subtitle in an accessible red below the  
+  frame rate when it drops below the expected rate.                             
+
+⏺ User answered Claude's questions:
+  ⎿  · What is the expected frame rate that the error subtitle checks against? →
+     Peak seen (Recommended)
+❯ G9 - Don't bother with license files this is a private repo that has no       
+  intention of ever being released.                                             
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='requirements.md'; s=open(p).read()…)
+  ⎿  requirements.md:1
+     validation.md:2
+     2
+  ⎿  Updated plan.md (+2 -2)
+       7  3. Write the counts class. It holds N, a Float64Array of N² cou
+          nts, the max count, and the total samples. `apply(values)` bins
+           each value, adds 1 to its cell, and updates the max and the to
+          tal. `reset(n)` makes new zero counts. This step creates src/ap
+          p/heatmap/grid-counts.ts.
+       8  4. Write the color map and the scale labels. `colorPosition(cou
+          nt, max)` returns null for a count of 0 and (count - 1) / (max 
+          - 1) otherwise, or 0 when the max is 1. A 256-entry table holds
+           the colors from blue to red. `scaleLabels(max)` returns the la
+          bels from G4. This step creates src/app/heatmap/color-map.ts.
+       9  5. Write the grid layout functions. `labelStep(n)` returns the 
+          step from G5. `cellRect(row, col, n, size)` returns the pixel b
+          ox of a cell with row 0 at the bottom and a 1 device pixel gap 
+          between cells. This step creates src/app/heatmap/grid-layout.ts
+          .
+      10 -6. Write the frame rate meter. `tick(now)` counts frames and re
+         -turns the count of the last full second. This step creates src/
+         -app/heatmap/frame-rate.ts.                                     
+      10 +6. Write the frame rate meter. `tick(now)` counts frames and re
+         +turns the count of the last full second. The meter also keeps t
+         +he peak reading and reports when the reading is below 90 percen
+         +t of the peak. This step creates src/app/heatmap/frame-rate.ts.
+      11  7. Write the store. It is an injectable service that owns the c
+          ounts, N as a signal, and the readout signals for the samples, 
+          the max count, and the frame rate. `setN(n)` clamps N to 1 to 6
+          4 and resets the counts. `applyBatch(values)` updates the count
+          s and marks the grid dirty. This step creates src/app/heatmap/h
+          eat-map-store.ts.
+      12  8. Write the heat map component. It sizes a square canvas to fi
+          t the main area with a ResizeObserver and the device pixel rati
+          o. It runs one requestAnimationFrame loop that ticks the frame 
+          rate meter, draws the cells and the axis labels when the grid i
+          s dirty, and updates the readout signals at most every 150 ms. 
+          It shows the color scale bar and its labels beside the canvas. 
+          This step creates src/app/heatmap/heat-map.ts, heat-map.html, a
+          nd heat-map.scss.
+      13 -9. Write the side panel component. It has the N control from G8
+         - and the three readouts, with hr lines between them as in the H
+         -TML design. This step creates src/app/panel/side-panel.ts, side
+         --panel.html, and side-panel.scss.                              
+      13 +9. Write the side panel component. It has the N control from G8
+         +, the three readouts, and the red error line below the frame ra
+         +te from G7, with hr lines between them as in the HTML design. T
+         +his step creates src/app/panel/side-panel.ts, side-panel.html, 
+         +and side-panel.scss.                                           
+      14  10. Replace the Angular placeholder app with the page shell. It
+           has the header, the main area with the heat map, and the side 
+          panel. This step changes src/app/app.ts, app.html, app.scss, an
+          d app.spec.ts.
+      15  11. Write the test source settings. `readTestSourceSettings(que
+          ry)` reads `rate`, `interval`, and `max` from the URL query, ap
+          plies the ranges and the defaults, and logs a warning for each 
+          bad value. This step creates src/app/source/test-source-setting
+          s.ts.
+      16  12. Write the batch generator. It takes the settings and return
+          s the next batch as a JSON string of uniform integers from 0 to
+           the max value minus 1. It carries the fractional sample count 
+          to the next call and returns null when a call has no samples. T
+          his step creates src/app/source/batch-generator.ts.
+  ⎿  Updated requirements.md (+2 -2)
+      34  - G4. **Agreed with a change.** The user simplified the scale l
+          abels. When the max is 2 or more, the scale shows three labels.
+           They are the max at the top, the midpoint (max + 1) / 2 at the
+           middle, and 1 at the bottom. The midpoint shows one decimal pl
+          ace when it is not a whole number, such as 5.5 for a max of 10,
+           so the label matches its place on the bar and never repeats th
+          e max or 1. When the max is 1, the scale shows only 1. When the
+           max is 0, it shows no labels. The numbers use en-US digit grou
+          ps, such as 1,024.
+      35  - G5. **Proposed.** The axis label step is 1 when N is 16 or le
+          ss, 2 when N is 17 to 32, and 4 when N is 33 to 64. The client 
+          labels each row and column whose number is a multiple of the st
+          ep, so a 64 by 64 grid shows 16 labels on each axis. The client
+           draws the labels on the same canvas as the cells, so they stay
+           lined up with the cells at any size.
+      36  - G6. **Proposed.** The frame rate is the number of requestAnim
+          ationFrame callbacks in the last full second. The loop runs on 
+          every frame, and it draws the grid only when the counts or the 
+          size changed. When the main thread is too busy to keep up, the 
+          frame rate drops, which is what the stress test must show.
+      37 -- G7. **Proposed.** The panel readouts update at most once ever
+         -y 150 ms, as the HTML design does, so text updates do not cost 
+         -a frame. The grid itself redraws on each frame that has new dat
+         -a.                                                             
+      37 +- G7. **Proposed.** The panel readouts update at most once ever
+         +y 150 ms, as the HTML design does, so text updates do not cost 
+         +a frame. The grid itself redraws on each frame that has new dat
+         +a. **Added by the user:** A red error line shows below the fram
+         +e rate readout when the frame rate drops below the expected rat
+         +e. The expected rate is the highest one-second reading since th
+         +e page loaded, as the user chose. On an idle page this is the d
+         +isplay refresh rate, so the rule works on 60 Hz and 120 Hz scre
+         +ens. The line shows when the reading is below 90 percent of tha
+         +t peak, and its text is "Below the expected 60 fps" with the pe
+         +ak in place of 60. The line uses the design token --danger-text
+         +, which is #B33A3A and has a contrast ratio of 5.9 to 1 on the 
+         +white panel. That passes WCAG AA for small text. The line hides
+         + again when the reading is back at or above 90 percent of the p
+         +eak. It follows the same 150 ms update as the readouts.        
+      38  - G8. **Proposed.** The N control follows the HTML design. It h
+          as a minus button, a read-only field that shows "32 × 32", and 
+          a plus button. The minus button is disabled at 1, and the plus 
+          button is disabled at 64. The up and down arrow keys in the fie
+          ld change N by 1, and with Shift by 10.
+      39 -- G9. **Proposed.** The fonts are Red Hat Display, Libre Frankl
+         -in, and IBM Plex Mono, as in the HTML design. The implement ste
+         -p extracts the six woff2 files from the design bundle into fron
+         -tend/public/fonts/, so the client needs no network for fonts. T
+         -he client uses the light theme only.                           
+      39 +- G9. **Proposed.** The fonts are Red Hat Display, Libre Frankl
+         +in, and IBM Plex Mono, as in the HTML design. The implement ste
+         +p extracts the six woff2 files from the design bundle into fron
+         +tend/public/fonts/, so the client needs no network for fonts. T
+         +he client uses the light theme only. The repo is private and wi
+         +ll not be released, so it has no license files for the fonts, a
+         +s the user asked.                                              
+      40  - G10. **Proposed.** The new code lives in frontend/src/app/ in
+           three folders. The heatmap/ folder holds the binning, the coun
+          ts, the color map, the labels, and the heat map component. The 
+          panel/ folder holds the side panel component. The source/ folde
+          r holds the test source settings, the batch generator, the work
+          er, and the service that starts the worker.
+  ⎿  Updated validation.md (+5 -1)
+      52  
+      53  - Before 1 s has passed, the meter reads 0.
+      54  - With a tick every 1000/60 ms for 2 s, the meter reads 60 afte
+          r the first second.
+      55 +- After 1 s at 60 fps and then 1 s at 30 fps, the meter reads 3
+         +0, its peak is 60, and it reports that the rate is below the ex
+         +pected rate.                                                   
+      56 +- After 1 s at 60 fps and then 1 s at 55 fps, the meter reports
+         + that the rate is not below the expected rate, because 55 is at
+         + least 90 percent of 60.                                       
+      57  - With a tick every 1000/30 ms for 2 s, the meter reads 30 afte
+          r the first second.
+      58  
+      59  ### V7. The test source settings and generator match the server
+     ...
+      88  - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and Ar
+          rowDown takes away 1.
+      89  - After 1,024 samples, the samples received readout shows "1,02
+          4".
+      90  - The frame rate readout shows the meter value with the unit "f
+          ps".
+      91 +- When the meter reports a peak of 60 and a reading of 30, the 
+         +panel shows the line "Below the expected 60 fps" below the fram
+         +e rate, with the class that sets the color to --danger-text.   
+      92 +- When the reading is back at 60, the line is gone.            
+      93  
+      94  ### V10. Linters pass
+      95  
+     ...
+      119  
+      120  1. Run `make frontend`, and set N to 64 in each step below.
+      121  2. Open http://localhost:4200/?rate=100000 and note the frame 
+           rate after 10 s. The expected result is a frame rate within 5 
+           fps of the display refresh rate.
+      118 -3. Repeat step 2 with `rate=1000000`, `rate=5000000`, and `rat
+          -e=10000000`. Note the frame rate for each. The expected result
+          - is a number for each rate, which goes into the Results sectio
+          -n.                                                            
+      122 +3. Repeat step 2 with `rate=1000000`, `rate=5000000`, and `rat
+          +e=10000000`. Note the frame rate for each. The expected result
+          + is a number for each rate, which goes into the Results sectio
+          +n. When the frame rate falls below 90 percent of the peak, the
+          + expected result is a red line below the frame rate that reads
+          + "Below the expected" and the peak fps.                       
+      123  4. Open http://localhost:4200/?rate=abc. The expected result i
+           s a console warning that names `rate`, and a stream at 100,000
+            samples per second.
+      124  
+      125  ### M4. The README and the logs record this feature
+
+⏺ I added both changes to the spec files.
+
+  G7: A red error line now shows below the frame rate readout when the rate
+  drops below the expected rate. The expected rate is the highest one-second
+  reading since the page loaded, as you chose. The line shows when the reading
+  is below 90 percent of that peak. For example, on a 60 Hz screen it reads
+  "Below the expected 60 fps" once the rate falls under 54 fps. It hides again
+  when the rate recovers.
+
+  The line uses the design's --danger-text color, #B33A3A. That red has a
+  contrast ratio of 5.9 to 1 on the white panel, which passes WCAG AA for small
+  text.
+
+  - plan.md: Step 6 now has the meter track the peak. Step 9 adds the error line
+    to the side panel.
+  - validation.md: V6 has two new cases. One drops from 60 to 30 fps and must
+    report the drop. The other drops from 60 to 55 fps and must not report it.
+    V9 checks that the line appears and then goes away. In M3 you also look for
+    the red line during the stress test.
+
+  G9: I added a sentence that the repo has no license files for the fonts,
+  because it is private and will not be released. The plan did not include any
+  license files before this change.
+
+  G2, G5, G6, G8, and G10 are still waiting for your review.
+
+✻ Sautéed for 34s · done 1:06 PM
+
+❯ G10 - make sure you keep components thin, e.g I want the state of the heatmap 
+  in its own component. Use canvas.                                             
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='requirements.md'; s=open(p).read()…)
+  ⎿  5:1. Extract the six woff2 fonts from the design bundle into
+     6:2. Write the binning functions. `binIndex(v, n)` returns (
+     7:3. Write the counts class. It holds N, a Float64Array of N
+     … +21 lines (ctrl+o to expand)
+  ⎿  Updated plan.md (+12 -10)
+       8  4. Write the color map and the scale labels. `colorPosition(cou
+          nt, max)` returns null for a count of 0 and (count - 1) / (max 
+          - 1) otherwise, or 0 when the max is 1. A 256-entry table holds
+           the colors from blue to red. `scaleLabels(max)` returns the la
+          bels from G4. This step creates src/app/heatmap/color-map.ts.
+       9  5. Write the grid layout functions. `labelStep(n)` returns the 
+          step from G5. `cellRect(row, col, n, size)` returns the pixel b
+          ox of a cell with row 0 at the bottom and a 1 device pixel gap 
+          between cells. This step creates src/app/heatmap/grid-layout.ts
+          .
+      10  6. Write the frame rate meter. `tick(now)` counts frames and re
+          turns the count of the last full second. The meter also keeps t
+          he peak reading and reports when the reading is below 90 percen
+          t of the peak. This step creates src/app/heatmap/frame-rate.ts.
+      11 -7. Write the store. It is an injectable service that owns the c
+         -ounts, N as a signal, and the readout signals for the samples, 
+         -the max count, and the frame rate. `setN(n)` clamps N to 1 to 6
+         -4 and resets the counts. `applyBatch(values)` updates the count
+         -s and marks the grid dirty. This step creates src/app/heatmap/h
+         -eat-map-store.ts.                                              
+      12 -8. Write the heat map component. It sizes a square canvas to fi
+         -t the main area with a ResizeObserver and the device pixel rati
+         -o. It runs one requestAnimationFrame loop that ticks the frame 
+         -rate meter, draws the cells and the axis labels when the grid i
+         -s dirty, and updates the readout signals at most every 150 ms. 
+         -It shows the color scale bar and its labels beside the canvas. 
+         -This step creates src/app/heatmap/heat-map.ts, heat-map.html, a
+         -nd heat-map.scss.                                              
+      13 -9. Write the side panel component. It has the N control from G8
+         -, the three readouts, and the red error line below the frame ra
+         -te from G7, with hr lines between them as in the HTML design. T
+         -his step creates src/app/panel/side-panel.ts, side-panel.html, 
+         -and side-panel.scss.                                           
+      14 -10. Replace the Angular placeholder app with the page shell. It
+         - has the header, the main area with the heat map, and the side 
+         -panel. This step changes src/app/app.ts, app.html, app.scss, an
+         -d app.spec.ts.                                                 
+      15 -11. Write the test source settings. `readTestSourceSettings(que
+         -ry)` reads `rate`, `interval`, and `max` from the URL query, ap
+         -plies the ranges and the defaults, and logs a warning for each 
+         -bad value. This step creates src/app/source/test-source-setting
+         -s.ts.                                                          
+      16 -12. Write the batch generator. It takes the settings and return
+         -s the next batch as a JSON string of uniform integers from 0 to
+         - the max value minus 1. It carries the fractional sample count 
+         -to the next call and returns null when a call has no samples. T
+         -his step creates src/app/source/batch-generator.ts.            
+      17 -13. Write the worker and the service that starts it. The worker
+         - runs the generator on a timer at the batch interval and posts 
+         -each JSON string. The service reads the settings from the page 
+         -URL, starts the worker, parses each string, and calls `applyBat
+         -ch`. The app starts the service at start. This step creates src
+         -/app/source/test-source.worker.ts, src/app/source/test-source.t
+         -s, and tsconfig.worker.json, and it changes angular.json and sr
+         -c/app/app.ts.                                                  
+      18 -14. Update the README with what the client shows, the test sour
+         -ce query settings with their defaults and ranges, and a stress 
+         -test example URL. This step changes README.md at the repo root.
+      19 -15. Add entries for this feature to the three logs. This step c
+         -hanges docs/assumptions.md, docs/trade-offs.md, and docs/ai-cha
+         -nges.md.                                                       
+      20 -16. Run every check in validation.md and fix the failures.     
+      11 +7. Write the store. It is an injectable service and the only ow
+         +ner of the heat map state. It holds N as a signal, the counts, 
+         +the frame rate meter, the dirty flag, and the readout signals f
+         +or the samples, the max count, the frame rate, and the error li
+         +ne. `setN(n)` clamps N to 1 to 64, resets the counts, and marks
+         + the grid dirty. `applyBatch(values)` updates the counts and ma
+         +rks the grid dirty. `frame(now)` ticks the meter, updates the r
+         +eadout signals at most every 150 ms, and returns true when the 
+         +grid needs a redraw. This step creates src/app/heatmap/heat-map
+         +-store.ts.                                                     
+      12 +8. Write the renderer. It is a plain class with no Angular code
+         +. `draw(ctx, counts, size)` fills the gap color, fills each cel
+         +l with its color or white from the color map, and writes the ax
+         +is labels at the step from G5. It uses `cellRect` from step 5, 
+         +so row 0 is at the bottom. This step creates src/app/heatmap/he
+         +at-map-renderer.ts.                                            
+      13 +9. Write the heat map component. It is thin. It hosts the canva
+         +s and sizes it to a square that fits the main area with a Resiz
+         +eObserver and the device pixel ratio. It runs one requestAnimat
+         +ionFrame loop that calls `store.frame(now)` and, when that retu
+         +rns true, `renderer.draw`. It stops the loop and the observer w
+         +hen it is destroyed. This step creates src/app/heatmap/heat-map
+         +.ts, heat-map.html, and heat-map.scss.                         
+      14 +10. Write the color scale component. It is thin. It shows the b
+         +ar with the gradient from G3 at the height of the grid and the 
+         +labels from `scaleLabels(store.max())`. This step creates src/a
+         +pp/heatmap/color-scale.ts, color-scale.html, and color-scale.sc
+         +ss.                                                            
+      15 +11. Write the side panel component. It is thin. It binds the st
+         +ore signals and calls `store.setN` from the N control in G8. It
+         + shows the three readouts and the red error line below the fram
+         +e rate from G7, with hr lines between them as in the HTML desig
+         +n. This step creates src/app/panel/side-panel.ts, side-panel.ht
+         +ml, and side-panel.scss.                                       
+      16 +12. Replace the Angular placeholder app with the page shell. It
+         + has the header, the main area with the heat map, and the side 
+         +panel. This step changes src/app/app.ts, app.html, app.scss, an
+         +d app.spec.ts.                                                 
+      17 +13. Write the test source settings. `readTestSourceSettings(que
+         +ry)` reads `rate`, `interval`, and `max` from the URL query, ap
+         +plies the ranges and the defaults, and logs a warning for each 
+         +bad value. This step creates src/app/source/test-source-setting
+         +s.ts.                                                          
+      18 +14. Write the batch generator. It takes the settings and return
+         +s the next batch as a JSON string of uniform integers from 0 to
+         + the max value minus 1. It carries the fractional sample count 
+         +to the next call and returns null when a call has no samples. T
+         +his step creates src/app/source/batch-generator.ts.            
+      19 +15. Write the worker and the service that starts it. The worker
+         + runs the generator on a timer at the batch interval and posts 
+         +each JSON string. The service reads the settings from the page 
+         +URL, starts the worker, parses each string, and calls `applyBat
+         +ch`. The app starts the service at start. This step creates src
+         +/app/source/test-source.worker.ts, src/app/source/test-source.t
+         +s, and tsconfig.worker.json, and it changes angular.json and sr
+         +c/app/app.ts.                                                  
+      20 +16. Update the README with what the client shows, the test sour
+         +ce query settings with their defaults and ranges, and a stress 
+         +test example URL. This step changes README.md at the repo root.
+      21 +17. Add entries for this feature to the three logs. This step c
+         +hanges docs/assumptions.md, docs/trade-offs.md, and docs/ai-cha
+         +nges.md.                                                       
+      22 +18. Run every check in validation.md and fix the failures.     
+  ⎿  Updated requirements.md (+1 -1)
+      37  - G7. **Proposed.** The panel readouts update at most once ever
+          y 150 ms, as the HTML design does, so text updates do not cost 
+          a frame. The grid itself redraws on each frame that has new dat
+          a. **Added by the user:** A red error line shows below the fram
+          e rate readout when the frame rate drops below the expected rat
+          e. The expected rate is the highest one-second reading since th
+          e page loaded, as the user chose. On an idle page this is the d
+          isplay refresh rate, so the rule works on 60 Hz and 120 Hz scre
+          ens. The line shows when the reading is below 90 percent of tha
+          t peak, and its text is "Below the expected 60 fps" with the pe
+          ak in place of 60. The line uses the design token --danger-text
+          , which is #B33A3A and has a contrast ratio of 5.9 to 1 on the 
+          white panel. That passes WCAG AA for small text. The line hides
+           again when the reading is back at or above 90 percent of the p
+          eak. It follows the same 150 ms update as the readouts.
+      38  - G8. **Proposed.** The N control follows the HTML design. It h
+          as a minus button, a read-only field that shows "32 × 32", and 
+          a plus button. The minus button is disabled at 1, and the plus 
+          button is disabled at 64. The up and down arrow keys in the fie
+          ld change N by 1, and with Shift by 10.
+      39  - G9. **Proposed.** The fonts are Red Hat Display, Libre Frankl
+          in, and IBM Plex Mono, as in the HTML design. The implement ste
+          p extracts the six woff2 files from the design bundle into fron
+          tend/public/fonts/, so the client needs no network for fonts. T
+          he client uses the light theme only. The repo is private and wi
+          ll not be released, so it has no license files for the fonts, a
+          s the user asked.
+      40 -- G10. **Proposed.** The new code lives in frontend/src/app/ in
+         - three folders. The heatmap/ folder holds the binning, the coun
+         -ts, the color map, the labels, and the heat map component. The 
+         -panel/ folder holds the side panel component. The source/ folde
+         -r holds the test source settings, the batch generator, the work
+         -er, and the service that starts the worker.                    
+      40 +- G10. **Agreed with a change.** The user asked for thin compon
+         +ents, with the heat map state in its own unit, and for the grid
+         + to be drawn on a canvas. The heat map state lives in one injec
+         +table service, the store. It owns N, the counts, the frame rate
+         + meter, the dirty flag, and the readout signals. It is the only
+         + code that changes them. The drawing lives in a plain renderer 
+         +class with no Angular code, which draws the cells and the axis 
+         +labels on a 2D canvas context. The components only bind signals
+         + from the store and forward user events to it. The heat map com
+         +ponent hosts the canvas, watches its size, and runs the request
+         +AnimationFrame loop that calls the store and the renderer. The 
+         +color scale component shows the bar and its labels. The side pa
+         +nel component shows the N control and the readouts. The new cod
+         +e lives in frontend/src/app/ in three folders. The heatmap/ fol
+         +der holds the binning, the counts, the color map, the layout, t
+         +he frame rate meter, the store, the renderer, the heat map comp
+         +onent, and the color scale component. The panel/ folder holds t
+         +he side panel component. The source/ folder holds the test sour
+         +ce settings, the batch generator, the worker, and the service t
+         +hat starts the worker.                                         
+  ⎿  Updated validation.md (+7 -6)
+      70  - With a max value of 1, every value is 0.
+      71  - The test source service parses the string "[17,8]" from a fak
+          e worker and applies it, so with N = 4 cells <0,0> and <1,3> ea
+          ch hold 1.
+      72  
+      73 -### V8. The heat map component draws the grid and the scale    
+      73 +### V8. The renderer draws the grid, and the components show th
+         +e scale                                                        
+      74  
+      75 -The tests use a fake 2D context that records each fill.        
+      75 +The renderer tests use a fake 2D context that records each fill
+         +.                                                              
+      76  
+      77 -- With N = 4 and the example input from V3.1, the draw fills ce
+         -ll <0,3> with rgb(30,0,255), cell <2,2> with rgb(255,0,51), and
+         - each empty cell with white.                                   
+      78 -- After the example input, the scale shows the labels 10, 5.5, 
+         -and 1 from top to bottom.                                      
+      79 -- With no data, the scale shows no labels, and every cell is wh
+         -ite.                                                           
+      80 -- The draw writes the row labels 0 to 3 on the left and the col
+         -umn labels 0 to 3 along the bottom for N = 4.                  
+      77 +- With N = 4 and the example input from V3.1, the renderer fill
+         +s cell <0,3> with rgb(30,0,255), cell <2,2> with rgb(255,0,51),
+         + and each empty cell with white.                               
+      78 +- After the example input, the color scale component shows the 
+         +labels 10, 5.5, and 1 from top to bottom.                      
+      79 +- With no data, the color scale component shows no labels, and 
+         +the renderer fills every cell with white.                      
+      80 +- The renderer writes the row labels 0 to 3 on the left and the
+         + column labels 0 to 3 along the bottom for N = 4.              
+      81  
+      82  ### V9. The side panel changes N and shows the readouts
+      83  
+     ...
+      88  - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and Ar
+          rowDown takes away 1.
+      89  - After 1,024 samples, the samples received readout shows "1,02
+          4".
+      90  - The frame rate readout shows the meter value with the unit "f
+          ps".
+      91 +- The heat map component calls the renderer on a frame when `st
+         +ore.frame` returns true, and does not call it when `store.frame
+         +` returns false.                                               
+      92  - When the meter reports a peak of 60 and a reading of 30, the 
+          panel shows the line "Below the expected 60 fps" below the fram
+          e rate, with the class that sets the color to --danger-text.
+      93  - When the reading is back at 60, the line is gone.
+      94  
+
+⏺ Bash(python3 - <<'EOF'
+      p='validation.md'; s=open(p).read()…)
+  ⎿  ### V8. The renderer draws the grid, and the components show the scale
+
+     The renderer tests use a fake 2D context that records each fill.
+     … +20 lines (ctrl+o to expand)
+  ⎿  Updated validation.md (+1 -1)
+      79  - With no data, the color scale component shows no labels, and 
+          the renderer fills every cell with white.
+      80  - The renderer writes the row labels 0 to 3 on the left and the
+           column labels 0 to 3 along the bottom for N = 4.
+      81  
+      82 +- The heat map component calls the renderer on a frame when `st
+         +ore.frame` returns true, and does not call it when `store.frame
+         +` returns false.                                               
+      83  ### V9. The side panel changes N and shows the readouts
+      84  
+      85  - The page header shows "Bin There, Done That".
+     ...
+      89  - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and Ar
+          rowDown takes away 1.
+      90  - After 1,024 samples, the samples received readout shows "1,02
+          4".
+      91  - The frame rate readout shows the meter value with the unit "f
+          ps".
+      91 -- The heat map component calls the renderer on a frame when `st
+         -ore.frame` returns true, and does not call it when `store.frame
+         -` returns false.                                               
+      92  - When the meter reports a peak of 60 and a reading of 30, the 
+          panel shows the line "Below the expected 60 fps" below the fram
+          e rate, with the class that sets the color to --danger-text.
+      93  - When the reading is back at 60, the line is gone.
+      94  
+
+⏺ Bash(python3 - <<'EOF'
+      p='validation.md'; s=open(p).read()…)
+  ⎿  - The renderer writes the row labels 0 to 3 on the left and the column
+      labels 0 to 3 along the bottom for N = 4.
+     - The heat map component calls the renderer on a frame when `store.fra
+     … +4 lines (ctrl+o to expand)
+  ⎿  Updated validation.md (+1 -1)
+      78  - After the example input, the color scale component shows the 
+          labels 10, 5.5, and 1 from top to bottom.
+      79  - With no data, the color scale component shows no labels, and 
+          the renderer fills every cell with white.
+      80  - The renderer writes the row labels 0 to 3 on the left and the
+           column labels 0 to 3 along the bottom for N = 4.
+      81 -                                                               
+      81  - The heat map component calls the renderer on a frame when `st
+          ore.frame` returns true, and does not call it when `store.frame
+          ` returns false.
+      82 +                                                               
+      83  ### V9. The side panel changes N and shows the readouts
+      84  
+      85  - The page header shows "Bin There, Done That".
+
+⏺ I updated G10 and restructured the plan so the components stay thin. The heat
+  map state lives in an injectable Angular service called the store, not in a
+  component. That is the usual Angular pattern. Tell me if you meant an Angular
+  component literally.
+
+  - Store: The store is the only owner of the state. It holds N, the counts, the
+    frame rate meter, the dirty flag, and the readout signals. It is also the
+    only code that changes them.
+  - Renderer: A plain class with no Angular code draws the cells and the axis
+    labels on the 2D canvas context.
+  - Components: The components only bind signals from the store and forward user
+    events to it. There are three of them.
+    - The heat map component hosts the canvas, watches its size, and runs the
+      requestAnimationFrame loop.
+    - A new color scale component shows the bar and its labels.
+    - The side panel component shows the N control and the readouts.
+
+  The plan now has 18 steps. The store is step 7, the renderer is step 8, and
+  the three components are steps 9 to 11. The test source is still at the end,
+  in steps 13 to 15.
+
+  In validation.md, V8 now tests the renderer with a fake canvas context and the
+  color scale component on its own. V8 also has a new case that checks the heat
+  map component calls the renderer only when store.frame says the grid needs a
+  redraw.
+
+  G2, G5, G6, and G8 are still waiting for your review.
+
+✻ Worked for 43s · done 1:11 PM
+
+❯ G8 - dont go disabled just remove/hide the  button in those states.           
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='requirements.md'; s=open(p).read()…)
+  ⎿  requirements.md:38:- G8. **Agreed with a change.** The N control follo
+     ws the HTML design. It has a minus button, a read-
+     validation.md:88:- The minus button is hidden at N = 1, and the plus b
+     … +8 lines (ctrl+o to expand)
+  ⎿  Updated requirements.md (+1 -1)
+      35  - G5. **Proposed.** The axis label step is 1 when N is 16 or le
+          ss, 2 when N is 17 to 32, and 4 when N is 33 to 64. The client 
+          labels each row and column whose number is a multiple of the st
+          ep, so a 64 by 64 grid shows 16 labels on each axis. The client
+           draws the labels on the same canvas as the cells, so they stay
+           lined up with the cells at any size.
+      36  - G6. **Proposed.** The frame rate is the number of requestAnim
+          ationFrame callbacks in the last full second. The loop runs on 
+          every frame, and it draws the grid only when the counts or the 
+          size changed. When the main thread is too busy to keep up, the 
+          frame rate drops, which is what the stress test must show.
+      37  - G7. **Proposed.** The panel readouts update at most once ever
+          y 150 ms, as the HTML design does, so text updates do not cost 
+          a frame. The grid itself redraws on each frame that has new dat
+          a. **Added by the user:** A red error line shows below the fram
+          e rate readout when the frame rate drops below the expected rat
+          e. The expected rate is the highest one-second reading since th
+          e page loaded, as the user chose. On an idle page this is the d
+          isplay refresh rate, so the rule works on 60 Hz and 120 Hz scre
+          ens. The line shows when the reading is below 90 percent of tha
+          t peak, and its text is "Below the expected 60 fps" with the pe
+          ak in place of 60. The line uses the design token --danger-text
+          , which is #B33A3A and has a contrast ratio of 5.9 to 1 on the 
+          white panel. That passes WCAG AA for small text. The line hides
+           again when the reading is back at or above 90 percent of the p
+          eak. It follows the same 150 ms update as the readouts.
+      38 -- G8. **Proposed.** The N control follows the HTML design. It h
+         -as a minus button, a read-only field that shows "32 × 32", and 
+         -a plus button. The minus button is disabled at 1, and the plus 
+         -button is disabled at 64. The up and down arrow keys in the fie
+         -ld change N by 1, and with Shift by 10.                        
+      38 +- G8. **Agreed with a change.** The N control follows the HTML 
+         +design. It has a minus button, a read-only field that shows "32
+         + × 32", and a plus button. The user asked that a button hide in
+         +stead of going disabled. The minus button is hidden at 1, and t
+         +he plus button is hidden at 64. A hidden button uses `visibilit
+         +y: hidden`, so it cannot be clicked or reached with Tab, and it
+         + keeps its space so the field does not move. The up and down ar
+         +row keys in the field change N by 1, and with Shift by 10.     
+      39  - G9. **Proposed.** The fonts are Red Hat Display, Libre Frankl
+          in, and IBM Plex Mono, as in the HTML design. The implement ste
+          p extracts the six woff2 files from the design bundle into fron
+          tend/public/fonts/, so the client needs no network for fonts. T
+          he client uses the light theme only. The repo is private and wi
+          ll not be released, so it has no license files for the fonts, a
+          s the user asked.
+      40  - G10. **Agreed with a change.** The user asked for thin compon
+          ents, with the heat map state in its own unit, and for the grid
+           to be drawn on a canvas. The heat map state lives in one injec
+          table service, the store. It owns N, the counts, the frame rate
+           meter, the dirty flag, and the readout signals. It is the only
+           code that changes them. The drawing lives in a plain renderer 
+          class with no Angular code, which draws the cells and the axis 
+          labels on a 2D canvas context. The components only bind signals
+           from the store and forward user events to it. The heat map com
+          ponent hosts the canvas, watches its size, and runs the request
+          AnimationFrame loop that calls the store and the renderer. The 
+          color scale component shows the bar and its labels. The side pa
+          nel component shows the N control and the readouts. The new cod
+          e lives in frontend/src/app/ in three folders. The heatmap/ fol
+          der holds the binning, the counts, the color map, the layout, t
+          he frame rate meter, the store, the renderer, the heat map comp
+          onent, and the color scale component. The panel/ folder holds t
+          he side panel component. The source/ folder holds the test sour
+          ce settings, the batch generator, the worker, and the service t
+          hat starts the worker.
+  ⎿  Updated validation.md (+4 -3)
+      85  - The page header shows "Bin There, Done That".
+      86  - The N field shows "32 × 32" at start.
+      87  - A click on the plus button shows "33 × 33" and sets the sampl
+          es received to 0.
+      88 -- The minus button is disabled at N = 1, and the plus button is
+         - disabled at N = 64.                                           
+      88 +- The minus button is hidden at N = 1, and the plus button is h
+         +idden at N = 64. Neither button has the disabled attribute.    
+      89 +- At N = 2, a click on the minus button hides it, and at N = 63
+         +, a click on the plus button hides it.                         
+      90  - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and Ar
+          rowDown takes away 1.
+      91  - After 1,024 samples, the samples received readout shows "1,02
+          4".
+      92  - The frame rate readout shows the meter value with the unit "f
+          ps".
+     ...
+      113  ### M2. The N control works at its limits
+      114  
+      115  1. Click the plus button until N is 64.
+      115 -2. The expected result is that the plus button is disabled, th
+          -e counts reset on each click, and the axis labels appear at ev
+          -ery 4th row and column.                                       
+      116 +2. The expected result is that the plus button is hidden, the 
+          +field does not move, the counts reset on each click, and the a
+          +xis labels appear at every 4th row and column.                
+      117  3. Click the minus button until N is 1.
+      117 -4. The expected result is that the minus button is disabled, a
+          -nd the one cell is the red end color #FF0033, because its coun
+          -t is the max count.                                           
+      118 +4. The expected result is that the minus button is hidden, the
+          + field does not move, and the one cell is the red end color #F
+          +F0033, because its count is the max count.                    
+      119  
+      120  ### M3. Stress test the browser
+      121  
+
+⏺ I changed G8 so the buttons hide instead of going disabled. The minus button
+  is hidden when N is 1, and the plus button is hidden when N is 64.
+
+  A hidden button uses visibility: hidden. You cannot click it or reach it with
+  Tab, but it keeps its space, so the "32 × 32" field does not jump sideways at
+  the limits. If you want the button fully removed and the field to widen, tell
+  me.
+
+  In validation.md, V9 now checks that each button is hidden at its limit and
+  does not have the disabled attribute. It also checks that a click at N = 2
+  hides the minus button and a click at N = 63 hides the plus button. M2 now
+  expects the button to be hidden and the field to stay in place.
+
+  G2, G5, and G6 are still waiting for your review.
+
+✻ Worked for 14s · done 1:12 PM
+
+❯ Rest are good                                                                 
+
+⏺ Bash(sed -i '' 's/\*\*Proposed\.\*\*/**Agreed.**/g; s/ \*\*Proposed:\*\* / /'
+      requirements.md && sed -i '' 's/^## Items the sources do not cover$/##
+      Items the source…)
+  ⎿  31:Each item below was my proposal. The user answered each one.
+     33:- G1. **Agreed.** The test source reads its settings from the URL q
+     34:- G2. **Agreed.** The test source runs in a Web Worker. The worker
+     … +8 lines (ctrl+o to expand)
+  ⎿  Updated requirements.md (+8 -6)
+      28  
+      29  ## Items the sources do not cover
+      30  
+      31 -- G1. **Agreed.** The test source reads its settings from the U
+         -RL query, as the user chose. The names are `rate` for samples p
+         -er second, `interval` for the batch interval in ms, and `max` f
+         -or the maximum value. An example is http://localhost:4200/?rate
+         -=1000000&interval=50&max=1024. A change needs a reload, which a
+         -lso resets the counts. **Proposed:** The defaults match the ser
+         -ver, which are 100,000 samples per second, 50 ms, and 1,024. Th
+         -e interval and the max value have the server ranges. The rate g
+         -oes up to 10,000,000 so that the stress test can go past the se
+         -rver limit. A value that is out of range or not a number falls 
+         -back to its default, and the client logs a warning to the conso
+         -le.                                                            
+      32 -- G2. **Proposed.** The test source runs in a Web Worker. The w
+         -orker makes each batch, encodes it to a JSON string, and posts 
+         -the string to the main thread. The main thread parses the strin
+         -g and bins the values. This matches the cost on the main thread
+         - of the SSE path in feature 4, where the browser receives text 
+         -and the client parses it. The generator carries the fractional 
+         -sample count to the next batch, as the server does (feature 2, 
+         -G4). In this feature the test source always runs. Feature 4 dec
+         -ides how the user picks the test source or the server.         
+      31 +Each item below was my proposal. The user answered each one.   
+      32 +                                                               
+      33 +- G1. **Agreed.** The test source reads its settings from the U
+         +RL query, as the user chose. The names are `rate` for samples p
+         +er second, `interval` for the batch interval in ms, and `max` f
+         +or the maximum value. An example is http://localhost:4200/?rate
+         +=1000000&interval=50&max=1024. A change needs a reload, which a
+         +lso resets the counts. The defaults match the server, which are
+         + 100,000 samples per second, 50 ms, and 1,024. The interval and
+         + the max value have the server ranges. The rate goes up to 10,0
+         +00,000 so that the stress test can go past the server limit. A 
+         +value that is out of range or not a number falls back to its de
+         +fault, and the client logs a warning to the console.           
+      34 +- G2. **Agreed.** The test source runs in a Web Worker. The wor
+         +ker makes each batch, encodes it to a JSON string, and posts th
+         +e string to the main thread. The main thread parses the string 
+         +and bins the values. This matches the cost on the main thread o
+         +f the SSE path in feature 4, where the browser receives text an
+         +d the client parses it. The generator carries the fractional sa
+         +mple count to the next batch, as the server does (feature 2, G4
+         +). In this feature the test source always runs. Feature 4 decid
+         +es how the user picks the test source or the server.           
+      35  - G3. **Agreed with a change.** The user widened the scale at b
+          oth ends to make the colors easier to tell apart. The blue end 
+          is #1E00FF, which is hue 247°, and the red end is #FF0033, whic
+          h is hue 348°. The map sweeps the hue from 247° down through cy
+          an, green, and yellow to 348°, at full saturation and full brig
+          htness, in equal steps of hue. The hue span is 259°, where the 
+          jet map without its dark ends spans 240°. The colors at the thi
+          rds of the scale are #00FFAD and #C2FF00. A 256-entry table hol
+          ds the colors. The scale bar uses `linear-gradient(to top in hs
+          l longer hue, #1E00FF, #FF0033)`, which follows the same hue pa
+          th, so the bar and the cells match. N4 in specs/mission.md says
+           full blue and full red. The replan step updates it to name the
+          se end colors. In the brief picture, cell (b) with count 5 of 1
+          0 looks yellow. This map makes it green, at #00FF33. I treat th
+          e picture colors as a sketch.
+      36  - G4. **Agreed with a change.** The user simplified the scale l
+          abels. When the max is 2 or more, the scale shows three labels.
+           They are the max at the top, the midpoint (max + 1) / 2 at the
+           middle, and 1 at the bottom. The midpoint shows one decimal pl
+          ace when it is not a whole number, such as 5.5 for a max of 10,
+           so the label matches its place on the bar and never repeats th
+          e max or 1. When the max is 1, the scale shows only 1. When the
+           max is 0, it shows no labels. The numbers use en-US digit grou
+          ps, such as 1,024.
+      35 -- G5. **Proposed.** The axis label step is 1 when N is 16 or le
+         -ss, 2 when N is 17 to 32, and 4 when N is 33 to 64. The client 
+         -labels each row and column whose number is a multiple of the st
+         -ep, so a 64 by 64 grid shows 16 labels on each axis. The client
+         - draws the labels on the same canvas as the cells, so they stay
+         - lined up with the cells at any size.                          
+      36 -- G6. **Proposed.** The frame rate is the number of requestAnim
+         -ationFrame callbacks in the last full second. The loop runs on 
+         -every frame, and it draws the grid only when the counts or the 
+         -size changed. When the main thread is too busy to keep up, the 
+         -frame rate drops, which is what the stress test must show.     
+      37 -- G7. **Proposed.** The panel readouts update at most once ever
+         -y 150 ms, as the HTML design does, so text updates do not cost 
+         -a frame. The grid itself redraws on each frame that has new dat
+         -a. **Added by the user:** A red error line shows below the fram
+         -e rate readout when the frame rate drops below the expected rat
+         -e. The expected rate is the highest one-second reading since th
+         -e page loaded, as the user chose. On an idle page this is the d
+         -isplay refresh rate, so the rule works on 60 Hz and 120 Hz scre
+         -ens. The line shows when the reading is below 90 percent of tha
+         -t peak, and its text is "Below the expected 60 fps" with the pe
+         -ak in place of 60. The line uses the design token --danger-text
+         -, which is #B33A3A and has a contrast ratio of 5.9 to 1 on the 
+         -white panel. That passes WCAG AA for small text. The line hides
+         - again when the reading is back at or above 90 percent of the p
+         -eak. It follows the same 150 ms update as the readouts.        
+      37 +- G5. **Agreed.** The axis label step is 1 when N is 16 or less
+         +, 2 when N is 17 to 32, and 4 when N is 33 to 64. The client la
+         +bels each row and column whose number is a multiple of the step
+         +, so a 64 by 64 grid shows 16 labels on each axis. The client d
+         +raws the labels on the same canvas as the cells, so they stay l
+         +ined up with the cells at any size.                            
+      38 +- G6. **Agreed.** The frame rate is the number of requestAnimat
+         +ionFrame callbacks in the last full second. The loop runs on ev
+         +ery frame, and it draws the grid only when the counts or the si
+         +ze changed. When the main thread is too busy to keep up, the fr
+         +ame rate drops, which is what the stress test must show.       
+      39 +- G7. **Agreed.** The panel readouts update at most once every 
+         +150 ms, as the HTML design does, so text updates do not cost a 
+         +frame. The grid itself redraws on each frame that has new data.
+         + **Added by the user:** A red error line shows below the frame 
+         +rate readout when the frame rate drops below the expected rate.
+         + The expected rate is the highest one-second reading since the 
+         +page loaded, as the user chose. On an idle page this is the dis
+         +play refresh rate, so the rule works on 60 Hz and 120 Hz screen
+         +s. The line shows when the reading is below 90 percent of that 
+         +peak, and its text is "Below the expected 60 fps" with the peak
+         + in place of 60. The line uses the design token --danger-text, 
+         +which is #B33A3A and has a contrast ratio of 5.9 to 1 on the wh
+         +ite panel. That passes WCAG AA for small text. The line hides a
+         +gain when the reading is back at or above 90 percent of the pea
+         +k. It follows the same 150 ms update as the readouts.          
+      40  - G8. **Agreed with a change.** The N control follows the HTML 
+          design. It has a minus button, a read-only field that shows "32
+           × 32", and a plus button. The user asked that a button hide in
+          stead of going disabled. The minus button is hidden at 1, and t
+          he plus button is hidden at 64. A hidden button uses `visibilit
+          y: hidden`, so it cannot be clicked or reached with Tab, and it
+           keeps its space so the field does not move. The up and down ar
+          row keys in the field change N by 1, and with Shift by 10.
+      39 -- G9. **Proposed.** The fonts are Red Hat Display, Libre Frankl
+         -in, and IBM Plex Mono, as in the HTML design. The implement ste
+         -p extracts the six woff2 files from the design bundle into fron
+         -tend/public/fonts/, so the client needs no network for fonts. T
+         -he client uses the light theme only. The repo is private and wi
+         -ll not be released, so it has no license files for the fonts, a
+         -s the user asked.                                              
+      41 +- G9. **Agreed.** The fonts are Red Hat Display, Libre Franklin
+         +, and IBM Plex Mono, as in the HTML design. The implement step 
+         +extracts the six woff2 files from the design bundle into fronte
+         +nd/public/fonts/, so the client needs no network for fonts. The
+         + client uses the light theme only. The repo is private and will
+         + not be released, so it has no license files for the fonts, as 
+         +the user asked.                                                
+      42  - G10. **Agreed with a change.** The user asked for thin compon
+          ents, with the heat map state in its own unit, and for the grid
+           to be drawn on a canvas. The heat map state lives in one injec
+          table service, the store. It owns N, the counts, the frame rate
+           meter, the dirty flag, and the readout signals. It is the only
+           code that changes them. The drawing lives in a plain renderer 
+          class with no Angular code, which draws the cells and the axis 
+          labels on a 2D canvas context. The components only bind signals
+           from the store and forward user events to it. The heat map com
+          ponent hosts the canvas, watches its size, and runs the request
+          AnimationFrame loop that calls the store and the renderer. The 
+          color scale component shows the bar and its labels. The side pa
+          nel component shows the N control and the readouts. The new cod
+          e lives in frontend/src/app/ in three folders. The heatmap/ fol
+          der holds the binning, the counts, the color map, the layout, t
+          he frame rate meter, the store, the renderer, the heat map comp
+          onent, and the color scale component. The panel/ folder holds t
+          he side panel component. The source/ folder holds the test sour
+          ce settings, the batch generator, the worker, and the service t
+          hat starts the worker.
+
+⏺ Bash(sed -i '' 's/^- G7\. \*\*Agreed\.\*\*/- G7. **Agreed with a change.**/;
+      s/^- G9\. \*\*Agreed\.\*\*/- G9. **Agreed with a change.**/'
+      requirements.md && grep -c…)
+  ⎿  6
+      M ../roadmap.md
+     ?? 03-frontend/
+  ⎿  Updated requirements.md (+2 -2)
+      36  - G4. **Agreed with a change.** The user simplified the scale l
+          abels. When the max is 2 or more, the scale shows three labels.
+           They are the max at the top, the midpoint (max + 1) / 2 at the
+           middle, and 1 at the bottom. The midpoint shows one decimal pl
+          ace when it is not a whole number, such as 5.5 for a max of 10,
+           so the label matches its place on the bar and never repeats th
+          e max or 1. When the max is 1, the scale shows only 1. When the
+           max is 0, it shows no labels. The numbers use en-US digit grou
+          ps, such as 1,024.
+      37  - G5. **Agreed.** The axis label step is 1 when N is 16 or less
+          , 2 when N is 17 to 32, and 4 when N is 33 to 64. The client la
+          bels each row and column whose number is a multiple of the step
+          , so a 64 by 64 grid shows 16 labels on each axis. The client d
+          raws the labels on the same canvas as the cells, so they stay l
+          ined up with the cells at any size.
+      38  - G6. **Agreed.** The frame rate is the number of requestAnimat
+          ionFrame callbacks in the last full second. The loop runs on ev
+          ery frame, and it draws the grid only when the counts or the si
+          ze changed. When the main thread is too busy to keep up, the fr
+          ame rate drops, which is what the stress test must show.
+      39 -- G7. **Agreed.** The panel readouts update at most once every 
+         -150 ms, as the HTML design does, so text updates do not cost a 
+         -frame. The grid itself redraws on each frame that has new data.
+         - **Added by the user:** A red error line shows below the frame 
+         -rate readout when the frame rate drops below the expected rate.
+         - The expected rate is the highest one-second reading since the 
+         -page loaded, as the user chose. On an idle page this is the dis
+         -play refresh rate, so the rule works on 60 Hz and 120 Hz screen
+         -s. The line shows when the reading is below 90 percent of that 
+         -peak, and its text is "Below the expected 60 fps" with the peak
+         - in place of 60. The line uses the design token --danger-text, 
+         -which is #B33A3A and has a contrast ratio of 5.9 to 1 on the wh
+         -ite panel. That passes WCAG AA for small text. The line hides a
+         -gain when the reading is back at or above 90 percent of the pea
+         -k. It follows the same 150 ms update as the readouts.          
+      39 +- G7. **Agreed with a change.** The panel readouts update at mo
+         +st once every 150 ms, as the HTML design does, so text updates 
+         +do not cost a frame. The grid itself redraws on each frame that
+         + has new data. **Added by the user:** A red error line shows be
+         +low the frame rate readout when the frame rate drops below the 
+         +expected rate. The expected rate is the highest one-second read
+         +ing since the page loaded, as the user chose. On an idle page t
+         +his is the display refresh rate, so the rule works on 60 Hz and
+         + 120 Hz screens. The line shows when the reading is below 90 pe
+         +rcent of that peak, and its text is "Below the expected 60 fps"
+         + with the peak in place of 60. The line uses the design token -
+         +-danger-text, which is #B33A3A and has a contrast ratio of 5.9 
+         +to 1 on the white panel. That passes WCAG AA for small text. Th
+         +e line hides again when the reading is back at or above 90 perc
+         +ent of the peak. It follows the same 150 ms update as the reado
+         +uts.                                                           
+      40  - G8. **Agreed with a change.** The N control follows the HTML 
+          design. It has a minus button, a read-only field that shows "32
+           × 32", and a plus button. The user asked that a button hide in
+          stead of going disabled. The minus button is hidden at 1, and t
+          he plus button is hidden at 64. A hidden button uses `visibilit
+          y: hidden`, so it cannot be clicked or reached with Tab, and it
+           keeps its space so the field does not move. The up and down ar
+          row keys in the field change N by 1, and with Shift by 10.
+      41 -- G9. **Agreed.** The fonts are Red Hat Display, Libre Franklin
+         -, and IBM Plex Mono, as in the HTML design. The implement step 
+         -extracts the six woff2 files from the design bundle into fronte
+         -nd/public/fonts/, so the client needs no network for fonts. The
+         - client uses the light theme only. The repo is private and will
+         - not be released, so it has no license files for the fonts, as 
+         -the user asked.                                                
+      41 +- G9. **Agreed with a change.** The fonts are Red Hat Display, 
+         +Libre Franklin, and IBM Plex Mono, as in the HTML design. The i
+         +mplement step extracts the six woff2 files from the design bund
+         +le into frontend/public/fonts/, so the client needs no network 
+         +for fonts. The client uses the light theme only. The repo is pr
+         +ivate and will not be released, so it has no license files for 
+         +the fonts, as the user asked.                                  
+      42  - G10. **Agreed with a change.** The user asked for thin compon
+          ents, with the heat map state in its own unit, and for the grid
+           to be drawn on a canvas. The heat map state lives in one injec
+          table service, the store. It owns N, the counts, the frame rate
+           meter, the dirty flag, and the readout signals. It is the only
+           code that changes them. The drawing lives in a plain renderer 
+          class with no Angular code, which draws the cells and the axis 
+          labels on a 2D canvas context. The components only bind signals
+           from the store and forward user events to it. The heat map com
+          ponent hosts the canvas, watches its size, and runs the request
+          AnimationFrame loop that calls the store and the renderer. The 
+          color scale component shows the bar and its labels. The side pa
+          nel component shows the N control and the readouts. The new cod
+          e lives in frontend/src/app/ in three folders. The heatmap/ fol
+          der holds the binning, the counts, the color map, the layout, t
+          he frame rate meter, the store, the renderer, the heat map comp
+          onent, and the color scale component. The panel/ folder holds t
+          he side panel component. The source/ folder holds the test sour
+          ce settings, the batch generator, the worker, and the service t
+          hat starts the worker.
+
+⏺ The plan for feature 3 is approved and the spec files are updated. In
+  requirements.md, all ten open items (G1 to G10) are now marked agreed. G3, G4,
+  G7, G8, G9, and G10 are marked "agreed with a change" to show where you
+  changed my proposal.
+
+  The working tree has two sets of changes for you to review and commit. The
+  first is specs/roadmap.md, where feature 3 is now in progress. The second is
+  the new folder specs/features/03-frontend/, with requirements.md, plan.md, and
+  validation.md.
+
+  Clear the session, then run /spec-driven implement to start feature 3.
+
+✻ Cooked for 11s · done 1:12 PM

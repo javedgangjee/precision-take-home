@@ -37,7 +37,7 @@ lint-backend:
 	cd backend && uv run ruff check . && uv run ruff format --check . && uv run mypy app tests
 
 lint-frontend:
-	cd frontend && npx ng lint
+	cd frontend && npx ng lint && npx prettier --check .
 
 lint-infra:
 	cd infra && uv run ruff check . && uv run ruff format --check . && uv run mypy app.py infra

@@ -18,6 +18,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - The frontend uses Angular 21.2.24 and runs only on the local machine. Angular CLI 21.2.1 created the project, and npm resolved its version ranges to 21.2.24.
 - The runtime is Node.js 22.22.1, and the package manager is npm 11.20.0.
 - The TypeScript, Vitest, and ESLint versions are the ones that Angular CLI 21.2.1 installs when it creates the project. ESLint comes from angular-eslint.
+- Prettier 3.9.9 formats the frontend code, and `make lint` checks the format. Angular CLI 21.2.1 wrote the range ^3.8.1, and npm resolved it to 3.9.9.
 - The frontend draws the grid on an HTML canvas. It applies each batch to the counts when the batch arrives, and it redraws at most once per display frame with requestAnimationFrame.
 - The frontend keeps counts as 64-bit floats, so large counts do not overflow.
 - The HTML design in context/ sets the look of the client. The brief wins where the two differ.

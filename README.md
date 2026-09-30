@@ -31,7 +31,7 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 - `make frontend` runs the client at http://localhost:4200.
 - `make dev` runs the backend and the frontend together. Press Ctrl+C once to stop both.
 - `make test` runs the backend and frontend tests with coverage. Each fails below 80 percent coverage.
-- `make lint` runs ruff and mypy on backend/ and infra/, and ESLint on frontend/.
+- `make lint` runs ruff and mypy on backend/ and infra/, and ESLint and Prettier on frontend/.
 - `make synth` synthesizes the CDK app into infra/cdk.out/. It needs no AWS credentials.
 - `make deploy` deploys the CDK stack to AWS. The stack is empty until feature 5.
 - `make destroy` removes the CDK stack from AWS.

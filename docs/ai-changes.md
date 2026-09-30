@@ -17,3 +17,6 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 ## 2026-09-29, implement feature 1, scaffold
 
 - The AI found that npm installed Angular 21.2.24 instead of the 21.2.1 in the tech stack, and it offered to pin 21.2.1. I kept 21.2.24 and had the AI update specs/tech-stack.md.
+- The AI kept the README that `ng new` made in frontend/. I deleted it, because the repo needs one README at the root.
+- The AI installed Prettier and its config in frontend/ but left it out of `make lint`, so eight files were out of format. I had the AI add `prettier --check` to the lint target and a `format` script to package.json, and it formatted the eight files. I also had the AI add Prettier 3.9.9 to specs/tech-stack.md.
+- The AI did not plan how the client at localhost:4200 reaches the backend on another origin. I found the gap and chose CORS on the backend over an Angular dev proxy, because the same code works locally and on Fargate. I had the AI add it to feature 2 in specs/roadmap.md.

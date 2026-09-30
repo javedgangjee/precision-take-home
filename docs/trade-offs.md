@@ -13,3 +13,8 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The admin settings page is a stretch goal. The cost is that a settings change needs a server restart.
 - The client draws the grid on a canvas instead of one DOM or SVG element per cell. A 64 by 64 grid has 4,096 cells, and a canvas repaints them without DOM updates. The cost is that the cells are not in the DOM, so tests must check the counts instead of the elements.
 - The client redraws with requestAnimationFrame instead of once per batch. Batches arrive every 50 ms, and the browser paints at the display rate, so the client draws only the latest state. The cost is up to one frame of added latency, which is about 17 ms at 60 Hz.
+
+## 2026-09-29, plan for feature 1, scaffold
+
+- The repo is one monorepo, and backend/ and infra/ are separate uv projects. The CDK libraries stay out of the backend image. The cost is two lock files to keep current.
+- The backend fails its tests below 80 percent coverage, the same rule as the frontend. The cost is one more dev dependency.

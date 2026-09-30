@@ -12,3 +12,9 @@ Each entry gives the date, the phase, and the assumption.
 - The server settings come from environment variables at start.
 - Python 3.13.15 is the project version because `python3` on my PATH points to it, although Python 3.14.7 is also on the laptop.
 - Accessibility is out of scope. A live color heat map cannot convey its data to a screen reader user, so an aria-label on the canvas would not fix the premise.
+
+## 2026-09-29, plan for feature 1, scaffold
+
+- The backend exposes `GET /health`, which returns `{"status": "ok"}`. The load balancer in feature 5 uses it as its health check.
+- The backend runs on port 8000 and the frontend runs on port 4200, which are the tool defaults.
+- The CDK stack has no AWS account or region lookup, so `cdk synth` runs without credentials.

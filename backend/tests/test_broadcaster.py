@@ -19,8 +19,8 @@ def test_two_subscribers_get_the_same_batches_in_order() -> None:
     broadcaster.publish([1, 2])
     broadcaster.publish([3])
 
-    assert [first.get_nowait().text for _ in range(2)] == ["[1, 2]", "[3]"]
-    assert [second.get_nowait().text for _ in range(2)] == ["[1, 2]", "[3]"]
+    assert [first.get_nowait().text for _ in range(2)] == ["[1,2]", "[3]"]
+    assert [second.get_nowait().text for _ in range(2)] == ["[1,2]", "[3]"]
 
 
 def test_batch_is_encoded_once() -> None:

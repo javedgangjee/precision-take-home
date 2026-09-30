@@ -38,7 +38,7 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 
 ## Backend stream
 
-`GET /stream` sends the stream as Server-Sent Events. Each event holds one batch as a JSON array of random integers in its `data` field. The `id` field holds the batch sequence number, which starts at 0 when the server starts and goes up by 1 for each batch. A gap in the ids shows that the client missed batches. The server generates one shared stream, so every client gets the same batches. When the server sends nothing for 15 seconds, it sends the comment `: ping`.
+`GET /stream` sends the stream as Server-Sent Events. Each event holds one batch as a compact JSON array of random integers in its `data` field, with no spaces. The `id` field holds the batch sequence number, which starts at 0 when the server starts and goes up by 1 for each batch. A gap in the ids shows that the client missed batches. The server generates one shared stream, so every client gets the same batches. When the server sends nothing for 15 seconds, it sends the comment `: ping`.
 
 Run `make backend`, and then run this command in another terminal to see the stream.
 

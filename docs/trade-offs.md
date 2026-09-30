@@ -54,3 +54,10 @@ Each entry gives the date, the phase, the choice, and what it costs.
 
 - `make backend` gives open streams 3 seconds to close on shutdown, and then Uvicorn cancels them. The server always stops in about 3 seconds. The cost is that Uvicorn logs an error line for the cancelled streams, and a client sees its stream cut off.
 - \* After a stall, the broadcaster runs only the latest tick that is due and skips the older ticks. The server does not spend CPU on batches that the client queues would drop, and it does not send a flood of old data. The cost is that the samples of the skipped ticks are never made, so the rate over a stall falls below the setting. The sequence number counts only the batches that the server sends, so a client cannot see the skipped ticks as a gap.
+
+## 2026-09-30, compact the batch payload, backend
+
+- The broadcaster encodes each batch with the compact JSON separators `(",", ":")`. A default batch drops from 24,558 characters to 19,559, which is 20 percent less, and the encode time stays at 0.29 ms. The client still gets a plain JSON array, so R2 holds. The cost is that the stream is harder to read by eye in curl.
+- The server does not send the batch as base64 of packed integers. Base64 of 16-bit values is 13,336 characters, and 10-bit packing is 8,336 characters. Both break R2, because the data is no longer a JSON array. The browser also decodes base64 slower than `JSON.parse`, at 0.4 to 0.6 ms against 0.09 ms per batch in Node 22.
+- The server does not gzip the stream. The Starlette GZipMiddleware skips `text/event-stream`, because it buffers the response. A custom per-event gzip needs one compressor for each client and must flush after each event. Gzip alone cuts the compact batch only to 8,149 bytes, because random values do not compress well.
+- The server does not send counts per value in place of the values. Counts make a batch 2,078 characters, but they break R2 and the brief, which asks for an array of random integers.

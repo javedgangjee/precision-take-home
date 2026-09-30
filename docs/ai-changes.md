@@ -36,3 +36,7 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 - The AI built the batch loop so that it made every missed batch in a burst after a stall. After a one hour stall, that is 72,000 batches, and the client queues drop almost all of them. I had the AI change the loop to skip the missed ticks and run only the latest one that is due.
 - The AI typed the lifespan function as `AsyncIterator[None]` under `@asynccontextmanager`. The type stubs mark that form as deprecated, and my editor flagged it. The AI first said that nothing was deprecated, because it checked only for runtime warnings. I had the AI change the type to `AsyncGenerator[None]`.
 - I asked which CORS origin forms the server must cover. The AI found two gaps in its own code. The server kept a trailing slash in `CORS_ORIGINS`, so `http://localhost:4200/` would match no browser. The CORS rule allowed no extra headers, so a reconnect with `Last-Event-ID` could fail in a browser that sends a preflight for it. I approved both fixes.
+
+## 2026-09-30, compact the batch payload, backend
+
+- The AI encoded each batch with the default `json.dumps` separators, which put a space after each comma. I asked for a way to make the payload smaller that still works as a string over SSE. The AI timed five formats. I kept the compact separators, which cut a default batch by 20 percent at no extra cost and keep the JSON array. The formats that save more break the JSON array in R2, and trade-offs.md records them.

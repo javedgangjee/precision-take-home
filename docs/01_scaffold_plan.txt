@@ -1,0 +1,585 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven plan                                                             
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The working tree is not clean. The file docs/00_constitution.txt is untracked,
+  so I stopped before I made the branch.
+
+  You can commit the file, delete it, or tell me to continue with it left
+  untracked. The next feature is 1, Scaffold.
+
+✻ Brewed for 5s · done 10:41 PM
+
+❯ done. continue                                                                
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Bash(mkdir -p specs/features/01-scaffold && sed -i '' 's/1.
+      \*\*Scaffold.\*\*\(.*\)The status is planned./1. **Scaffold.**\1The status
+      is in progress./' specs/roadma…)
+  ⎿  1. **Scaffold.** The goal is a repo where the backend, the frontend, a
+     nd the CDK app exist, the tests run, the linters pass, and the CDK app
+      synthesizes, all from the Makefile. It covers N13 and S2. The status
+     is in progress.
+  ⎿  Updated specs/roadmap.md (+1 -1)
+      2  
+      3  Every feature updates the README and the three logs in docs/ as 
+         it goes. That work covers S1 to S7 and N14 across all features.
+      4  
+      5 -1. **Scaffold.** The goal is a repo where the backend, the front
+        -end, and the CDK app exist, the tests run, the linters pass, and
+        - the CDK app synthesizes, all from the Makefile. It covers N13 a
+        -nd S2. The status is planned.                                   
+      5 +1. **Scaffold.** The goal is a repo where the backend, the front
+        +end, and the CDK app exist, the tests run, the linters pass, and
+        + the CDK app synthesizes, all from the Makefile. It covers N13 a
+        +nd S2. The status is in progress.                               
+      6  2. **Backend.** The goal is a FastAPI server that generates rand
+         om integers and sends them in batches over Server-Sent Events. I
+         t covers B2, N5, N7, N8, and N11. The status is planned.
+      7  3. **Frontend.** The goal is an Angular client that bins values,
+          keeps counts, and draws the grid, the axis labels, the color sc
+         ale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2, N
+         3, N4, D2, and D3. The status is planned.
+      8  4. **Stream.** The goal is a client that shows the stream state,
+          reconnects with backoff, and keeps counts on screen during a re
+         connect. It covers N9, N10, and D1. The status is planned.
+
+⏺ Write(specs/features/01-scaffold/requirements.md)
+  ⎿  Wrote 24 lines to specs/features/01-scaffold/requirements.md
+      1 # Feature 1 requirements: Scaffold
+      3 ## Requirements from the sources
+      4 
+        , FastAPI, Uvicorn, pytest, ruff, and mypy at the versions in spe
+      6 - R2. The repo has a frontend project that uses Angular 21.2.1 wi
+        th Vitest and angular-eslint. (tech-stack.md, Frontend)
+        nt. (tech-stack.md, Frontend)
+      8 - R4. The repo has a CDK app in Python that uses aws-cdk-lib 2.27
+        admap feature 1)
+        sts, runs the linte
+     … +41 lines (ctrl+o to expand)
+
+⏺ Write(specs/features/01-scaffold/plan.md)
+  ⎿  Wrote 16 lines to specs/features/01-scaffold/plan.md
+      1 # Feature 1 plan: Scaffold
+      3 The steps assume the answers to G1 to G7 in requirements.md are y
+        es. I change the plan if an answer is no.
+      5 1. Create the backend project with uv. Pin Python 3.13.15, add Fa
+        stAPI, Uvicorn, and Pydantic, and add pytest, pytest-cov, ruff, a
+         and the pytest coverage floor of 80 percent in pyproject.toml. T
+        his step creates backend/pyproject.toml, backend/uv.lock, and bac
+      6 2. Write the FastAPI app with the `GET /health` endpoint. This st
+        ep creates backend/app/__init__.py and backend/app/main.py.
+        tes backend/tests
+     … +30 lines (ctrl+o to expand)
+
+⏺ Write(specs/features/01-scaffold/validation.md)
+  ⎿  Wrote 65 lines to specs/features/01-scaffold/validation.md
+      1 # Feature 1 validation: Scaffold
+      2 
+      3 The brief has no worked example that this feature covers.
+      4 
+      5 ## Automated checks
+      6 
+      7 ### V1. Backend tests pass with coverage of 80 percent or more
+      8 
+      9 The command is `make test`, which runs the backend step below amo
+        ng others.
+     … +70 lines (ctrl+o to expand)
+
+⏺ I'm on branch feature/01-scaffold and wrote the three files in
+  specs/features/01-scaffold/. The roadmap now marks Scaffold as in progress.
+
+  requirements.md lists seven items the specs don't cover, G1 to G7. The plan
+  assumes you accept my proposal for each one. I'll ask about them one at a
+  time.
+
+  G1. I propose three folders at the repo root, backend/, frontend/, and infra/.
+  The two Python folders would each be a separate uv project with its own lock
+  file. Do you accept this layout?
+
+✻ Cogitated for 44s · done 10:42 PM
+
+❯ Correct                                                                       
+
+⏺ Bash(sed -i '' 's/- G1\. \*\*Open\.\*\*/- G1. **Agreed.**/'
+      specs/features/01-scaffold/requirements.md && grep G1
+      specs/features/01-scaffold/requirements.md)
+  ⎿  - G1. **Agreed.** The folders are backend/, frontend/, and infra/ at t
+     he repo root. Each Python folder is its own uv project with its own lo
+     ck file.
+  ⎿  Updated specs/features/01-scaffold/requirements.md (+1 -1)
+      15  
+      16  Each item below is my proposal. I need your answer on each one.
+      17  
+      18 -- G1. **Open.** The folders are backend/, frontend/, and infra/
+         - at the repo root. Each Python folder is its own uv project wit
+         -h its own lock file.                                           
+      18 +- G1. **Agreed.** The folders are backend/, frontend/, and infr
+         +a/ at the repo root. Each Python folder is its own uv project w
+         +ith its own lock file.                                         
+      19  - G2. **Open.** The scaffold backend has one endpoint, `GET /he
+          alth`, that returns `{"status": "ok"}`. It gives the tests and 
+          the later load balancer health check something to hit. The stre
+          am endpoint comes in feature 2.
+      20  - G3. **Open.** The frontend is made with `ng new frontend --st
+          yle=css --ssr=false --routing=false --zoneless --test-runner=vi
+          test --ai-config=none --skip-git`. The scaffold keeps the defau
+          lt app component and its test.
+      21  - G4. **Open.** The CDK app has one empty stack named `Precisio
+          nStack` with no AWS account or region lookup, so `cdk synth` ru
+          ns without credentials. Feature 5 adds the resources.
+
+⏺ G2. The scaffold backend would have one endpoint, GET /health, which returns
+  {"status": "ok"}. The tests need something to call, and the load balancer can
+  use it as a health check in feature 5. The stream endpoint comes in feature 2.
+  Do you accept this?
+
+✻ Baked for 5s · done 10:43 PM
+
+❯ Yes                                                                           
+
+⏺ Bash(sed -i '' 's/- G2\. \*\*Open\.\*\*/- G2. **Agreed.**/'
+      specs/features/01-scaffold/requirements.md && grep -c Agreed
+      specs/features/01-scaffold/requirements.md)
+  ⎿  2
+  ⎿  Updated specs/features/01-scaffold/requirements.md (+1 -1)
+      16  Each item below is my proposal. I need your answer on each one.
+      17  
+      18  - G1. **Agreed.** The folders are backend/, frontend/, and infr
+          a/ at the repo root. Each Python folder is its own uv project w
+          ith its own lock file.
+      19 -- G2. **Open.** The scaffold backend has one endpoint, `GET /he
+         -alth`, that returns `{"status": "ok"}`. It gives the tests and 
+         -the later load balancer health check something to hit. The stre
+         -am endpoint comes in feature 2.                                
+      19 +- G2. **Agreed.** The scaffold backend has one endpoint, `GET /
+         +health`, that returns `{"status": "ok"}`. It gives the tests an
+         +d the later load balancer health check something to hit. The st
+         +ream endpoint comes in feature 2.                              
+      20  - G3. **Open.** The frontend is made with `ng new frontend --st
+          yle=css --ssr=false --routing=false --zoneless --test-runner=vi
+          test --ai-config=none --skip-git`. The scaffold keeps the defau
+          lt app component and its test.
+      21  - G4. **Open.** The CDK app has one empty stack named `Precisio
+          nStack` with no AWS account or region lookup, so `cdk synth` ru
+          ns without credentials. Feature 5 adds the resources.
+      22  - G5. **Open.** The Makefile targets are `install`, `backend`, 
+          `frontend`, `test`, `lint`, `synth`, and `deploy`. In this feat
+          ure `deploy` runs `cdk deploy` on the empty stack, and feature 
+          5 makes it build and push the image.
+
+⏺ G3. I would create the frontend with this command:
+
+  ng new frontend --style=css --ssr=false --routing=false --zoneless 
+  --test-runner=vitest --ai-config=none --skip-git
+
+  The app would use plain CSS. It would have no server-side rendering, no
+  routing, and no zone.js. Vitest would run the tests. Angular would add no AI
+  config files and would not start a separate git repo. The scaffold keeps the
+  default app component and its test. Do you accept this?
+
+✻ Sautéed for 5s · done 10:43 PM
+
+❯ use scss. Keep the default app component. one monorepo is good                
+
+⏺ Bash(f=specs/features/01-scaffold/requirements.md && sed -i '' 's/- G3\.
+      \*\*Open\.\*\* The frontend is made with `ng new frontend --style=css /-
+      G3. **Agreed with a…)
+  ⎿  - G3. **Agreed with a change.** The frontend is made with `ng new fron
+     tend --style=scss --ssr=false --routing=false --zoneless --test-runner
+     =vitest --ai-config=none --skip-git`. The styles use SCSS, as the user
+     … +3 lines (ctrl+o to expand)
+  ⎿  Updated specs/features/01-scaffold/requirements.md (+1 -1)
+      17  
+      18  - G1. **Agreed.** The folders are backend/, frontend/, and infr
+          a/ at the repo root. Each Python folder is its own uv project w
+          ith its own lock file.
+      19  - G2. **Agreed.** The scaffold backend has one endpoint, `GET /
+          health`, that returns `{"status": "ok"}`. It gives the tests an
+          d the later load balancer health check something to hit. The st
+          ream endpoint comes in feature 2.
+      20 -- G3. **Open.** The frontend is made with `ng new frontend --st
+         -yle=css --ssr=false --routing=false --zoneless --test-runner=vi
+         -test --ai-config=none --skip-git`. The scaffold keeps the defau
+         -lt app component and its test.                                 
+      20 +- G3. **Agreed with a change.** The frontend is made with `ng n
+         +ew frontend --style=scss --ssr=false --routing=false --zoneless
+         + --test-runner=vitest --ai-config=none --skip-git`. The styles 
+         +use SCSS, as the user asked. The scaffold keeps the default app
+         + component and its test. The repo stays one monorepo, so `--ski
+         +p-git` stops Angular from making a nested git repo.            
+      21  - G4. **Open.** The CDK app has one empty stack named `Precisio
+          nStack` with no AWS account or region lookup, so `cdk synth` ru
+          ns without credentials. Feature 5 adds the resources.
+      22  - G5. **Open.** The Makefile targets are `install`, `backend`, 
+          `frontend`, `test`, `lint`, `synth`, and `deploy`. In this feat
+          ure `deploy` runs `cdk deploy` on the empty stack, and feature 
+          5 makes it build and push the image.
+      23  - G6. **Open.** The backend also measures coverage with pytest-
+          cov and fails below 80 percent, to match the frontend rule. pyt
+          est-cov is not in tech-stack.md.
+
+⏺ G4. The CDK app would have one empty stack named PrecisionStack. It would not
+  look up an AWS account or region, so cdk synth runs without credentials.
+  Feature 5 adds the resources. Do you accept this?
+
+✻ Baked for 6s · done 10:45 PM
+❯ yes                                                                           
+
+⏺ Bash(sed -i '' 's/- G4\. \*\*Open\.\*\*/- G4. **Agreed.**/'
+      specs/features/01-scaffold/requirements.md && grep -c Agreed
+      specs/features/01-scaffold/requirements.md)
+  ⎿  4
+  ⎿  Updated specs/features/01-scaffold/requirements.md (+1 -1)
+      18  - G1. **Agreed.** The folders are backend/, frontend/, and infr
+          a/ at the repo root. Each Python folder is its own uv project w
+          ith its own lock file.
+      19  - G2. **Agreed.** The scaffold backend has one endpoint, `GET /
+          health`, that returns `{"status": "ok"}`. It gives the tests an
+          d the later load balancer health check something to hit. The st
+          ream endpoint comes in feature 2.
+      20  - G3. **Agreed with a change.** The frontend is made with `ng n
+          ew frontend --style=scss --ssr=false --routing=false --zoneless
+           --test-runner=vitest --ai-config=none --skip-git`. The styles 
+          use SCSS, as the user asked. The scaffold keeps the default app
+           component and its test. The repo stays one monorepo, so `--ski
+          p-git` stops Angular from making a nested git repo.
+      21 -- G4. **Open.** The CDK app has one empty stack named `Precisio
+         -nStack` with no AWS account or region lookup, so `cdk synth` ru
+         -ns without credentials. Feature 5 adds the resources.          
+      21 +- G4. **Agreed.** The CDK app has one empty stack named `Precis
+         +ionStack` with no AWS account or region lookup, so `cdk synth` 
+         +runs without credentials. Feature 5 adds the resources.        
+      22  - G5. **Open.** The Makefile targets are `install`, `backend`, 
+          `frontend`, `test`, `lint`, `synth`, and `deploy`. In this feat
+          ure `deploy` runs `cdk deploy` on the empty stack, and feature 
+          5 makes it build and push the image.
+      23  - G6. **Open.** The backend also measures coverage with pytest-
+          cov and fails below 80 percent, to match the frontend rule. pyt
+          est-cov is not in tech-stack.md.
+      24  - G7. **Open.** The backend runs on port 8000 and the frontend 
+          runs on port 4200, which are the tool defaults.
+
+⏺ G5. The Makefile targets would be install, backend, frontend, test, lint,
+  synth, and deploy. In this feature, deploy runs cdk deploy on the empty stack.
+  Feature 5 makes it build and push the image.
+
+  cdk deploy needs AWS credentials and a bootstrapped account, and it creates a
+  real empty stack in AWS. Validation does not run deploy in this feature. Do
+  you accept this?
+
+✻ Brewed for 6s · done 10:45 PM
+
+❯ add one that does both backend and frontend. Also add destroy when you add    
+  deploy.                                                                       
+
+⏺ Bash(d=specs/features/01-scaffold && python3 - <<'EOF'
+      p='specs/features/01-scaffold/requirements.md'…)
+  ⎿  specs/features/01-scaffold/plan.md:5:1. Create the backend project wit
+     h uv. Pin Python 3.13.15, add FastAPI, Uvicorn, and Pydantic, and add
+     pytest, pytest-cov, ruff, and mypy as dev dependencies. Configure ruff
+     … +26 lines (ctrl+o to expand)
+  ⎿  Updated specs/features/01-scaffold/plan.md (+1 -1)
+       9  5. Add angular-eslint with `ng add angular-eslint`. This step c
+          hanges frontend/angular.json and frontend/package.json and crea
+          tes frontend/eslint.config.js.
+      10  6. Set the Vitest coverage floor to 80 percent for lines, branc
+          hes, functions, and statements. This step changes frontend/angu
+          lar.json and frontend/package.json.
+      11  7. Create the CDK app as a uv project. Pin Python 3.13.15, add 
+          aws-cdk-lib 2.271.0 and constructs, and add ruff and mypy as de
+          v dependencies. Write the empty `PrecisionStack`. This step cre
+          ates infra/pyproject.toml, infra/uv.lock, infra/.python-version
+          , infra/cdk.json, infra/app.py, and infra/infra/precision_stack
+          .py.
+      12 -8. Write the Makefile with the targets in G5. Each recipe line 
+         -uses tabs and plain shell, so it runs on GNU Make 3.81. This st
+         -ep creates Makefile.                                           
+      12 +8. Write the Makefile with the targets in G5. The `dev` target 
+         +runs `backend` and `frontend` in parallel. Each recipe line use
+         +s tabs and plain shell, so it runs on GNU Make 3.81. This step 
+         +creates Makefile.                                              
+      13  9. Add ignore rules for Python caches, virtual environments, no
+          de_modules, the Angular build output, coverage output, and cdk.
+          out. This step creates .gitignore.
+      14  10. Write the README with the prerequisites, the install step, 
+          each Makefile target, and pointers to specs/ and docs/. This st
+          ep creates README.md.
+      15  11. Add entries for this feature to the three logs. This step c
+          hanges docs/assumptions.md, docs/trade-offs.md, and docs/ai-cha
+          nges.md.
+  ⎿  Updated specs/features/01-scaffold/requirements.md (+1 -1)
+      19  - G2. **Agreed.** The scaffold backend has one endpoint, `GET /
+          health`, that returns `{"status": "ok"}`. It gives the tests an
+          d the later load balancer health check something to hit. The st
+          ream endpoint comes in feature 2.
+      20  - G3. **Agreed with a change.** The frontend is made with `ng n
+          ew frontend --style=scss --ssr=false --routing=false --zoneless
+           --test-runner=vitest --ai-config=none --skip-git`. The styles 
+          use SCSS, as the user asked. The scaffold keeps the default app
+           component and its test. The repo stays one monorepo, so `--ski
+          p-git` stops Angular from making a nested git repo.
+      21  - G4. **Agreed.** The CDK app has one empty stack named `Precis
+          ionStack` with no AWS account or region lookup, so `cdk synth` 
+          runs without credentials. Feature 5 adds the resources.
+      22 -- G5. **Open.** The Makefile targets are `install`, `backend`, 
+         -`frontend`, `test`, `lint`, `synth`, and `deploy`. In this feat
+         -ure `deploy` runs `cdk deploy` on the empty stack, and feature 
+         -5 makes it build and push the image.                           
+      22 +- G5. **Agreed with a change.** The Makefile targets are `insta
+         +ll`, `backend`, `frontend`, `dev`, `test`, `lint`, `synth`, `de
+         +ploy`, and `destroy`. The `dev` target runs the backend and the
+         + frontend together with `make -j2 backend frontend`, as the use
+         +r asked. In this feature `deploy` runs `cdk deploy` on the empt
+         +y stack and `destroy` runs `cdk destroy` on it, as the user ask
+         +ed. Feature 5 makes `deploy` build and push the image. Both nee
+         +d AWS credentials and a bootstrapped account, so validation doe
+         +s not run them in this feature.                                
+      23  - G6. **Open.** The backend also measures coverage with pytest-
+          cov and fails below 80 percent, to match the frontend rule. pyt
+          est-cov is not in tech-stack.md.
+      24  - G7. **Open.** The backend runs on port 8000 and the frontend 
+          runs on port 4200, which are the tool defaults.
+  ⎿  Updated specs/features/01-scaffold/validation.md (+10 -3)
+      53  2. Open http://localhost:4200 in a browser.
+      54  3. The expected result is the default Angular page with no erro
+          rs in the browser console.
+      55  
+      56 -### M3. The README is enough to start                          
+      56 +### M3. The dev target runs both apps                          
+      57 +                                                               
+      58 +1. Run `make dev`.                                             
+      59 +2. Run `curl -s localhost:8000/health` in another terminal, and
+         + open http://localhost:4200 in a browser.                      
+      60 +3. The expected result is `{"status":"ok"}` and the default Ang
+         +ular page.                                                     
+      61 +4. Press Ctrl+C once. The expected result is that both processe
+         +s stop.                                                        
+      62 +                                                               
+      63 +### M4. The README is enough to start                          
+      64  
+      65  1. Read README.md from the top.
+      66  2. Follow only its steps on a fresh clone.
+      60 -3. The expected result is that M1 and M2 pass without any other
+         - help.                                                         
+      67 +3. The expected result is that M1, M2, and M3 pass without any 
+         +other help.                                                    
+      68  
+      62 -### M4. The logs record this feature                           
+      69 +### M5. The logs record this feature                           
+      70  
+      71  1. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-ch
+          anges.md.
+      72  2. The expected result is that each file has an entry dated for
+           the scaffold feature.
+
+⏺ I added two targets. dev runs the backend and the frontend together, and
+  destroy removes the stack.
+
+  G6. The backend would measure coverage with pytest-cov and fail below 80
+  percent, the same rule as the frontend. pytest-cov is not in tech-stack.md, so
+  I would add it there. Do you accept this?
+
+✻ Cogitated for 11s · done 10:46 PM
+
+❯ add it yes                                                                    
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(sed -i '' 's/^- The tests use pytest 9.1.1.$/- The tests use pytest
+      9.1.1. pytest-cov 7.1.0 measures coverage. The minimum coverage is 80
+      percent./' specs/tech-…)
+  ⎿  specs/features/01-scaffold/requirements.md:5:- R1. The repo has a back
+     end project that uses Python 3.13.15, uv, FastAPI, Uvicorn, pytest, ru
+     ff, and mypy at the versions in specs/tech-stack.md. (tech-stack.md, B
+     … +7 lines (ctrl+o to expand)
+  ⎿  Updated specs/features/01-scaffold/requirements.md (+1 -1)
+      20  - G3. **Agreed with a change.** The frontend is made with `ng n
+          ew frontend --style=scss --ssr=false --routing=false --zoneless
+           --test-runner=vitest --ai-config=none --skip-git`. The styles 
+          use SCSS, as the user asked. The scaffold keeps the default app
+           component and its test. The repo stays one monorepo, so `--ski
+          p-git` stops Angular from making a nested git repo.
+      21  - G4. **Agreed.** The CDK app has one empty stack named `Precis
+          ionStack` with no AWS account or region lookup, so `cdk synth` 
+          runs without credentials. Feature 5 adds the resources.
+      22  - G5. **Agreed with a change.** The Makefile targets are `insta
+          ll`, `backend`, `frontend`, `dev`, `test`, `lint`, `synth`, `de
+          ploy`, and `destroy`. The `dev` target runs the backend and the
+           frontend together with `make -j2 backend frontend`, as the use
+          r asked. In this feature `deploy` runs `cdk deploy` on the empt
+          y stack and `destroy` runs `cdk destroy` on it, as the user ask
+          ed. Feature 5 makes `deploy` build and push the image. Both nee
+          d AWS credentials and a bootstrapped account, so validation doe
+          s not run them in this feature.
+      23 -- G6. **Open.** The backend also measures coverage with pytest-
+         -cov and fails below 80 percent, to match the frontend rule. pyt
+         -est-cov is not in tech-stack.md.                               
+      23 +- G6. **Agreed.** The backend also measures coverage with pytes
+         +t-cov and fails below 80 percent, to match the frontend rule. s
+         +pecs/tech-stack.md now lists pytest-cov 7.1.0.                 
+      24  - G7. **Open.** The backend runs on port 8000 and the frontend 
+          runs on port 4200, which are the tool defaults.
+  ⎿  Updated specs/tech-stack.md (+1 -1)
+      10  - The ASGI server is Uvicorn 0.54.0.
+      11  - The backend sends the stream to the client with Server-Sent E
+          vents. The client sends nothing back, so the project does not u
+          se WebSockets.
+      12  - The backend runs locally for development and in a Docker imag
+          e in the cloud.
+      13 -- The tests use pytest 9.1.1.                                  
+      13 +- The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverag
+         +e. The minimum coverage is 80 percent.                         
+      14  - The linters are ruff 0.16.9 and mypy 2.3.1.
+      15  
+      16  ## Frontend
+
+⏺ I added pytest-cov 7.1.0 to specs/tech-stack.md. That is the latest release on
+  PyPI today.
+
+  G7. The backend would run on port 8000 and the frontend on port 4200. These
+  are the default ports for Uvicorn and Angular. Do you accept this?
+
+✻ Churned for 9s · done 10:46 PM
+
+❯ Yes                                                                           
+
+⏺ Bash(sed -i '' 's/- G7\. \*\*Open\.\*\*/- G7. **Agreed.**/; s/^Each item below
+      is my proposal. I need your answer on each one./Each item below was my
+      proposal. The u…)
+  ⎿  7
+  ⎿  Updated docs/ai-changes.md (+6 -0)
+       7  - The AI drafted a roadmap with a final write-up feature. I rem
+          oved it. The README, this log, and the other logs now update du
+          ring every feature, so the documents stay current with the code
+          .
+       8  - The AI listed the admin page before the hotspot distribution 
+          in the stretch goals. I swapped the order.
+       9  - The AI offered to put the bonus write-ups for 3D and server-s
+          ide rendering in the roadmap. I kept them out, because I write 
+          them myself.
+      10 +                                                               
+      11 +## 2026-09-29, plan for feature 1, scaffold                    
+      12 +                                                               
+      13 +- The AI proposed plain CSS for the frontend. I changed it to S
+         +CSS.                                                           
+      14 +- The AI proposed Makefile targets with no way to run both apps
+         + at once and no way to remove the stack. I added a `dev` target
+         + that runs the backend and the frontend together, and a `destro
+         +y` target next to `deploy`.                                    
+      15 +- The AI proposed backend coverage with pytest-cov, which was n
+         +ot in the tech stack. I approved it and added pytest-cov 7.1.0 
+         +to specs/tech-stack.md.                                        
+  ⎿  Updated docs/assumptions.md (+6 -0)
+      12  - The server settings come from environment variables at start.
+      13  - Python 3.13.15 is the project version because `python3` on my
+           PATH points to it, although Python 3.14.7 is also on the lapto
+          p.
+      14  - Accessibility is out of scope. A live color heat map cannot c
+          onvey its data to a screen reader user, so an aria-label on the
+           canvas would not fix the premise.
+      15 +                                                               
+      16 +## 2026-09-29, plan for feature 1, scaffold                    
+      17 +                                                               
+      18 +- The backend exposes `GET /health`, which returns `{"status": 
+         +"ok"}`. The load balancer in feature 5 uses it as its health ch
+         +eck.                                                           
+      19 +- The backend runs on port 8000 and the frontend runs on port 4
+         +200, which are the tool defaults.                              
+      20 +- The CDK stack has no AWS account or region lookup, so `cdk sy
+         +nth` runs without credentials.                                 
+  ⎿  Updated docs/trade-offs.md (+5 -0)
+      13  - The admin settings page is a stretch goal. The cost is that a
+           settings change needs a server restart.
+      14  - The client draws the grid on a canvas instead of one DOM or S
+          VG element per cell. A 64 by 64 grid has 4,096 cells, and a can
+          vas repaints them without DOM updates. The cost is that the cel
+          ls are not in the DOM, so tests must check the counts instead o
+          f the elements.
+      15  - The client redraws with requestAnimationFrame instead of once
+           per batch. Batches arrive every 50 ms, and the browser paints 
+          at the display rate, so the client draws only the latest state.
+           The cost is up to one frame of added latency, which is about 1
+          7 ms at 60 Hz.
+      16 +                                                               
+      17 +## 2026-09-29, plan for feature 1, scaffold                    
+      18 +                                                               
+      19 +- The repo is one monorepo, and backend/ and infra/ are separat
+         +e uv projects. The CDK libraries stay out of the backend image.
+         + The cost is two lock files to keep current.                   
+      20 +- The backend fails its tests below 80 percent coverage, the sa
+         +me rule as the frontend. The cost is one more dev dependency.  
+  ⎿  Updated specs/features/01-scaffold/plan.md (+1 -1)
+      1  # Feature 1 plan: Scaffold
+      2  
+      3 -The steps assume the answers to G1 to G7 in requirements.md are 
+        -yes. I change the plan if an answer is no.                      
+      3 +The steps follow the answers to G1 to G7 in requirements.md.    
+      4  
+      5  1. Create the backend project with uv. Pin Python 3.13.15, add F
+         astAPI, Uvicorn, and Pydantic, and add pytest, pytest-cov, ruff,
+          and mypy as dev dependencies. Configure ruff, mypy in strict mo
+         de, and the pytest coverage floor of 80 percent in pyproject.tom
+         l. This step creates backend/pyproject.toml, backend/uv.lock, an
+         d backend/.python-version.
+      6  2. Write the FastAPI app with the `GET /health` endpoint. This s
+         tep creates backend/app/__init__.py and backend/app/main.py.
+  ⎿  Updated specs/features/01-scaffold/requirements.md (+2 -2)
+      13  
+      14  ## Items the sources do not cover
+      15  
+      16 -Each item below is my proposal. I need your answer on each one.
+      16 +Each item below was my proposal. The user answered each one.   
+      17  
+      18  - G1. **Agreed.** The folders are backend/, frontend/, and infr
+          a/ at the repo root. Each Python folder is its own uv project w
+          ith its own lock file.
+      19  - G2. **Agreed.** The scaffold backend has one endpoint, `GET /
+          health`, that returns `{"status": "ok"}`. It gives the tests an
+          d the later load balancer health check something to hit. The st
+          ream endpoint comes in feature 2.
+     ...
+      21  - G4. **Agreed.** The CDK app has one empty stack named `Precis
+          ionStack` with no AWS account or region lookup, so `cdk synth` 
+          runs without credentials. Feature 5 adds the resources.
+      22  - G5. **Agreed with a change.** The Makefile targets are `insta
+          ll`, `backend`, `frontend`, `dev`, `test`, `lint`, `synth`, `de
+          ploy`, and `destroy`. The `dev` target runs the backend and the
+           frontend together with `make -j2 backend frontend`, as the use
+          r asked. In this feature `deploy` runs `cdk deploy` on the empt
+          y stack and `destroy` runs `cdk destroy` on it, as the user ask
+          ed. Feature 5 makes `deploy` build and push the image. Both nee
+          d AWS credentials and a bootstrapped account, so validation doe
+          s not run them in this feature.
+      23  - G6. **Agreed.** The backend also measures coverage with pytes
+          t-cov and fails below 80 percent, to match the frontend rule. s
+          pecs/tech-stack.md now lists pytest-cov 7.1.0.
+      24 -- G7. **Open.** The backend runs on port 8000 and the frontend 
+         -runs on port 4200, which are the tool defaults.                
+      24 +- G7. **Agreed.** The backend runs on port 8000 and the fronten
+         +d runs on port 4200, which are the tool defaults.              
+
+⏺ You have answered all seven items. The plan for feature 1 is ready for your
+  review.
+
+  - Feature files: requirements.md, plan.md, and validation.md are in
+    specs/features/01-scaffold/. They now match your answers.
+  - Tech stack: specs/tech-stack.md now lists pytest-cov 7.1.0.
+  - Logs: each of the three logs in docs/ has a new section for this plan. The
+    AI changes log records your switch to SCSS, the two targets you added (dev
+    and destroy), and your approval of pytest-cov.
+  - Deploy targets: validation does not run deploy or destroy in this feature,
+    because both need AWS credentials and a bootstrapped account.
+
+  Nothing is committed. After you approve the plan, clear the session and run
+  /spec-driven implement.
+
+✻ Sautéed for 12s · done 10:47 PM

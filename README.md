@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold is in place, and the stream and the heat map come in later features. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold and the backend stream are in place, and the heat map comes in a later feature. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -35,6 +35,27 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 - `make synth` synthesizes the CDK app into infra/cdk.out/. It needs no AWS credentials.
 - `make deploy` deploys the CDK stack to AWS. The stack is empty until feature 5.
 - `make destroy` removes the CDK stack from AWS.
+
+## Backend stream
+
+`GET /stream` sends the stream as Server-Sent Events. Each event holds one batch as a JSON array of random integers in its `data` field. The `id` field holds the batch sequence number, which starts at 0 when the server starts and goes up by 1 for each batch. A gap in the ids shows that the client missed batches. The server generates one shared stream, so every client gets the same batches. When the server sends nothing for 15 seconds, it sends the comment `: ping`.
+
+Run `make backend`, and then run this command in another terminal to see the stream.
+
+```sh
+curl -N localhost:8000/stream | head -c 300
+```
+
+The server reads these environment variables at start. When a value is out of range or not a number, the server logs a warning and uses the default.
+
+| Variable | Default | Range | Meaning |
+| --- | --- | --- | --- |
+| `SAMPLES_PER_SECOND` | 100000 | 1 to 100000 | This sets how many integers the server makes each second. |
+| `BATCH_INTERVAL_MS` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
+| `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
+| `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. | These origins can call the server from a browser. |
+
+For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends one batch of 20 integers each second.
 
 ## Specs and logs
 

@@ -30,3 +30,8 @@ Each entry gives the date, the phase, and the assumption.
 - Each SSE event carries the batch sequence number in its `id` field. The number starts at 0 when the server starts and goes back to 0 when it restarts.
 - The environment variables are `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS`. `CORS_ORIGINS` is a comma-separated list.
 - When samples per second times the interval is not a whole number, the server carries the fraction to the next batch and sends no empty batch.
+
+## 2026-09-29, implement feature 2, backend
+
+- The CORS rule allows only the GET method, because the client only reads from the server.
+- The app is built by a `create_app(settings)` function, and the module makes the served app from the environment at import. The tests build apps with their own settings.

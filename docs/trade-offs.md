@@ -43,3 +43,9 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The batches carry no timestamp yet. Feature 7 decides how to measure latency across two clocks. The cost is that the payload format may change in feature 7.
 - The generator uses `random.Random.choices` from the standard library instead of NumPy. It needs no new dependency and makes a 5,000-value batch in about 0.5 ms, three times faster than a `randrange` loop. The cost is speed. NumPy made the same batch in 0.11 ms, including the conversion to a list for JSON, which is about four times faster. At 20 batches a second, the saving is about 0.7 percent of one core, which does not justify a large dependency.
 - The broadcaster encodes each batch to JSON once and sends the same string to every client with `raw_data`. Encoding costs 0.28 ms per batch instead of 2.94 ms per batch per client, so a 0.25 vCPU task can serve many more clients. The cost is that the route bypasses the FastAPI data validation and encoding, so the broadcaster owns the wire format.
+
+## 2026-09-29, implement feature 2, backend
+
+- The generator keeps the carried fraction as a whole number of thousandths of a sample instead of a float. The carry stays exact over any number of batches. The cost is a less obvious formula in the code.
+- The broadcaster tests run the event loop with `asyncio.run` inside plain tests instead of adding pytest-asyncio. The project needs no new dependency. The cost is a small wrapper function in the async test.
+- The stream test fixture binds a socket to a free port and hands it to Uvicorn. No other process can take the port between the bind and the start. The cost is more fixture code than a plain port number.

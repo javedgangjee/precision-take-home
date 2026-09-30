@@ -26,3 +26,8 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The frontend adds @vitest/coverage-v8 4.1.11 as a dev dependency. The Angular test builder needs it to measure coverage. The cost is one more dev dependency.
 - The Makefile sets NG_CLI_ANALYTICS to false, so the Angular CLI never stops to ask about usage data. The cost is that the Angular team gets no usage data from this project.
 - The CDK app has no feature flags in cdk.json, because the stack is empty. The cost is a notice on each synth until feature 5 adds the resources and the flags.
+
+## 2026-09-29, replan after feature 1, scaffold
+
+- The tests measure coverage and aim for 100 percent, but no minimum is enforced and no check tests the minimum. The rule was hard to prove and added little. The cost is that coverage can drop without a failed build.
+- The admin page moves from a stretch goal to feature 6, before the testing feature. The stress test can then change the sample rate without a server restart. The cost is one more feature before the latency and limit measurements.

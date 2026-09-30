@@ -10,7 +10,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - The ASGI server is Uvicorn 0.54.0.
 - The backend sends the stream to the client with Server-Sent Events. The client sends nothing back, so the project does not use WebSockets.
 - The backend runs locally for development and in a Docker image in the cloud.
-- The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverage. The minimum coverage is 80 percent.
+- The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverage. The goal is 100 percent coverage, and no minimum is enforced.
 - The linters are ruff 0.16.9 and mypy 2.3.1.
 
 ## Frontend
@@ -22,7 +22,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - The frontend draws the grid on an HTML canvas. It applies each batch to the counts when the batch arrives, and it redraws at most once per display frame with requestAnimationFrame.
 - The frontend keeps counts as 64-bit floats, so large counts do not overflow.
 - The HTML design in context/ sets the look of the client. The brief wins where the two differ.
-- The tests use Vitest. The minimum coverage is 80 percent, and the goal is 100 percent.
+- The tests use Vitest. The goal is 100 percent coverage, and no minimum is enforced.
 
 ## Infrastructure
 

@@ -64,5 +64,4 @@ The brief is the main source of truth. Where my notes or the HTML design disagre
 
 - The bonus items are write-ups only. I write B7 and B8 myself, outside the roadmap.
 - I do not write general documentation about AI.
-- An admin page for live settings is a stretch goal.
 - Accessibility is out of scope, including an aria-label on the canvas.

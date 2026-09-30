@@ -70,3 +70,28 @@ The command is `/usr/bin/make --version && /usr/bin/make install test lint synth
 
 1. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-changes.md.
 2. The expected result is that each file has an entry dated for the scaffold feature.
+
+## Results
+
+These results are from 2026-09-29.
+
+### Automated checks
+
+- V1 passes. One backend test passed, and coverage is 100 percent.
+- V2 passes. Two frontend tests passed, and coverage is 100 percent for statements, branches, functions, and lines.
+- V3 passes. ruff check, ruff format, strict mypy, ng lint, and Prettier report no issues.
+- V4 passes. `make synth` exits with code 0 and writes infra/cdk.out/PrecisionStack.template.json.
+- V5 passes. `/usr/bin/make --version` reports GNU Make 3.81, and `install test lint synth` exits with code 0.
+
+### Manual checks
+
+- M1 passes, as the user reported.
+- M2 passes, as the user reported.
+- M3 passes, as the user reported.
+- M4 passes. The user followed the README on a fresh copy of the repo, and M1 to M3 passed there.
+- M5 passes. Each log has plan and implement entries for the scaffold dated 2026-09-29.
+
+### Requirement coverage
+
+- R3 has only partial proof. The 80 percent floor is set in frontend/angular.json, but no check shows that the run fails below 80 percent.
+- Every other requirement has at least one passing check.

@@ -1,0 +1,1107 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /spec-driven constitution Use the files in the context folder. The project    
+frontend html is attached but brief takes precedence. Do not make suggestions   
+or spoon feed me what to use for the tech stack since this is a take home. You  
+draft the docs and interview me as you go along.                                
+
+  Read 3 files, listed 1 directory, ran 3 shell commands (ctrl+o to expand)
+
+⏺ Reading the design HTML to learn the UI layout.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Drafting the files now with open items marked. Then I will interview you one
+  question at a time.
+
+⏺ Write(specs/mission.md)
+  ⎿  Wrote 59 lines to specs/mission.md
+      1 # Mission
+      3 ## Why the project exists
+      5 This project is a take-home exercise for the Precision Neuroscien
+        ce full-stack role. It shows how I design, build, and deploy a re
+        ring manager and the software engineering team review the code an
+      6 
+      8 
+      9 The reviewers run the web client on their own machine. The client
+        whether the reviewers are the only users, or whether the docs sho
+        tches live data.
+     … +84 lines (ctrl+o to expand)
+
+⏺ Write(specs/tech-stack.md)
+  ⎿  Wrote 26 lines to specs/tech-stack.md
+       1 # Tech stack
+       3 ## Backend
+       4 
+       5 - The backend uses Python. OPEN: confirm the Python version.
+         n.
+       7 - The backend sends the stream to the client with Server-Sent Ev
+          WebSockets.
+       8 - The backend runs locally for development and in a Docker image
+          in the cloud.
+      10 - The linters are ruff and mypy.
+     … +27 lines (ctrl+o to expand)
+
+⏺ Write(specs/roadmap.md)
+  ⎿  Wrote 11 lines to specs/roadmap.md
+      1 # Roadmap
+      3 OPEN: confirm the order of the features.
+      4 
+         the frontend start, the tests run, and the linters pass from the
+         Makefile. It covers N11 and S2. The status is planned.
+         random integers and sends them in batches over Server-Sent Event
+        s. It covers B2, N3, N5, N6, and N9. The status is planned.
+        alues, keeps counts, and draws the grid and the color scale. It c
+        overs B1, B3, B4, B5, B6, N1, and N2. The status is planned.
+        tream
+     … +16 lines (ctrl+o to expand)
+
+⏺ Write(CLAUDE.md)
+  ⎿  Wrote 6 lines to CLAUDE.md
+      1 # CLAUDE.md
+      2 
+      3 - The files in specs/ are the source of truth for what to build. 
+        Read them before any task.
+      4 - The project documents are in context/. The brief PDF is the mai
+        n truth. The HTML design sets the look, and the brief wins where 
+        they differ.
+      5 - Record assumptions, trade-offs, and changes to AI output in doc
+        s/decision-log.md as each phase goes along.
+      6 - The user commits and merges. Do not commit.
+
+⏺ I drafted specs/mission.md, specs/tech-stack.md, specs/roadmap.md, and
+  CLAUDE.md. Each open item has the mark OPEN.
+
+  I checked the (v - 1) mod N² rule from your notes. It gives both brief
+  examples. It also puts example input (e) in the right cells when row 0 is at
+  the bottom. The value 4 goes to <0,3>, 6 goes to <1,1> five times, and 11 goes
+  to <2,2> ten times.
+
+  The design HTML differs from your notes in three places. It draws row 0 at the
+  top, it lets N run from 4 to 100, and it stores counts as 32-bit integers.
+  The drafts follow your notes.
+
+  Question 1. The brief says the input is nonnegative, so 0 can arrive. The rule
+  (0 - 1) mod N² puts 0 in the last cell, <N-1, N-1>. Should the server send 0,
+  and should 0 go to the last cell?
+
+✻ Baked for 1m 23s · done 10:24 PM
+
+❯ 0 in N-1,N-1 makes the most sense                                             
+
+⏺ Update(specs/mission.md)
+  ⎿  Error editing file
+
+⏺ Update(specs/mission.md)
+  ⎿  Added 1 line, removed 1 line
+      39  
+      40  ### From my design notes
+      41  
+      42 -- N1. The bin index is (v - 1) mod N², the row is index div N, 
+         -and the column is index mod N. Row 0 is at the bottom of the sc
+         -reen, and column 0 is at the left. This rule matches both brief
+         - examples and the example input (e) in the brief picture.      
+      42 +- N1. The bin index is (v - 1) mod N², the row is index div N, 
+         +and the column is index mod N. Row 0 is at the bottom of the sc
+         +reen, and column 0 is at the left. This rule matches both brief
+         + examples and the example input (e) in the brief picture. The s
+         +erver can send 0, and 0 goes to cell <N-1, N-1>.               
+      43  - N2. N ranges from 1 to 64, and the default is 32.
+      44  - N3. The server sends the stream in batches, and each batch is
+           a JSON array of random integers.
+      45  - N4. The target latency from generation to render is 100 ms.
+
+⏺ I updated N1 in specs/mission.md.
+
+  Question 2. When the user changes N while the stream runs, what happens to the
+  counts? The design resets them to zero. The other choice is to keep the raw
+  values on the client and bin them again for the new N, which costs memory as
+  the stream grows.
+
+✻ Churned for 7s · done 10:24 PM
+
+❯ Reset them to 0                                                               
+
+⏺ Update(specs/mission.md)
+  ⎿  Added 1 line, removed 1 line
+      40  ### From my design notes
+      41  
+      42  - N1. The bin index is (v - 1) mod N², the row is index div N, 
+          and the column is index mod N. Row 0 is at the bottom of the sc
+          reen, and column 0 is at the left. This rule matches both brief
+           examples and the example input (e) in the brief picture. The s
+          erver can send 0, and 0 goes to cell <N-1, N-1>.
+      43 -- N2. N ranges from 1 to 64, and the default is 32.            
+      43 +- N2. N ranges from 1 to 64, and the default is 32. When the us
+         +er changes N, all counts reset to zero.                        
+      44  - N3. The server sends the stream in batches, and each batch is
+           a JSON array of random integers.
+      45  - N4. The target latency from generation to render is 100 ms.
+      46  - N5. Delivery is lossy and best effort.
+
+⏺ Question 3. How should a count map to a color? The design uses count divided
+  by max. So a count of 1 is almost blue, but it only reaches full blue as max
+  grows. The other choice is (count - 1) divided by (max - 1). That makes 1
+  always full blue and max always full red, which matches the 1 to 10 scale in
+  the brief picture. When max is 1, every non-empty cell would then need a fixed
+  color.
+
+✻ Sautéed for 5s · done 10:24 PM
+
+❯ correct 1 shoudl be full blue, and max full red                               
+
+⏺ Update(specs/mission.md)
+  ⎿  Added 1 line
+      41  
+      42  - N1. The bin index is (v - 1) mod N², the row is index div N, 
+          and the column is index mod N. Row 0 is at the bottom of the sc
+          reen, and column 0 is at the left. This rule matches both brief
+           examples and the example input (e) in the brief picture. The s
+          erver can send 0, and 0 goes to cell <N-1, N-1>.
+      43  - N2. N ranges from 1 to 64, and the default is 32. When the us
+          er changes N, all counts reset to zero.
+      44 +- N14. The color position of a cell is (count - 1) / (max - 1).
+         + A count of 1 is full blue, and the max count is full red. When
+         + the max count is 1, every non-empty cell is full blue. The sca
+         +le labels run from 1 to the max count.                         
+      45  - N3. The server sends the stream in batches, and each batch is
+           a JSON array of random integers.
+      46  - N4. The target latency from generation to render is 100 ms.
+      47  - N5. Delivery is lossy and best effort.
+
+⏺ I added the rule as N14 in specs/mission.md, and a max of 1 paints every
+  non-empty cell full blue. I will fix the numbering at the end.
+
+  Question 4. Do all clients see one shared stream, or does each connection get
+  its own generator? One shared stream means the server generates each batch
+  once and sends it to every client. Separate generators mean the server load
+  grows with each client.
+
+✻ Churned for 7s · done 10:26 PM
+
+❯ One shared stream                                                             
+
+⏺ Update(specs/mission.md)  ⎿  Added 1 line, removed 1 line
+      42  - N1. The bin index is (v - 1) mod N², the row is index div N, 
+          and the column is index mod N. Row 0 is at the bottom of the sc
+          reen, and column 0 is at the left. This rule matches both brief
+           examples and the example input (e) in the brief picture. The s
+          erver can send 0, and 0 goes to cell <N-1, N-1>.
+      43  - N2. N ranges from 1 to 64, and the default is 32. When the us
+          er changes N, all counts reset to zero.
+      44  - N14. The color position of a cell is (count - 1) / (max - 1).
+           A count of 1 is full blue, and the max count is full red. When
+           the max count is 1, every non-empty cell is full blue. The sca
+          le labels run from 1 to the max count.
+      45 -- N3. The server sends the stream in batches, and each batch is
+         - a JSON array of random integers.                              
+      45 +- N3. The server sends the stream in batches, and each batch is
+         + a JSON array of random integers. The server generates one shar
+         +ed stream, and every connected client gets the same batches.   
+      46  - N4. The target latency from generation to render is 100 ms.
+      47  - N5. Delivery is lossy and best effort.
+      48  - N6. The server sends a heartbeat if it sends nothing for 15 s
+          econds.
+
+⏺ Question 5. What distribution should the generator use? A uniform draw from 0
+  to 10,000 gives a nearly flat heat map. The design also has a "hotspots" mode
+  where a few regions get most hits. Pick uniform, hotspots, or a setting that
+  switches between them.
+
+✻ Cooked for 5s · done 10:26 PM
+
+❯ Stick to uniform. Put hotspots under a Stretch goal phase at the end          
+
+⏺ Bash(python3 - <<'EOF'
+      p="specs/mission.md"; s=open(p).read()…)
+  ⎿  Updated specs/mission.md (+1 -1)
+      42  - N1. The bin index is (v - 1) mod N², the row is index div N, 
+          and the column is index mod N. Row 0 is at the bottom of the sc
+          reen, and column 0 is at the left. This rule matches both brief
+           examples and the example input (e) in the brief picture. The s
+          erver can send 0, and 0 goes to cell <N-1, N-1>.
+      43  - N2. N ranges from 1 to 64, and the default is 32. When the us
+          er changes N, all counts reset to zero.
+      44  - N14. The color position of a cell is (count - 1) / (max - 1).
+           A count of 1 is full blue, and the max count is full red. When
+           the max count is 1, every non-empty cell is full blue. The sca
+          le labels run from 1 to the max count.
+      45 -- N3. The server sends the stream in batches, and each batch is
+         - a JSON array of random integers. The server generates one shar
+         -ed stream, and every connected client gets the same batches.   
+      45 +- N3. The server sends the stream in batches, and each batch is
+         + a JSON array of random integers drawn from a uniform distribut
+         +ion. The server generates one shared stream, and every connecte
+         +d client gets the same batches.                                
+      46  - N4. The target latency from generation to render is 100 ms.
+      47  - N5. Delivery is lossy and best effort.
+      48  - N6. The server sends a heartbeat if it sends nothing for 15 s
+          econds.
+  ⎿  Updated specs/roadmap.md (+4 -0)
+       9  5. **Cloud deploy.** The goal is the backend running on ECS Far
+          gate behind an ALB at my domain, deployed with CDK from the Mak
+          efile. It covers B2 and N11. The status is planned.
+      10  6. **Latency and stress test.** The goal is a measured generati
+          on-to-render latency and a measured set of limits. It covers N4
+           and N10. The status is planned.
+      11  7. **Submission write-ups.** The goal is a README and write-ups
+           for the bonus items, the AI toolchain, and the assumptions and
+           trade-offs. It covers B7, B8, S1, S3, S4, S5, S6, S7, and N12.
+           The status is planned.
+      12 +                                                               
+      13 +## Stretch goals                                               
+      14 +                                                               
+      15 +8. **Hotspot distribution.** The goal is a generator mode where
+         + a few drifting regions get most of the hits, as in the HTML de
+         +sign. It covers no required item. The status is planned.       
+
+⏺ Question 6. Is the admin page for changing settings live in scope for the core
+  build, or does it go under stretch goals? Without it, the settings come from
+  environment variables at server start.
+
+✻ Brewed for 6s · done 10:27 PM
+
+❯ stretch                                                                       
+
+⏺ Bash(python3 - <<'EOF'
+      p="specs/mission.md"; s=open(p).read()…)
+  ⎿  51:- N9. The server settings are samples per second from 1 to 100,000,
+      batch interval from 50 ms to 1 s, and a maximum value of 10,000. The
+     server reads these settings from environment variables at start.
+     60:- An admin page for live settings is a stretch goal.
+  ⎿  Updated specs/mission.md (+2 -2)
+      48  - N6. The server sends a heartbeat if it sends nothing for 15 s
+          econds.
+      49  - N7. Counts stay on screen while the client reconnects.
+      50  - N8. The client reconnects with backoff and shows one of three
+           states, which are Live, Connecting, and Reconnecting.
+      51 -- N9. The server settings are samples per second from 1 to 100,
+         -000, batch interval from 50 ms to 1 s, and a maximum value of 1
+         -0,000.                                                         
+      51 +- N9. The server settings are samples per second from 1 to 100,
+         +000, batch interval from 50 ms to 1 s, and a maximum value of 1
+         +0,000. The server reads these settings from environment variabl
+         +es at start.                                                   
+      52  - N10. A stress test measures the limits on clients, samples, a
+          nd payload size, if it is feasible.
+      53  - N11. A Makefile runs the frontend and the backend, runs the t
+          ests, and deploys.
+      54  - N12. A log records assumptions, trade-offs, and changes to AI
+           output in each phase.
+      55 -- N13. OPEN: confirm whether the admin page for live settings i
+         -s in scope.                                                    
+      55  
+      56  ## Out of scope
+      57  
+      58  - The bonus items are write-ups only, and I do not build them.
+      59  - I do not write general documentation about AI.
+      60 +- An admin page for live settings is a stretch goal.           
+  ⎿  Updated specs/roadmap.md (+1 -0)
+      13  ## Stretch goals
+      14  
+      15  8. **Hotspot distribution.** The goal is a generator mode where
+           a few drifting regions get most of the hits, as in the HTML de
+          sign. It covers no required item. The status is planned.
+      16 +9. **Admin settings page.** The goal is a backend page that cha
+         +nges the stream settings while the server runs. It covers no re
+         +quired item. The status is planned.                            
+
+⏺ Question 7. What are the default values for samples per second and batch
+  interval?
+
+✻ Baked for 6s · done 10:28 PM
+
+❯ 100,000 samples/sec, batch 50ms                                               
+
+⏺ Bash(python3 - <<'EOF'
+      p="specs/mission.md"; s=open(p).read()…)
+  ⎿  Updated specs/mission.md (+1 -1)
+      48  - N6. The server sends a heartbeat if it sends nothing for 15 s
+          econds.
+      49  - N7. Counts stay on screen while the client reconnects.
+      50  - N8. The client reconnects with backoff and shows one of three
+           states, which are Live, Connecting, and Reconnecting.
+      51 -- N9. The server settings are samples per second from 1 to 100,
+         -000, batch interval from 50 ms to 1 s, and a maximum value of 1
+         -0,000. The server reads these settings from environment variabl
+         -es at start.                                                   
+      51 +- N9. The server settings are samples per second from 1 to 100,
+         +000, batch interval from 50 ms to 1 s, and a maximum value of 1
+         +0,000. The defaults are 100,000 samples per second and a 50 ms 
+         +batch interval, so each batch holds 5,000 integers. The server 
+         +reads these settings from environment variables at start.      
+      52  - N10. A stress test measures the limits on clients, samples, a
+          nd payload size, if it is feasible.
+      53  - N11. A Makefile runs the frontend and the backend, runs the t
+          ests, and deploys.
+      54  - N12. A log records assumptions, trade-offs, and changes to AI
+           output in each phase.
+
+⏺ These defaults make each batch about 30 KB of JSON, which is about 600 KB per
+  second per client. The stress test will measure what that costs.
+
+  Question 8. Which Python and FastAPI versions do you want? Also name the
+  package manager and the ASGI server.
+
+✻ Worked for 7s · done 10:28 PM
+
+❯ use my laptop versions for all. use uv                                        
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Write(specs/tech-stack.md)
+  ⎿  Added 14 lines, removed 9 lines
+       1  # Tech stack
+       2  
+       3 +The versions match the tools on my laptop on 2026-09-29. Where 
+         +a library is not on the laptop, the version is the latest relea
+         +se on that date.                                               
+       4 +                                                               
+       5  ## Backend
+       6  
+       5 -- The backend uses Python. OPEN: confirm the Python version.   
+       6 -- The web framework is FastAPI. OPEN: confirm the FastAPI versi
+         -on.                                                            
+       7 +- The backend uses Python 3.13.15.                             
+       8 +- uv 0.11.24 manages the Python version, the dependencies, and 
+         +the lock file.                                                 
+       9 +- The web framework is FastAPI 0.142.1, with Pydantic 2.13.5.  
+      10 +- The ASGI server is Uvicorn 0.54.0.                           
+      11  - The backend sends the stream to the client with Server-Sent E
+          vents. The client sends nothing back, so the project does not u
+          se WebSockets.
+      12  - The backend runs locally for development and in a Docker imag
+          e in the cloud.
+       9 -- The tests use pytest.                                        
+      10 -- The linters are ruff and mypy.                               
+      11 -- OPEN: confirm the package manager and the ASGI server.       
+      13 +- The tests use pytest 9.1.1.                                  
+      14 +- The linters are ruff 0.16.9 and mypy 2.3.1.                  
+      15  
+      16  ## Frontend
+      17  
+      15 -- The frontend uses Angular and runs only on the local machine.
+         - OPEN: confirm the Angular, TypeScript, and Node.js versions.  
+      18 +- The frontend uses Angular 21.2.1 and runs only on the local m
+         +achine.                                                        
+      19 +- The runtime is Node.js 22.22.1, and the package manager is np
+         +m 11.20.0.                                                     
+      20 +- The TypeScript, Vitest, and ESLint versions are the ones that
+         + Angular CLI 21.2.1 installs when it creates the project. ESLin
+         +t comes from angular-eslint.                                   
+      21  - The frontend keeps counts as 64-bit floats, so large counts d
+          o not overflow.
+      22  - The HTML design in context/ sets the look of the client. The 
+          brief wins where the two differ.
+      23  - The tests use Vitest. The minimum coverage is 80 percent, and
+           the goal is 100 percent.
+      19 -- The linter is ESLint.                                        
+      24  
+      25  ## Infrastructure
+      26  
+      27  - The backend runs on AWS ECS Fargate with 0.25 vCPU, behind an
+           Application Load Balancer.
+      24 -- AWS CDK in Python defines the infrastructure. OPEN: confirm t
+         -he CDK version.                                                
+      28 +- AWS CDK in Python defines the infrastructure. The CDK CLI is 
+         +2.1143.0, and the library is aws-cdk-lib 2.271.0.              
+      29 +- Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles cr
+         +edentials.                                                     
+      30  - The public URL is a subdomain of jgangjee.com, such as precis
+          ion.jgangjee.com. I supply the final URL.
+      26 -- A Makefile holds the common tasks, such as running the backen
+         -d, running the frontend, running the tests, and deploying.     
+      31 +- A Makefile holds the common tasks, such as running the backen
+         +d, running the frontend, running the tests, and deploying. It m
+         +ust work with GNU Make 3.81, which ships with macOS.           
+
+⏺ I filled specs/tech-stack.md with your laptop versions. Your laptop has both
+  Python 3.13.15 and 3.14.7. I used 3.13.15 because python3 on your PATH points
+  to it.
+
+  Question 9. Are the reviewers the only users in the mission, or should it also
+  name a notional end user, such as a researcher who watches live data from an
+  electrode array?
+
+✻ Cogitated for 27s · done 10:30 PM
+
+❯ just reviewers                                                                
+
+⏺ Update(specs/mission.md)
+  ⎿  Added 1 line, removed 1 line
+       6  
+       7  ## Who uses it
+       8  
+       9 -The reviewers run the web client on their own machine. The clie
+         -nt connects to a data server that runs in the cloud. OPEN: conf
+         -irm whether the reviewers are the only users, or whether the do
+         -cs should also describe a notional end user such as a researche
+         -r who watches live data.                                       
+       9 +The reviewers run the web client on their own machine. The clie
+         +nt connects to a data server that runs in the cloud. The review
+         +ers are the only users.                                        
+      10  
+      11  ## What the system does
+      12  
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Question 10. Should the Fargate task run on ARM64 or x86_64? Your laptop is
+  ARM64, so an ARM64 task needs no cross-build.
+
+✻ Cogitated for 7s · done 10:30 PM
+
+❯ arm64                                                                         
+
+⏺ Update(specs/tech-stack.md)
+  ⎿  Added 1 line, removed 1 line
+      24  
+      25  ## Infrastructure
+      26  
+      27 -- The backend runs on AWS ECS Fargate with 0.25 vCPU, behind an
+         - Application Load Balancer.                                    
+      27 +- The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, 
+         +behind an Application Load Balancer.                           
+      28  - AWS CDK in Python defines the infrastructure. The CDK CLI is 
+          2.1143.0, and the library is aws-cdk-lib 2.271.0.
+      29  - Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles cr
+          edentials.
+      30  - The public URL is a subdomain of jgangjee.com, such as precis
+          ion.jgangjee.com. I supply the final URL.
+
+⏺ Question 11. The brief picture labels the axes with row and column numbers.
+  The design has no axis labels. Should the grid show axis labels? At N = 64
+  every label will not fit, so the choice is between labels at an interval or
+  labels only at small N.
+✻ Cogitated for 4s · done 10:30 PM
+
+❯ Yes, labels at an interval sounds fine                                        
+
+⏺ Update(specs/mission.md)
+  ⎿  Added 1 line
+      40  ### From my design notes
+      41  
+      42  - N1. The bin index is (v - 1) mod N², the row is index div N, 
+          and the column is index mod N. Row 0 is at the bottom of the sc
+          reen, and column 0 is at the left. This rule matches both brief
+           examples and the example input (e) in the brief picture. The s
+          erver can send 0, and 0 goes to cell <N-1, N-1>.
+      43 +- N15. The grid shows row numbers on the left and column number
+         +s along the bottom, as in the brief picture. When N is too larg
+         +e to label every row and column, the labels appear at a fixed i
+         +nterval.                                                       
+      44  - N2. N ranges from 1 to 64, and the default is 32. When the us
+          er changes N, all counts reset to zero.
+      45  - N14. The color position of a cell is (count - 1) / (max - 1).
+           A count of 1 is full blue, and the max count is full red. When
+           the max count is 1, every non-empty cell is full blue. The sca
+          le labels run from 1 to the max count.
+      46  - N3. The server sends the stream in batches, and each batch is
+           a JSON array of random integers drawn from a uniform distribut
+          ion. The server generates one shared stream, and every connecte
+          d client gets the same batches.
+
+⏺ Next I will ask about the order of the features.
+
+  Question 12. The roadmap now runs scaffold, stream server, heat map client,
+  connection handling, cloud deploy, latency and stress test, and write-ups,
+  then the two stretch goals. Do you want a different order? One option is to
+  move cloud deploy earlier so that the client works against the real server
+  sooner.
+
+✻ Brewed for 6s · done 10:31 PM
+
+❯ No write up phase, just update readme, ai iterattions, assumptions and trade  
+  offs as we go along. Switch the order of phase 8 and 9.                       
+
+⏺ Bash(python3 - <<'EOF'
+      p="specs/mission.md"; s=open(p).read()…)
+  ⎿  ### From my design notes
+
+     - N1. The bin index is (v - 1) mod N², the row is index div N, and the
+     … +32 lines (ctrl+o to expand)
+  ⎿  Updated specs/mission.md (+19 -13)
+      40  ### From my design notes
+      41  
+      42  - N1. The bin index is (v - 1) mod N², the row is index div N, 
+          and the column is index mod N. Row 0 is at the bottom of the sc
+          reen, and column 0 is at the left. This rule matches both brief
+           examples and the example input (e) in the brief picture. The s
+          erver can send 0, and 0 goes to cell <N-1, N-1>.
+      43 -- N15. The grid shows row numbers on the left and column number
+         -s along the bottom, as in the brief picture. When N is too larg
+         -e to label every row and column, the labels appear at a fixed i
+         -nterval.                                                       
+      44 -- N2. N ranges from 1 to 64, and the default is 32. When the us
+         -er changes N, all counts reset to zero.                        
+      45 -- N14. The color position of a cell is (count - 1) / (max - 1).
+         - A count of 1 is full blue, and the max count is full red. When
+         - the max count is 1, every non-empty cell is full blue. The sca
+         -le labels run from 1 to the max count.                         
+      46 -- N3. The server sends the stream in batches, and each batch is
+         - a JSON array of random integers drawn from a uniform distribut
+         -ion. The server generates one shared stream, and every connecte
+         -d client gets the same batches.                                
+      47 -- N4. The target latency from generation to render is 100 ms.  
+      48 -- N5. Delivery is lossy and best effort.                       
+      49 -- N6. The server sends a heartbeat if it sends nothing for 15 s
+         -econds.                                                        
+      50 -- N7. Counts stay on screen while the client reconnects.       
+      51 -- N8. The client reconnects with backoff and shows one of three
+         - states, which are Live, Connecting, and Reconnecting.         
+      52 -- N9. The server settings are samples per second from 1 to 100,
+         -000, batch interval from 50 ms to 1 s, and a maximum value of 1
+         -0,000. The defaults are 100,000 samples per second and a 50 ms 
+         -batch interval, so each batch holds 5,000 integers. The server 
+         -reads these settings from environment variables at start.      
+      53 -- N10. A stress test measures the limits on clients, samples, a
+         -nd payload size, if it is feasible.                            
+      54 -- N11. A Makefile runs the frontend and the backend, runs the t
+         -ests, and deploys.                                             
+      55 -- N12. A log records assumptions, trade-offs, and changes to AI
+         - output in each phase.                                         
+      43 +- N2. The grid shows row numbers on the left and column numbers
+         + along the bottom, as in the brief picture. When N is too large
+         + to label every row and column, the labels appear at a fixed in
+         +terval.                                                        
+      44 +- N3. N ranges from 1 to 64, and the default is 32. When the us
+         +er changes N, all counts reset to zero.                        
+      45 +- N4. The color position of a cell is (count - 1) / (max - 1). 
+         +A count of 1 is full blue, and the max count is full red. When 
+         +the max count is 1, every non-empty cell is full blue. The scal
+         +e labels run from 1 to the max count.                          
+      46 +- N5. The server sends the stream in batches, and each batch is
+         + a JSON array of random integers drawn from a uniform distribut
+         +ion. The server generates one shared stream, and every connecte
+         +d client gets the same batches.                                
+      47 +- N6. The target latency from generation to render is 100 ms.  
+      48 +- N7. Delivery is lossy and best effort.                       
+      49 +- N8. The server sends a heartbeat if it sends nothing for 15 s
+         +econds.                                                        
+      50 +- N9. Counts stay on screen while the client reconnects.       
+      51 +- N10. The client reconnects with backoff and shows one of thre
+         +e states, which are Live, Connecting, and Reconnecting.        
+      52 +- N11. The server settings are samples per second from 1 to 100
+         +,000, batch interval from 50 ms to 1 s, and a maximum value of 
+         +10,000. The defaults are 100,000 samples per second and a 50 ms
+         + batch interval, so each batch holds 5,000 integers. The server
+         + reads these settings from environment variables at start.     
+      53 +- N12. A stress test measures the limits on clients, samples, a
+         +nd payload size, if it is feasible.                            
+      54 +- N13. A Makefile runs the frontend and the backend, runs the t
+         +ests, and deploys.                                             
+      55 +- N14. A log records assumptions, trade-offs, and changes to AI
+         + output in each phase.                                         
+      56 +                                                               
+      57 +### From the HTML design                                       
+      58 +                                                               
+      59 +- D1. A side panel shows the stream state as a badge.          
+      60 +- D2. A side panel has minus and plus buttons that change N.   
+      61 +- D3. The side panel shows the samples received, the max count,
+         + and the measured frame rate.                                  
+      62  
+      63  ## Out of scope
+      64  
+
+⏺ Fix D2 wording and rewrite the roadmap and CLAUDE.md.
+
+⏺ Bash(sed -i '' 's/^- D2\. A side panel has/- D2. The side panel has/'
+      specs/mission.md && cat > specs/roadmap.md <<'EOF'
+      # Roadmap…)
+  ⎿  Updated CLAUDE.md (+1 -1)
+      2  
+      3  - The files in specs/ are the source of truth for what to build.
+          Read them before any task.
+      4  - The project documents are in context/. The brief PDF is the ma
+         in truth. The HTML design sets the look, and the brief wins wher
+         e they differ.
+      5 -- Record assumptions, trade-offs, and changes to AI output in do
+        -cs/decision-log.md as each phase goes along.                    
+      5 +- Each feature updates the README, the AI iteration log, and the
+        + assumptions and trade-offs log as it goes.                     
+      6  - The user commits and merges. Do not commit.
+  ⎿  Updated specs/mission.md (+1 -1)
+      57  ### From the HTML design
+      58  
+      59  - D1. A side panel shows the stream state as a badge.
+      60 -- D2. A side panel has minus and plus buttons that change N.   
+      60 +- D2. The side panel has minus and plus buttons that change N. 
+      61  - D3. The side panel shows the samples received, the max count,
+           and the measured frame rate.
+      62  
+      63  ## Out of scope
+  ⎿  Updated specs/roadmap.md (+8 -9)
+       1  # Roadmap
+       2  
+       3 -OPEN: confirm the order of the features.                       
+       3 +Every feature updates the README, the AI iteration log, and the
+         + assumptions and trade-offs log as it goes. That work covers S1
+         + to S7 and N14 across all features.                            
+       4  
+       5 -1. **Project scaffold.** The goal is a repo where the backend a
+         -nd the frontend start, the tests run, and the linters pass from
+         - the Makefile. It covers N11 and S2. The status is planned.    
+       6 -2. **Stream server.** The goal is a FastAPI server that generat
+         -es random integers and sends them in batches over Server-Sent E
+         -vents. It covers B2, N3, N5, N6, and N9. The status is planned.
+       7 -3. **Heat map client.** The goal is an Angular client that bins
+         - values, keeps counts, and draws the grid and the color scale. 
+         -It covers B1, B3, B4, B5, B6, N1, and N2. The status is planned
+         -.                                                              
+       8 -4. **Connection handling.** The goal is a client that shows the
+         - stream state, reconnects with backoff, and keeps counts on scr
+         -een during a reconnect. It covers N7 and N8. The status is plan
+         -ned.                                                           
+       9 -5. **Cloud deploy.** The goal is the backend running on ECS Far
+         -gate behind an ALB at my domain, deployed with CDK from the Mak
+         -efile. It covers B2 and N11. The status is planned.            
+      10 -6. **Latency and stress test.** The goal is a measured generati
+         -on-to-render latency and a measured set of limits. It covers N4
+         - and N10. The status is planned.                               
+      11 -7. **Submission write-ups.** The goal is a README and write-ups
+         - for the bonus items, the AI toolchain, and the assumptions and
+         - trade-offs. It covers B7, B8, S1, S3, S4, S5, S6, S7, and N12.
+         - The status is planned.                                        
+       5 +1. **Project scaffold.** The goal is a repo where the backend a
+         +nd the frontend start, the tests run, and the linters pass from
+         + the Makefile. It covers N13 and S2. The status is planned.    
+       6 +2. **Stream server.** The goal is a FastAPI server that generat
+         +es random integers and sends them in batches over Server-Sent E
+         +vents. It covers B2, N5, N7, N8, and N11. The status is planned
+         +.                                                              
+       7 +3. **Heat map client.** The goal is an Angular client that bins
+         + values, keeps counts, and draws the grid, the axis labels, the
+         + color scale, and the side panel. It covers B1, B3, B4, B5, B6,
+         + N1, N2, N3, N4, D2, and D3. The status is planned.            
+       8 +4. **Connection handling.** The goal is a client that shows the
+         + stream state, reconnects with backoff, and keeps counts on scr
+         +een during a reconnect. It covers N9, N10, and D1. The status i
+         +s planned.                                                     
+       9 +5. **Cloud deploy.** The goal is the backend running on ECS Far
+         +gate behind an ALB at my domain, deployed with CDK from the Mak
+         +efile. It covers B2 and N13. The status is planned.            
+      10 +6. **Latency and stress test.** The goal is a measured generati
+         +on-to-render latency and a measured set of limits. It covers N6
+         + and N12. The status is planned.                               
+      11  
+      12  ## Stretch goals
+      13  
+      14 +7. **Admin settings page.** The goal is a backend page that cha
+         +nges the stream settings while the server runs. It covers no re
+         +quired item. The status is planned.                            
+      15  8. **Hotspot distribution.** The goal is a generator mode where
+           a few drifting regions get most of the hits, as in the HTML de
+          sign. It covers no required item. The status is planned.
+      16 -9. **Admin settings page.** The goal is a backend page that cha
+         -nges the stream settings while the server runs. It covers no re
+         -quired item. The status is planned.                            
+
+⏺ I rewrote specs/roadmap.md without the write-up phase and swapped the two
+  stretch goals. The README and logs are now a rule for every feature.
+
+  Question 13. The two bonus write-ups (3D and server-side rendering) now belong
+  to no feature. Where should they go? One choice is a section in the README
+  during the latency and stress test feature. Another is a separate small
+  feature at the end.
+
+✻ Crunched for 19s · done 10:33 PM
+
+❯ Skip. I'll write it                                                           
+
+⏺ Bash(sed -i '' 's/^- The bonus items are write-ups only, and I do not build
+      them\./- The bonus items are write-ups only. I write B7 and B8 myself,
+      outside the roadma…)
+  ⎿  65:- The bonus items are write-ups only. I write B7 and B8 myself, out
+     side the roadmap.
+  ⎿  Updated specs/mission.md (+1 -1)
+      62  
+      63  ## Out of scope
+      64  
+      65 -- The bonus items are write-ups only, and I do not build them. 
+      65 +- The bonus items are write-ups only. I write B7 and B8 myself,
+         + outside the roadmap.                                          
+      66  - I do not write general documentation about AI.
+      67  - An admin page for live settings is a stretch goal.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ The four constitution files are written, and no open items remain.
+
+  - specs/mission.md holds the requirements with IDs. B1 to B8 come from the
+    brief, S1 to S7 from the overview, N1 to N14 from your notes, and D1 to D3
+    from the design.
+  - specs/tech-stack.md pins your laptop versions and uses uv, Python 3.13.15,
+    Angular 21.2.1, and ARM64 Fargate.
+  - specs/roadmap.md has six features and two stretch goals.
+  - CLAUDE.md points at the specs and the context folder, and it says that you
+    commit and merge.
+
+  I checked that each requirement maps to a feature. B7 and B8 are yours to
+  write outside the roadmap. S1 to S7 and N14 are ongoing rules for every
+  feature, so no single feature owns them. Everything else maps to at least one
+  feature.
+
+  One detail is still unset. The specs do not say where the AI iteration log and
+  the assumptions log live. The plan for feature 1 will ask you that.
+
+  The next mode is /spec-driven plan for feature 1, the project scaffold. The
+  plan mode needs a clean working tree, so commit these files first. Then clear
+  the session before you start it.
+
+✻ Baked for 14s · done 10:34 PM
+
+❯ Create a docs folder for assumptions.md, trade-offs.md and ai-changes.md      
+  (where it writes out how I changed the ai output).                            
+
+⏺ Bash(mkdir -p docs && cat > docs/assumptions.md <<'EOF'
+      # Assumptions…)
+  ⎿  CLAUDE.md:5:- Each feature updates the README and the three logs in do
+     cs/ as it goes. docs/assumptions.md records assumptions, docs/trade-of
+     fs.md records trade-offs, and docs/ai-changes.md records how the user
+     … +7 lines (ctrl+o to expand)
+  ⎿  Updated CLAUDE.md (+1 -1)
+      2  
+      3  - The files in specs/ are the source of truth for what to build.
+          Read them before any task.
+      4  - The project documents are in context/. The brief PDF is the ma
+         in truth. The HTML design sets the look, and the brief wins wher
+         e they differ.
+      5 -- Each feature updates the README, the AI iteration log, and the
+        - assumptions and trade-offs log as it goes.                     
+      5 +- Each feature updates the README and the three logs in docs/ as
+        + it goes. docs/assumptions.md records assumptions, docs/trade-of
+        +fs.md records trade-offs, and docs/ai-changes.md records how the
+        + user changed the AI output and why.                            
+      6  - The user commits and merges. Do not commit.
+  ⎿  Created docs/ai-changes.md (+9 -0)
+      1 +# AI changes                                                    
+      2 +                                                                
+      3 +Each entry gives the date, the phase, what the AI produced, what
+        + I changed, and why.                                            
+      4 +                                                                
+      5 +## 2026-09-29, constitution                                     
+      6 +                                                                
+      7 +- The AI drafted a roadmap with a final write-up feature. I remo
+        +ved it. The README, this log, and the other logs now update duri
+        +ng every feature, so the documents stay current with the code.  
+      8 +- The AI listed the admin page before the hotspot distribution i
+        +n the stretch goals. I swapped the order.                       
+      9 +- The AI offered to put the bonus write-ups for 3D and server-si
+        +de rendering in the roadmap. I kept them out, because I write th
+        +em myself.                                                      
+  ⎿  Created docs/assumptions.md (+13 -0)
+       1 +# Assumptions                                                  
+       2 +                                                               
+       3 +Each entry gives the date, the phase, and the assumption.      
+       4 +                                                               
+       5 +## 2026-09-29, constitution                                    
+       6 +                                                               
+       7 +- The bin index is (v - 1) mod N². This rule is the only one I 
+         +found that matches both brief examples and the example input (e
+         +) in the brief picture.                                        
+       8 +- Row 0 is at the bottom of the grid and column 0 is at the lef
+         +t, as in the brief picture.                                    
+       9 +- The value 0 goes to cell <N-1, N-1>, because (0 - 1) mod N² i
+         +s N² - 1.                                                      
+      10 +- A count of 1 is full blue and the max count is full red, as i
+         +n the 1 to 10 scale of the brief picture. When the max count is
+         + 1, every non-empty cell is full blue.                         
+      11 +- The reviewers are the only users of the system.              
+      12 +- The server settings come from environment variables at start.
+      13 +- Python 3.13.15 is the project version because `python3` on my
+         + PATH points to it, although Python 3.14.7 is also on the lapto
+         +p.                                                             
+  ⎿  Created docs/trade-offs.md (+13 -0)
+       1 +# Trade-offs                                                   
+       2 +                                                               
+       3 +Each entry gives the date, the phase, the choice, and what it c
+         +osts.                                                          
+       4 +                                                               
+       5 +## 2026-09-29, constitution                                    
+       6 +                                                               
+       7 +- The stream uses Server-Sent Events instead of WebSockets. The
+         + client sends nothing to the server, so a one-way channel is en
+         +ough. The cost is that any future client-to-server message need
+         +s a separate HTTP call.                                        
+       8 +- The server generates one shared stream for all clients. The s
+         +erver load stays flat as clients join. The cost is that clients
+         + cannot have their own settings.                               
+       9 +- A change to N resets all counts to zero. The client does not 
+         +keep raw values, so memory stays fixed. The cost is that the hi
+         +story is lost when N changes.                                  
+      10 +- Delivery is lossy and best effort. The server does not buffer
+         + or replay batches for a client that disconnects. The cost is g
+         +aps in the counts after a reconnect.                           
+      11 +- The client keeps counts as 64-bit floats. They stay exact up 
+         +to 2⁵³, which a 32-bit integer would overflow in hours at 100,0
+         +00 samples per second. The cost is twice the memory of 32-bit i
+         +ntegers, which is small at 64 by 64 cells.                     
+      12 +- The generator uses a uniform distribution. It is the simplest
+         + to test. The cost is a nearly flat heat map, so the hotspot mo
+         +de is a stretch goal.                                          
+      13 +- The admin settings page is a stretch goal. The cost is that a
+         + settings change needs a server restart.                       
+  ⎿  Updated specs/mission.md (+1 -1)
+      52  - N11. The server settings are samples per second from 1 to 100
+          ,000, batch interval from 50 ms to 1 s, and a maximum value of 
+          10,000. The defaults are 100,000 samples per second and a 50 ms
+           batch interval, so each batch holds 5,000 integers. The server
+           reads these settings from environment variables at start.
+      53  - N12. A stress test measures the limits on clients, samples, a
+          nd payload size, if it is feasible.
+      54  - N13. A Makefile runs the frontend and the backend, runs the t
+          ests, and deploys.
+      55 -- N14. A log records assumptions, trade-offs, and changes to AI
+         - output in each phase.                                         
+      55 +- N14. Three logs in docs/ record the assumptions, the trade-of
+         +fs, and my changes to AI output in each phase. They are assumpt
+         +ions.md, trade-offs.md, and ai-changes.md.                     
+      56  
+      57  ### From the HTML design
+      58  
+  ⎿  … 1 more file changed
+
+⏺ Bash(sed -i '' 's/updates the README, and the three/updates the README and the
+      three/' specs/roadmap.md && head -3 specs/roadmap.md)
+  ⎿  # Roadmap
+
+     Every feature updates the README and the three logs in docs/ as it goe
+     s. That work covers S1 to S7 and N14 across all features.
+  ⎿  Updated specs/roadmap.md (+1 -1)
+      1  # Roadmap
+      2  
+      3 -Every feature updates the README, and the three logs in docs/ as
+        - it goes. That work covers S1 to S7 and N14 across all features.
+      3 +Every feature updates the README and the three logs in docs/ as 
+        +it goes. That work covers S1 to S7 and N14 across all features. 
+      4  
+      5  1. **Project scaffold.** The goal is a repo where the backend an
+         d the frontend start, the tests run, and the linters pass from t
+         he Makefile. It covers N13 and S2. The status is planned.
+      6  2. **Stream server.** The goal is a FastAPI server that generate
+         s random integers and sends them in batches over Server-Sent Eve
+         nts. It covers B2, N5, N7, N8, and N11. The status is planned.
+
+⏺ I made the docs/ folder with the three files and started each one with a dated
+  constitution entry.
+
+  - docs/assumptions.md has 7 entries from this session, such as the (v - 1) mod
+    N² rule and where the value 0 goes.
+  - docs/trade-offs.md has 7 entries, such as SSE over WebSockets and resetting
+    the counts when N changes.
+  - docs/ai-changes.md has 3 entries for the changes you made to my drafts. You
+    removed the write-up feature, swapped the two stretch goals, and kept the
+    bonus write-ups out of the roadmap.
+
+  Check the ai-changes entries against how you see those changes, because the
+  file is in your voice.
+
+  CLAUDE.md, specs/roadmap.md, and N14 in specs/mission.md now name the three
+  files. This settles the open question about where the logs go.
+
+  The next step is still the same. Commit, clear the session, and run
+  /spec-driven plan for feature 1.
+
+✻ Baked for 24s · done 10:35 PM
+
+❯ Rename the phases to be simpler - Scaffold (include infra scaffold as well),  
+  Backend, Frontend, Stream, Deploy, Testing, Admin Page, Hotspots              
+
+⏺ Bash(cat > specs/roadmap.md <<'EOF'
+      # Roadmap…)
+  ⎿  Updated specs/roadmap.md (+8 -8)
+       2  
+       3  Every feature updates the README and the three logs in docs/ as
+           it goes. That work covers S1 to S7 and N14 across all features
+          .
+       4  
+       5 -1. **Project scaffold.** The goal is a repo where the backend a
+         -nd the frontend start, the tests run, and the linters pass from
+         - the Makefile. It covers N13 and S2. The status is planned.    
+       6 -2. **Stream server.** The goal is a FastAPI server that generat
+         -es random integers and sends them in batches over Server-Sent E
+         -vents. It covers B2, N5, N7, N8, and N11. The status is planned
+         -.                                                              
+       7 -3. **Heat map client.** The goal is an Angular client that bins
+         - values, keeps counts, and draws the grid, the axis labels, the
+         - color scale, and the side panel. It covers B1, B3, B4, B5, B6,
+         - N1, N2, N3, N4, D2, and D3. The status is planned.            
+       8 -4. **Connection handling.** The goal is a client that shows the
+         - stream state, reconnects with backoff, and keeps counts on scr
+         -een during a reconnect. It covers N9, N10, and D1. The status i
+         -s planned.                                                     
+       9 -5. **Cloud deploy.** The goal is the backend running on ECS Far
+         -gate behind an ALB at my domain, deployed with CDK from the Mak
+         -efile. It covers B2 and N13. The status is planned.            
+      10 -6. **Latency and stress test.** The goal is a measured generati
+         -on-to-render latency and a measured set of limits. It covers N6
+         - and N12. The status is planned.                               
+       5 +1. **Scaffold.** The goal is a repo where the backend, the fron
+         +tend, and the CDK app exist, the tests run, the linters pass, a
+         +nd the CDK app synthesizes, all from the Makefile. It covers N1
+         +3 and S2. The status is planned.                               
+       6 +2. **Backend.** The goal is a FastAPI server that generates ran
+         +dom integers and sends them in batches over Server-Sent Events.
+         + It covers B2, N5, N7, N8, and N11. The status is planned.     
+       7 +3. **Frontend.** The goal is an Angular client that bins values
+         +, keeps counts, and draws the grid, the axis labels, the color 
+         +scale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2
+         +, N3, N4, D2, and D3. The status is planned.                   
+       8 +4. **Stream.** The goal is a client that shows the stream state
+         +, reconnects with backoff, and keeps counts on screen during a 
+         +reconnect. It covers N9, N10, and D1. The status is planned.   
+       9 +5. **Deploy.** The goal is the backend running on ECS Fargate b
+         +ehind an ALB at my domain, deployed with CDK from the Makefile.
+         + It covers B2 and N13. The status is planned.                  
+      10 +6. **Testing.** The goal is a measured generation-to-render lat
+         +ency and a measured set of limits from a stress test. It covers
+         + N6 and N12. The status is planned.                            
+      11  
+      12  ## Stretch goals
+      13  
+      14 -7. **Admin settings page.** The goal is a backend page that cha
+         -nges the stream settings while the server runs. It covers no re
+         -quired item. The status is planned.                            
+      15 -8. **Hotspot distribution.** The goal is a generator mode where
+         - a few drifting regions get most of the hits, as in the HTML de
+         -sign. It covers no required item. The status is planned.       
+      14 +7. **Admin Page.** The goal is a backend page that changes the 
+         +stream settings while the server runs. It covers no required it
+         +em. The status is planned.                                     
+      15 +8. **Hotspots.** The goal is a generator mode where a few drift
+         +ing regions get most of the hits, as in the HTML design. It cov
+         +ers no required item. The status is planned.                   
+
+⏺ I renamed the phases in specs/roadmap.md. Scaffold now also creates the CDK
+  app and checks that it synthesizes from the Makefile. The resources still get
+  defined and deployed in Deploy. The other phases keep their goals and
+  requirement IDs.
+
+  The branch for phase 1 will be feature/01-scaffold.
+
+✻ Worked for 9s · done 10:37 PM
+
+❯ On the frontend make sure you use canvas and maybe requestAnimationFrame      
+
+⏺ Bash(python3 - <<'EOF'
+      p="specs/tech-stack.md"; s=open(p).read()…)  ⎿  Updated docs/trade-offs.md (+2 -0)
+      11  - The client keeps counts as 64-bit floats. They stay exact up 
+          to 2⁵³, which a 32-bit integer would overflow in hours at 100,0
+          00 samples per second. The cost is twice the memory of 32-bit i
+          ntegers, which is small at 64 by 64 cells.
+      12  - The generator uses a uniform distribution. It is the simplest
+           to test. The cost is a nearly flat heat map, so the hotspot mo
+          de is a stretch goal.
+      13  - The admin settings page is a stretch goal. The cost is that a
+           settings change needs a server restart.
+      14 +- The client draws the grid on a canvas instead of one DOM or S
+         +VG element per cell. A 64 by 64 grid has 4,096 cells, and a can
+         +vas repaints them without DOM updates. The cost is that the cel
+         +ls are not in the DOM, so the grid needs an aria-label for scre
+         +en readers and tests must check the counts instead of the eleme
+         +nts.                                                           
+      15 +- The client redraws with requestAnimationFrame instead of once
+         + per batch. Batches arrive every 50 ms, and the browser paints 
+         +at the display rate, so the client draws only the latest state.
+         + The cost is up to one frame of added latency, which is about 1
+         +7 ms at 60 Hz.                                                 
+  ⎿  Updated specs/tech-stack.md (+1 -0)
+      18  - The frontend uses Angular 21.2.1 and runs only on the local m
+          achine.
+      19  - The runtime is Node.js 22.22.1, and the package manager is np
+          m 11.20.0.
+      20  - The TypeScript, Vitest, and ESLint versions are the ones that
+           Angular CLI 21.2.1 installs when it creates the project. ESLin
+          t comes from angular-eslint.
+      21 +- The frontend draws the grid on an HTML canvas. It applies eac
+         +h batch to the counts when the batch arrives, and it redraws at
+         + most once per display frame with requestAnimationFrame.       
+      22  - The frontend keeps counts as 64-bit floats, so large counts d
+          o not overflow.
+      23  - The HTML design in context/ sets the look of the client. The 
+          brief wins where the two differ.
+      24  - The tests use Vitest. The minimum coverage is 80 percent, and
+           the goal is 100 percent.
+
+⏺ I added this to the frontend section of specs/tech-stack.md. The client draws
+  the grid on a canvas and updates the counts as each batch arrives. It redraws
+  with requestAnimationFrame at most once per display frame, and it skips a
+  frame when nothing has changed.
+
+  I made requestAnimationFrame a firm rule. Batches come every 50 ms, so drawing
+  on each batch would paint frames the display never shows.
+
+  I also added two entries to docs/trade-offs.md. One says that canvas cells are
+  not in the DOM, so the grid needs an aria-label and tests must check the
+  counts instead of elements. The other says that requestAnimationFrame can add
+  up to one frame of latency, which is about 17 ms at 60 Hz, against the 100 ms
+  target.
+
+✻ Brewed for 11s · done 10:38 PM
+
+❯ Skip the aria label in this case, the fundamental UI and premise is flawed    
+  from view of a11y                                                             
+
+⏺ Bash(python3 - <<'EOF'
+      p="docs/trade-offs.md"; s=open(p).read()…)
+  ⎿  specs/mission.md:52:- N11. The server settings are samples per second
+     from 1 to 100,000, batch interval from 50 ms to 1 s, and a maximum val
+     ue of 10,000. The defaults are 100,000 samples per second and a 50 ms
+     … +9 lines (ctrl+o to expand)
+  ⎿  Updated docs/assumptions.md (+1 -0)
+      11  - The reviewers are the only users of the system.
+      12  - The server settings come from environment variables at start.
+      13  - Python 3.13.15 is the project version because `python3` on my
+           PATH points to it, although Python 3.14.7 is also on the lapto
+          p.
+      14 +- Accessibility is out of scope. A live color heat map cannot c
+         +onvey its data to a screen reader user, so an aria-label on the
+         + canvas would not fix the premise.                             
+  ⎿  Updated docs/trade-offs.md (+1 -1)
+      11  - The client keeps counts as 64-bit floats. They stay exact up 
+          to 2⁵³, which a 32-bit integer would overflow in hours at 100,0
+          00 samples per second. The cost is twice the memory of 32-bit i
+          ntegers, which is small at 64 by 64 cells.
+      12  - The generator uses a uniform distribution. It is the simplest
+           to test. The cost is a nearly flat heat map, so the hotspot mo
+          de is a stretch goal.
+      13  - The admin settings page is a stretch goal. The cost is that a
+           settings change needs a server restart.
+      14 -- The client draws the grid on a canvas instead of one DOM or S
+         -VG element per cell. A 64 by 64 grid has 4,096 cells, and a can
+         -vas repaints them without DOM updates. The cost is that the cel
+         -ls are not in the DOM, so the grid needs an aria-label for scre
+         -en readers and tests must check the counts instead of the eleme
+         -nts.                                                           
+      14 +- The client draws the grid on a canvas instead of one DOM or S
+         +VG element per cell. A 64 by 64 grid has 4,096 cells, and a can
+         +vas repaints them without DOM updates. The cost is that the cel
+         +ls are not in the DOM, so tests must check the counts instead o
+         +f the elements.                                                
+      15  - The client redraws with requestAnimationFrame instead of once
+           per batch. Batches arrive every 50 ms, and the browser paints 
+          at the display rate, so the client draws only the latest state.
+           The cost is up to one frame of added latency, which is about 1
+          7 ms at 60 Hz.
+  ⎿  Updated specs/mission.md (+1 -0)
+      65  - The bonus items are write-ups only. I write B7 and B8 myself,
+           outside the roadmap.
+      66  - I do not write general documentation about AI.
+      67  - An admin page for live settings is a stretch goal.
+      68 +- Accessibility is out of scope, including an aria-label on the
+         + canvas.                                                       
+
+⏺ I took the aria-label out of the canvas trade-off in docs/trade-offs.md.
+
+  - specs/mission.md now lists accessibility as out of scope, and the canvas
+    aria-label is out with it.
+  - docs/assumptions.md has an entry that gives your reason, which is that a
+    live color heat map cannot convey its data to a screen reader user.
+
+  The design HTML has an aria-label and a live status region. The Frontend and
+  Stream plans will leave both out.
+
+✻ Crunched for 8s · done 10:39 PM

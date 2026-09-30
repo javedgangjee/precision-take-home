@@ -41,6 +41,7 @@ Consider
 - I need a makefile with all the basics - run frontend, run backend, deploy, etc
 - Deploy with CDK in python
 - Backend may need an admin page to allow dynamic update of settings
+- Keep log of assumptions, trade offs and ai changes as we go along in each phase
 
 Out of scope
 - Assume bonus items are writeups

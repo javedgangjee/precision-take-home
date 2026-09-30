@@ -1,0 +1,644 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven validate                                                         
+
+  Listed 2 directories (ctrl+o to expand)
+
+⏺ Running the three automated commands now.
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+⏺ All automated checks pass.
+
+  - V1 to V9. make test passes. The frontend has 15 test files and 69 tests, and
+    the backend has 36 tests. Each case listed in validation.md has a matching
+    test. Five extra tests exist beyond the list: the late window in the frame
+    rate meter, the grid redraw on resize, two batch queue cases, and the flat
+    index in binning. The review commit added them.
+  - V10. make lint exits with code 0. ESLint and Prettier pass.
+  - V11. ng build exits with code 0, and the worker has its own chunk
+    (worker-FGOCIK6W.js).
+
+  Every item from R1 to R14 has at least one check. R12 depends only on M1, and
+  R14 depends only on M4, so I need your result for each manual check. I will
+  ask about them one at a time.
+
+  M1. The page matches the brief and the HTML design
+
+  1. Run make frontend and open http://localhost:4200.
+  2. Open context/Bin There Done That.html in a second window.
+  3. Check that the header, the side panel, the fonts, and the colors match the
+     design. Check that the grid fills with color, the samples received count
+     rises, and the frame rate is near your display's refresh rate.
+  4. Check that the row labels 0, 2, and so on to 30 are on the left, and the
+     column labels are along the bottom. Check that the scale on the right runs
+     from blue at 1 to red at the max count.
+
+  Does M1 pass? If it does not, tell me what differs.
+
+✻ Crunched for 37s · done 3:05 PM
+
+※ recap: I am validating the frontend feature, and every automated check passes. Next, you run manual check M1 in the browser and tell me if it passes.
+
+❯ M1 passes                                                                     
+
+⏺ M2. The N control works at its limits
+
+  1. Click the plus button until N is 64.
+  2. Check that the plus button is hidden and the field does not move. Check
+     that the counts reset on each click, and that the axis labels appear at
+     every 4th row and column.
+  3. Click the minus button until N is 1.
+  4. Check that the minus button is hidden and the field does not move. Check
+     that the one cell is the red end color #FF0033.
+
+  Does M2 pass?
+
+✻ Crunched for 2s · done 4:33 PM
+
+❯ pass                                                                          
+
+⏺ M3. Stress test the browser
+
+  1. Keep make frontend running. Set N to 64 in each step below, because a
+     reload resets N to 32.
+  2. Open http://localhost:4200/?rate=100000 and note the frame rate after 10 s.
+     It should be within 5 fps of your display refresh rate.
+  3. Repeat step 2 with ?rate=1000000, ?rate=5000000, and ?rate=10000000. Note
+     the frame rate for each. When the rate falls below 90 percent of the peak,
+     a red line that reads "Below the expected N fps" should show below the
+     frame rate.
+  4. Open http://localhost:4200/?rate=abc. The console should show a warning
+     that names rate, and the stream should run at 100,000 samples per second.
+
+  Send me the four frame rates, your display refresh rate, and the result of
+  step 4.
+
+✻ Baked for 3s · done 4:34 PM
+
+※ recap: We are validating feature 3, the frontend, and the automated checks, M1, and M2 all pass. Next, run the M3 stress test and send me the four frame rates, your display refresh rate, and the result for rate=abc.
+
+❯ Cranked rate max sample rate to 100mil so it didn't default to 100k.          
+  This is telling make a few changes for me. To assumptions add that it is      
+  meant to run with chrome energy saver off and the target frame rate is 60fps. 
+  So instead of a stable frame rate for the error, change it to a hard coded    
+  60fps. I'll give you the stress tested front end frame rate in the next       
+  response                                                                      
+
+  Searched for 1 pattern, ran 3 shell commands (ctrl+o to expand)
+
+⏺ Now the code changes.
+
+⏺ Bash(python3 - <<'EOF'
+      import re,pathlib…)
+  ⎿  8: * Counts animation frames. The reading is the frame rate of the las
+     t window
+     14:  private windowStart: number | null = null;
+     … +9 lines (ctrl+o to expand)
+  ⎿  Updated frontend/src/app/heatmap/frame-rate.ts (+7 -7)
+       1 -/** The reading is below the expected rate when it is under thi
+         -s share of the peak. */                                        
+       1 +/** The target frame rate. The client runs in Chrome with Energ
+         +y Saver off, which allows 60 fps. */                           
+       2 +export const EXPECTED_FPS = 60;                                
+       3 +                                                               
+       4 +/** The reading is below the expected rate when it is under thi
+         +s share of it. */                                              
+       5  const BELOW_RATIO = 0.9;
+       6  
+       7  /**
+       8   * Counts animation frames. The reading is the frame rate of th
+          e last window
+       9   * of at least 1 s, which is the frame count divided by the rea
+          l window length.
+       7 - * A late frame makes the window longer, so a stall lowers the 
+         -reading. The peak is the highest reading so far, which stands f
+         -or the                                                         
+       8 - * refresh rate of the display.                                
+      10 + * A late frame makes the window longer, so a stall lowers the 
+         +reading.                                                       
+      11   */
+      12  export class FrameRateMeter {
+      13    reading = 0;
+      12 -  peak = 0;                                                    
+      14    private windowStart: number | null = null;
+      15    private frames = 0;
+      16  
+     ...
+      20        this.windowStart = now;
+      21      } else if (now - this.windowStart >= 1000) {
+      22        this.reading = Math.round((this.frames * 1000) / (now - t
+          his.windowStart));
+      22 -      this.peak = Math.max(this.peak, this.reading);           
+      23        this.windowStart = now;
+      24        this.frames = 0;
+      25      }
+     ...
+      27      return this.reading;
+      28    }
+      29  
+      30 -  /** Is true when the reading is below 90 percent of the peak.
+         - */                                                            
+      30 +  /** Is true after the first window when the reading is below 
+         +90 percent of the expected rate. */                            
+      31    get below(): boolean {
+      32 -    return this.reading < this.peak * BELOW_RATIO;             
+      32 +    return this.windowClosed && this.reading < EXPECTED_FPS * B
+         +ELOW_RATIO;                                                    
+      33    }
+      34  }
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  2:import { FrameRateMeter } from './frame-rate';
+     /** The target frame rate. The client runs in Chrome with Energy Saver
+      off, which allows 60 fps. */
+     … +34 lines (ctrl+o to expand)
+  ⎿  Updated frontend/src/app/heatmap/frame-rate.ts (+2 -0)
+      13    reading = 0;
+      14    private windowStart: number | null = null;
+      15    private frames = 0;
+      16 +  private windowClosed = false;                                
+      17  
+      18    /** Counts one frame at the given time in ms and returns the 
+          reading. */
+      19    tick(now: number): number {
+     ...
+      23        this.reading = Math.round((this.frames * 1000) / (now - t
+          his.windowStart));
+      24        this.windowStart = now;
+      25        this.frames = 0;
+      26 +      this.windowClosed = true;                                
+      27      }
+      28      this.frames++;
+      29      return this.reading;
+  ⎿  Updated frontend/src/app/heatmap/heat-map-store.ts (+1 -1)
+      72      this.samplesSignal.set(counts.total);
+      73      this.maxSignal.set(counts.max);
+      74      this.fpsSignal.set(meter.reading);
+      75 -    this.fpsWarningSignal.set(meter.below ? `Below the expected
+         - ${meter.peak} fps` : null);                                   
+      75 +    this.fpsWarningSignal.set(meter.below ? `Below the expected
+         + ${EXPECTED_FPS} fps` : null);                                 
+      76    }
+      77  }
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿      expect(warn).not.toHaveBeenCalled();
+       });
+     … +9 lines (ctrl+o to expand)
+  ⎿  Updated frontend/src/app/heatmap/frame-rate.spec.ts (+12 -1)
+      31      run(meter, 60, 0, 999);
+      32      run(meter, 30, 1000, 2000);
+      33      expect(meter.reading).toBe(30);
+      34 -    expect(meter.peak).toBe(60);                               
+      34      expect(meter.below).toBe(true);
+      35    });
+      36  
+      37 +  it('reports 30 fps from the start as below the expected 60 fp
+         +s', () => {                                                    
+      38 +    const meter = new FrameRateMeter();                        
+      39 +    run(meter, 30, 0, 2000);                                   
+      40 +    expect(meter.below).toBe(true);                            
+      41 +  });                                                          
+      42 +                                                               
+      43 +  it('does not report a drop before the first second has passed
+         +', () => {                                                     
+      44 +    const meter = new FrameRateMeter();                        
+      45 +    run(meter, 60, 0, 999);                                    
+      46 +    expect(meter.below).toBe(false);                           
+      47 +  });                                                          
+      48 +                                                               
+      49    it('does not report 55 fps after 60 fps as below the expected
+           rate', () => {
+      50      const meter = new FrameRateMeter();
+      51      run(meter, 60, 0, 999);
+  ⎿  Updated frontend/src/app/heatmap/heat-map-store.ts (+1 -1)
+      1  import { Injectable, signal } from '@angular/core';
+      2 -import { FrameRateMeter } from './frame-rate';                  
+      2 +import { EXPECTED_FPS, FrameRateMeter } from './frame-rate';    
+      3  import { GridCounts } from './grid-counts';
+      4  
+      5  export const MIN_N = 1;
+  ⎿  Updated frontend/src/app/panel/side-panel.spec.ts (+1 -1)
+       97      expect(readoutValue('Frame rate')).toBe('60 fps');
+       98    });
+       99  
+      100 -  it('shows the red error line when the reading drops below th
+          -e peak and hides it when it is back', async () => {           
+      100 +  it('shows the red error line when the reading drops below 60
+          + fps and hides it when it is back', async () => {             
+      101      run(60, 0, 999);
+      102      run(30, 1000, 2200);
+      103      await render();
+  ⎿  Updated frontend/src/app/source/test-source-settings.spec.ts (+2 -2)
+      21    });
+      22  
+      23    it('reads the highest rate, the longest interval, and the sma
+          llest max value', () => {
+      24 -    expect(readTestSourceSettings('?rate=10000000&interval=1000
+         -&max=1')).toEqual({                                            
+      24 +    expect(readTestSourceSettings('?rate=100000000&interval=100
+         +0&max=1')).toEqual({                                           
+      25        rate: 10_000_000,
+      26        interval: 1000,
+      27        max: 1,
+      28      });
+      29    });
+      30  
+      31 -  it.each(['0', '10000001', 'abc'])('falls back to the default 
+         -rate for rate=%s', (value) => {                                
+      31 +  it.each(['0', '100000001', 'abc'])('falls back to the default
+         + rate for rate=%s', (value) => {                               
+      32      expect(readTestSourceSettings(`?rate=${value}`).rate).toBe(
+          100_000);
+      33      expectWarningFor('rate');
+      34    });
+
+⏺ Bash(sed -i '' 's/      rate: 10_000_000,/      rate: 100_000_000,/'
+      frontend/src/app/source/test-source-settings.spec.ts && make test-frontend
+      2>&1 | grep -E "Test…)
+  ⎿   Test Files  15 passed (15)
+           Tests  71 passed (71)
+     All files pass linting.
+     … +3 lines (ctrl+o to expand)
+  ⎿  Updated frontend/src/app/source/test-source-settings.spec.ts (+1 -1)
+      22  
+      23    it('reads the highest rate, the longest interval, and the sma
+          llest max value', () => {
+      24      expect(readTestSourceSettings('?rate=100000000&interval=100
+          0&max=1')).toEqual({
+      25 -      rate: 10_000_000,                                        
+      25 +      rate: 100_000_000,                                       
+      26        interval: 1000,
+      27        max: 1,
+      28      });
+  ⎿  (timeout 5m)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  125:1. Run `make frontend` and open the page in Chrome with Energy Sav
+     er off. Set N to 64 in each step below.
+     126:2. Open http://localhost:4200/?rate=100000 and note the frame rate
+     … +2 lines (ctrl+o to expand)
+  ⎿  Updated README.md (+2 -2)
+      66  - A cell with no hits is white. A cell with hits gets a color f
+          rom blue (#1E00FF) at a count of 1 through cyan, green, and yel
+          low to red (#FF0033) at the max count.
+      67  - The color scale shows the max count at the top, the midpoint 
+          in the middle, and 1 at the bottom.
+      68  - The minus and plus buttons change N from 1 to 64. The up and 
+          down arrow keys in the N field change N by 1, and by 10 with Sh
+          ift. A change to N resets all counts to zero.
+      69 -- The side panel shows the samples received, the max count, and
+         - the frame rate. A red line shows below the frame rate when it 
+         -falls below 90 percent of the highest rate since the page loade
+         -d.                                                             
+      69 +- The side panel shows the samples received, the max count, and
+         + the frame rate. A red line shows below the frame rate when it 
+         +falls below 90 percent of the target of 60 fps. Run the client 
+         +in Chrome with Energy Saver off, because Energy Saver caps the 
+         +frame rate at 30 fps.                                          
+      70  
+      71  ### Test source
+      72  
+     ...
+      74  
+      75  | Setting | Default | Range | Meaning |
+      76  | --- | --- | --- | --- |
+      77 -| `rate` | 100000 | 1 to 10000000 | This sets how many integers
+         - the source makes each second. The range goes past the server l
+         -imit, so a stress test can push the browser. |                 
+      77 +| `rate` | 100000 | 1 to 100000000 | This sets how many integer
+         +s the source makes each second. The range goes past the server 
+         +limit, so a stress test can push the browser. |                
+      78  | `interval` | 50 | 50 to 1000 | This sets the time between bat
+          ches in milliseconds. |
+      79  | `max` | 1024 | 1 to 10000 | Each integer is from 0 to this va
+          lue minus 1. |
+      80  
+  ⎿  Updated docs/ai-changes.md (+5 -0)
+      56  - The AI closed each frame rate window on the first frame at or
+           after 1 s and used the raw frame count as the reading. I point
+          ed out that the window did not end at 1 s but kept going until 
+          the next frame. After a stall, 60 frames over 2 s read as 60 fp
+          s. The AI now divides the frame count by the real window length
+          , and a new test covers a late frame.
+      57  - The AI marked the grid dirty after a resize and left the redr
+          aw to the next frame. Setting the canvas size clears the canvas
+          , and the browser painted it blank before that frame, so the gr
+          id went blank while I resized. I changed layout() to draw at on
+          ce. The AI then moved the draw call into one private method, fi
+          xed the frame loop test that my change broke, and added a test 
+          that a resize draws without a frame.
+      58  - The AI built the test source worker to post every batch with 
+          no limit, so a slow main thread would build an open backlog of 
+          messages. I asked for the same queue of 2 as the server. The AI
+           added a queue in the worker that drops the oldest batch when i
+          t is full, with one batch in flight and an ack from the main th
+          read that releases the next one.
+      59 +                                                               
+      60 +## 2026-09-30, validate feature 3, frontend                    
+      61 +                                                               
+      62 +- The AI set the test source rate limit to 10,000,000 samples p
+         +er second. During the stress test, a rate of 100,000,000 fell b
+         +ack to the default of 100,000. I raised the limit to 100,000,00
+         +0 in the code, and the AI updated the tests and the docs to mat
+         +ch.                                                            
+      63 +- The AI compared the frame rate with the peak reading since th
+         +e page loaded. I decided the client targets 60 fps in Chrome wi
+         +th Energy Saver off, and asked for a fixed 60 fps target instea
+         +d of the peak. The AI removed the peak from the meter, kept the
+         + 90 percent margin, and hid the line until the first reading.  
+  ⎿  Updated docs/assumptions.md (+8 -2)
+      44  ## 2026-09-30, plan for feature 3, frontend
+      45  
+      46  - Where the HTML design differs from the brief or the specs, th
+          e client follows the brief and the specs. N runs from 1 to 64, 
+          the grid has row and column labels, row 0 is at the bottom, cel
+          ls use (count - 1) / (max - 1), and the frame rate is measured.
+      47 -- The test source in the browser reads `rate`, `interval`, and 
+         -`max` from the URL query. The defaults match the server. The ra
+         -te goes up to 10,000,000 samples per second so that the stress 
+         -test can go past the server limit of 100,000.                  
+      47 +- The test source in the browser reads `rate`, `interval`, and 
+         +`max` from the URL query. The defaults match the server. The ra
+         +te goes up to 100,000,000 samples per second so that the stress
+         + test can go past the server limit of 100,000.                 
+      48  - The test source is the only source in feature 3. Feature 4 de
+          cides how the user picks the test source or the server.
+      49  - The colors of the brief picture are a sketch. Cell (b), with 
+          5 of 10 hits, looks yellow in the picture and is green on the c
+          lient scale.
+      50 -- The expected frame rate is the highest one-second reading sin
+         -ce the page loaded. On an idle page that reading is the display
+         - refresh rate, so the rule works on 60 Hz and 120 Hz screens.  
+      50 +- The expected frame rate is the highest one-second reading sin
+         +ce the page loaded. On an idle page that reading is the display
+         + refresh rate, so the rule works on 60 Hz and 120 Hz screens. T
+         +he validate step replaced this assumption with the one below.  
+      51  - The fonts come from the HTML design bundle. The repo is priva
+          te and will not be released, so it has no license files for the
+           fonts.
+      52  - The client uses the light theme only.
+      53  
+     ...
+      61  ## 2026-09-30, review for feature 3, frontend
+      62  
+      63  - The server queue holds batches that wait for the send to the 
+          client. I assume the closest match in the browser is a queue in
+           the worker that waits for the main thread to apply each batch,
+           so the ack stands for a finished send.
+      64 +                                                               
+      65 +## 2026-09-30, validate feature 3, frontend                    
+      66 +                                                               
+      67 +- The client runs in Chrome with Energy Saver off. Energy Saver
+         + caps the frame rate at 30 fps, which would show the red error 
+         +line on an idle page.                                          
+      68 +- The target frame rate is 60 fps. The red error line shows whe
+         +n the reading is below 90 percent of 60, which is 54 fps. The l
+         +ine hides for the first second, before the meter has a reading.
+      69 +- The test source rate goes up to 100,000,000 samples per secon
+         +d, so the stress test can push the browser past 10,000,000.    
+  ⎿  Updated docs/trade-offs.md (+5 -1)
+      70  - The scale shows three labels, which are the max, the midpoint
+          , and 1. The scale stays easy to read. The cost is fewer refere
+          nce points, and the midpoint shows a decimal, such as 5.5, when
+           the max is even.
+      71  - The client draws the axis labels on the same canvas as the ce
+          lls. The labels stay lined up with the cells at any size. The c
+          ost is that the labels are not in the DOM, so the tests check t
+          hem through a fake canvas context.
+      72  - The panel readouts update at most once every 150 ms, as the H
+          TML design does. Text updates do not cost a frame. The cost is 
+          that the numbers lag the grid by up to 150 ms.
+      73 -- The frame rate counts requestAnimationFrame callbacks, and th
+         -e error line compares the count with the peak since load. It sh
+         -ows when the main thread falls behind, on any display. The cost
+         - is that the peak is low when the page loads under heavy load, 
+         -and then the line does not show a drop that is real.           
+      73 +- The frame rate counts requestAnimationFrame callbacks, and th
+         +e error line compares the count with the peak since load. It sh
+         +ows when the main thread falls behind, on any display. The cost
+         + is that the peak is low when the page loads under heavy load, 
+         +and then the line does not show a drop that is real. The valida
+         +te step replaced the peak with a fixed target, as the entry bel
+         +ow records.                                                    
+      74  - The N buttons hide with `visibility: hidden` at the limits in
+          stead of going disabled. The field does not move. The cost is t
+          hat the button under the pointer or the keyboard focus disappea
+          rs at the limit, and the focus leaves it.
+      75  - The heat map state lives in one store service, the drawing li
+          ves in a plain renderer class, and the components only bind sig
+          nals and forward events. Each part is small and has its own tes
+          ts. The cost is more files than one component that does it all.
+      76  
+     ...
+      86  - The frame rate reading is the frame count divided by the real
+           window length, so a stall lowers it. The cost is that a hidden
+           tab pauses requestAnimationFrame, and the first window after t
+          he tab shows again reads low and can show the error line for up
+           to 1 s.
+      87  - A resize draws the grid at once, outside the frame loop, so t
+          he grid never paints blank. The cost is a second draw in a fram
+          e when a batch and a resize land in the same frame, which happe
+          ns only while the user resizes.
+      88  - The test source worker sends one batch at a time and waits fo
+          r an ack from the main thread, with a queue of 2 behind it. A s
+          low main thread gets fresh batches and the backlog stays at 3 b
+          atches at most. The cost is one extra message per batch, and th
+          e queue fills only when the main thread lags. The server queue 
+          in feature 4 fills when the network lags, because the browser r
+          eads the SSE stream off the main thread.
+      89 +                                                               
+      90 +## 2026-09-30, validate feature 3, frontend                    
+      91 +                                                               
+      92 +- The error line compares the frame rate with a fixed target of
+         + 60 fps instead of the peak since load. A page that loads under
+         + heavy load now shows the drop. The cost is that a 120 Hz displ
+         +ay running at 60 fps shows no line, and a browser capped at 30 
+         +fps shows the line at all times.                               
+  ⎿  Updated specs/features/03-frontend/plan.md (+1 -1)
+       7  3. Write the counts class. It holds N, a Float64Array of N² cou
+          nts, the max count, and the total samples. `apply(values)` bins
+           each value, adds 1 to its cell, and updates the max and the to
+          tal. `reset(n)` makes new zero counts. This step creates src/ap
+          p/heatmap/grid-counts.ts.
+       8  4. Write the color map and the scale labels. `colorPosition(cou
+          nt, max)` returns null for a count of 0 and (count - 1) / (max 
+          - 1) otherwise, or 0 when the max is 1. A 256-entry table holds
+           the colors from blue to red. `scaleLabels(max)` returns the la
+          bels from G4. This step creates src/app/heatmap/color-map.ts.
+       9  5. Write the grid layout functions. `labelStep(n)` returns the 
+          step from G5. `cellRect(row, col, n, size)` returns the pixel b
+          ox of a cell with row 0 at the bottom and a 1 device pixel gap 
+          between cells. This step creates src/app/heatmap/grid-layout.ts
+          .
+      10 -6. Write the frame rate meter. `tick(now)` counts frames and re
+         -turns the count of the last full second. The meter also keeps t
+         -he peak reading and reports when the reading is below 90 percen
+         -t of the peak. This step creates src/app/heatmap/frame-rate.ts.
+      10 +6. Write the frame rate meter. `tick(now)` counts frames and re
+         +turns the count of the last full second. The meter also reports
+         + when the reading is below 90 percent of the fixed target of 60
+         + fps. This step creates src/app/heatmap/frame-rate.ts.         
+      11  7. Write the store. It is an injectable service and the only ow
+          ner of the heat map state. It holds N as a signal, the counts, 
+          the frame rate meter, the dirty flag, and the readout signals f
+          or the samples, the max count, the frame rate, and the error li
+          ne. `setN(n)` clamps N to 1 to 64, resets the counts, and marks
+           the grid dirty. `applyBatch(values)` updates the counts and ma
+          rks the grid dirty. `frame(now)` ticks the meter, updates the r
+          eadout signals at most every 150 ms, and returns true when the 
+          grid needs a redraw. This step creates src/app/heatmap/heat-map
+          -store.ts.
+      12  8. Write the renderer. It is a plain class with no Angular code
+          . `draw(ctx, counts, size)` fills the gap color, fills each cel
+          l with its color or white from the color map, and writes the ax
+          is labels at the step from G5. It uses `cellRect` from step 5, 
+          so row 0 is at the bottom. This step creates src/app/heatmap/he
+          at-map-renderer.ts.
+      13  9. Write the heat map component. It is thin. It hosts the canva
+          s and sizes it to a square that fits the main area with a Resiz
+          eObserver and the device pixel ratio. It runs one requestAnimat
+          ionFrame loop that calls `store.frame(now)` and, when that retu
+          rns true, `renderer.draw`. It stops the loop and the observer w
+          hen it is destroyed. This step creates src/app/heatmap/heat-map
+          .ts, heat-map.html, and heat-map.scss.
+  ⎿  … 2 more files changed
+
+⏺ The docs and specs are updated. I am checking for any stale references to the
+  old limit or the peak.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I made both changes. The frontend tests pass (71 of 71), and lint and Prettier
+  pass.
+
+  Fixed 60 fps target
+  - frame-rate.ts now compares the reading with a fixed EXPECTED_FPS = 60, and
+    the peak is gone. The store shows "Below the expected 60 fps".
+  - I kept the 90 percent margin, so the red line shows below 54 fps. Without a
+    margin, a normal reading of 59 would make the line flicker. Tell me if you
+    want the line to show at any reading below 60.
+  - The line now stays hidden for the first second, before the meter has a
+    reading. Before, the peak did this job. Without it, the page would show the
+    line at load.
+  - In frame-rate.spec.ts I took out the peak assertion and added two cases. One
+    checks that 30 fps from the start reports below 60. The other checks that
+    the line stays hidden before 1 s. The validation.md checks also changed to
+    match.
+
+  Rate limit of 100,000,000
+  - I kept your code change. In the settings tests I moved the accepted case to
+    100000000 and the rejected case to 100000001.
+  - M3 now also tests rate=100000000 and says to open the page in Chrome with
+    Energy Saver off.
+
+  Docs
+  - docs/assumptions.md has a new validate entry for Chrome with Energy Saver
+    off, the 60 fps target, and the new rate limit. The old entry about the peak
+    now points to it.
+  - docs/trade-offs.md and docs/ai-changes.md each have a validate entry.
+  - The README, requirements.md (G1 and G7), and plan step 6 now match the new
+    behavior.
+
+  Send me the M3 results. I need the frame rate at each of the five rates, the
+  result of ?rate=abc, and whether the red line showed when it should.
+
+✻ Sautéed for 1m 41s · done 5:25 PM
+❯ Pass it. 100k, 5mil, 10mil - 60 fps, 100mil - 23fps. 40mil seems to be the    
+  limit.                                                                        
+
+⏺ I will record M3 as a pass. The results are 60 fps at 100,000, 5,000,000, and
+  10,000,000, 23 fps at 100,000,000, and a limit near 40,000,000. You gave no
+  separate number for 1,000,000, so the Results section will say you did not
+  report one.
+
+  M4. The README and the logs record this feature
+
+  1. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-changes.md. Check
+     that each one has an entry dated for the frontend feature.
+  2. Open README.md. Check that it describes the client and lists rate,
+     interval, and max with their defaults and ranges. Check also that it gives
+     a stress test URL.
+
+  Does M4 pass?
+
+✻ Crunched for 5s · done 5:31 PM
+
+❯ pass                                                                          
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(cat >> specs/features/03-frontend/validation.md <<'EOF'…)
+  ⎿  Updated specs/features/03-frontend/validation.md (+21 -0)
+      133  2. The expected result is that each file has an entry dated fo
+           r the frontend feature.
+      134  3. Open README.md.
+      135  4. The expected result is that it describes the client, lists 
+           the `rate`, `interval`, and `max` query settings with their de
+           faults and ranges, and gives a stress test URL.
+      136 +                                                              
+      137 +## Results (2026-09-30)                                       
+      138 +                                                              
+      139 +The validate step changed two things at the user's request bef
+          +ore the final run. The expected frame rate is now a fixed 60 f
+          +ps instead of the peak since load, and the test source rate li
+          +mit is now 100,000,000. The V6, V7, V9, and M3 checks above sh
+          +ow the new cases. The results below are from the final run.   
+      140 +                                                              
+      141 +### Automated checks                                          
+      142 +                                                              
+      143 +- V1 to V9 pass. `make test` passes 71 frontend tests in 15 fi
+          +les and 36 backend tests. Each case listed above has a matchin
+          +g test.                                                       
+      144 +- V10 passes. `make lint` exits with code 0.                  
+      145 +- V11 passes. `npx ng build` exits with code 0, and the output
+          + has the separate worker chunk worker-FGOCIK6W.js.            
+      146 +                                                              
+      147 +### Manual checks                                             
+      148 +                                                              
+      149 +- M1 passes. The user confirmed that the page matches the brie
+          +f and the HTML design.                                        
+      150 +- M2 passes. The user confirmed that the N control works at 1 
+          +and at 64.                                                    
+      151 +- M3 passes. The test ran in Chrome with Energy Saver off at N
+          + = 64. The frame rate was 60 fps at 100,000, 5,000,000, and 10
+          +,000,000 samples per second. It was 23 fps at 100,000,000. The
+          + user found the limit near 40,000,000 samples per second. The 
+          +user did not report a separate number for 1,000,000.          
+      152 +- M4 passes. The user confirmed that the README and the three 
+          +logs record the feature.                                      
+      153 +                                                              
+      154 +### Requirement coverage                                      
+      155 +                                                              
+      156 +Each item from R1 to R14 has at least one passing check.      
+
+⏺ Every check passes, so feature 3 is ready for you to review, commit, and
+  merge.
+
+  After the two changes I ran everything again. make test passes 71 frontend
+  tests and 36 backend tests. make lint exits with code 0. The build exits with
+  code 0, and the worker is still in its own chunk. Each item from R1 to R14 has
+  at least one passing check.
+
+  I added the Results section, dated 2026-09-30, at the end of
+  specs/features/03-frontend/validation.md. It records the change to a fixed 60
+  fps target and the new rate limit of 100,000,000. It also records your M3
+  numbers, the limit you found near 40,000,000, and the missing number for
+  1,000,000.
+
+  Clear the session before you run replan after the merge.
+
+✻ Sautéed for 35s · done 5:32 PM
+
+※ recap: We are building the take-home step by step, and feature 3 (frontend) passed every validate check after the 60 fps and rate limit changes. Next, you review, commit, and merge the branch, then clear the session and run replan.

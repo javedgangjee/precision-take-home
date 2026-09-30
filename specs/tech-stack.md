@@ -15,7 +15,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 
 ## Frontend
 
-- The frontend uses Angular 21.2.1 and runs only on the local machine.
+- The frontend uses Angular 21.2.24 and runs only on the local machine. Angular CLI 21.2.1 created the project, and npm resolved its version ranges to 21.2.24.
 - The runtime is Node.js 22.22.1, and the package manager is npm 11.20.0.
 - The TypeScript, Vitest, and ESLint versions are the ones that Angular CLI 21.2.1 installs when it creates the project. ESLint comes from angular-eslint.
 - The frontend draws the grid on an HTML canvas. It applies each batch to the counts when the batch arrives, and it redraws at most once per display frame with requestAnimationFrame.

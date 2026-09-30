@@ -18,3 +18,11 @@ Each entry gives the date, the phase, the choice, and what it costs.
 
 - The repo is one monorepo, and backend/ and infra/ are separate uv projects. The CDK libraries stay out of the backend image. The cost is two lock files to keep current.
 - The backend fails its tests below 80 percent coverage, the same rule as the frontend. The cost is one more dev dependency.
+
+## 2026-09-29, implement feature 1, scaffold
+
+- The frontend keeps Angular 21.2.24, which npm resolved from the ranges that Angular CLI 21.2.1 wrote. The project gets the latest 21.2 patches. The cost is that the version differs from the CLI that created the project.
+- The backend adds httpx2 as a dev dependency. The FastAPI test client needs an HTTP client, and Starlette warns that httpx is deprecated for it. The cost is one more dev dependency.
+- The frontend adds @vitest/coverage-v8 4.1.11 as a dev dependency. The Angular test builder needs it to measure coverage. The cost is one more dev dependency.
+- The Makefile sets NG_CLI_ANALYTICS to false, so the Angular CLI never stops to ask about usage data. The cost is that the Angular team gets no usage data from this project.
+- The CDK app has no feature flags in cdk.json, because the stack is empty. The cost is a notice on each synth until feature 5 adds the resources and the flags.

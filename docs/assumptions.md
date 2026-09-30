@@ -18,3 +18,7 @@ Each entry gives the date, the phase, and the assumption.
 - The backend exposes `GET /health`, which returns `{"status": "ok"}`. The load balancer in feature 5 uses it as its health check.
 - The backend runs on port 8000 and the frontend runs on port 4200, which are the tool defaults.
 - The CDK stack has no AWS account or region lookup, so `cdk synth` runs without credentials.
+
+## 2026-09-29, implement feature 1, scaffold
+
+- The CDK CLI is installed globally, so the Makefile calls `cdk` directly instead of through npx. The README lists it as a prerequisite.

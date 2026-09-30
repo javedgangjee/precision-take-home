@@ -70,7 +70,7 @@ Run `make frontend` and open http://localhost:4200. The page shows the heat map,
 
 ### Test source
 
-Until feature 4 connects the server, a test source in a Web Worker makes the data in the browser. It makes uniform random integers as the server does, and it posts each batch as a JSON string. The client reads the settings from the URL query. When a value is out of range or not a whole number, the client logs a warning to the console and uses the default.
+Until feature 4 connects the server, a test source in a Web Worker makes the data in the browser. It makes uniform random integers as the server does, and it posts each batch as a JSON string. It has the same queue of 2 batches as the server. When the main thread falls behind, the worker drops the oldest waiting batch. The client reads the settings from the URL query. When a value is out of range or not a whole number, the client logs a warning to the console and uses the default.
 
 | Setting | Default | Range | Meaning |
 | --- | --- | --- | --- |

@@ -57,3 +57,7 @@ Each entry gives the date, the phase, and the assumption.
 - The test source settings must be whole numbers. A value such as 1.5 falls back to its default, as a value out of range does.
 - The grid is never smaller than 120 CSS pixels on a side, as in the HTML design.
 - The client redraws the grid when the fonts finish loading, so the axis labels use IBM Plex Mono.
+
+## 2026-09-30, review for feature 3, frontend
+
+- The server queue holds batches that wait for the send to the client. I assume the closest match in the browser is a queue in the worker that waits for the main thread to apply each batch, so the ack stands for a finished send.

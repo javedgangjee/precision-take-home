@@ -68,7 +68,8 @@ The command for V1 to V9 is `make test`. The command for V10 is `make lint`. The
 - With a rate of 30 and a 50 ms interval, 20 calls in a row give 30 integers in total.
 - With a max value of 3 and 100,000 samples, every value is from 0 to 2, and each of 0, 1, and 2 appears at least once.
 - With a max value of 1, every value is 0.
-- The test source service parses the string "[17,8]" from a fake worker and applies it, so with N = 4 cells <0,0> and <1,3> each hold 1.
+- The test source service parses the string "[17,8]" from a fake worker and applies it, so with N = 4 cells <0,0> and <1,3> each hold 1. The service then posts an ack to the worker.
+- The worker queue sends the first batch at once and holds the next batches until an ack. With 4 batches pushed before any ack, the main thread gets the 1st, 3rd, and 4th, so the queue dropped the 2nd.
 
 ### V8. The renderer draws the grid, and the components show the scale
 

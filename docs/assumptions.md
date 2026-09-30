@@ -44,10 +44,10 @@ Each entry gives the date, the phase, and the assumption.
 ## 2026-09-30, plan for feature 3, frontend
 
 - Where the HTML design differs from the brief or the specs, the client follows the brief and the specs. N runs from 1 to 64, the grid has row and column labels, row 0 is at the bottom, cells use (count - 1) / (max - 1), and the frame rate is measured.
-- The test source in the browser reads `rate`, `interval`, and `max` from the URL query. The defaults match the server. The rate goes up to 10,000,000 samples per second so that the stress test can go past the server limit of 100,000.
+- The test source in the browser reads `rate`, `interval`, and `max` from the URL query. The defaults match the server. The rate goes up to 100,000,000 samples per second so that the stress test can go past the server limit of 100,000.
 - The test source is the only source in feature 3. Feature 4 decides how the user picks the test source or the server.
 - The colors of the brief picture are a sketch. Cell (b), with 5 of 10 hits, looks yellow in the picture and is green on the client scale.
-- The expected frame rate is the highest one-second reading since the page loaded. On an idle page that reading is the display refresh rate, so the rule works on 60 Hz and 120 Hz screens.
+- The expected frame rate is the highest one-second reading since the page loaded. On an idle page that reading is the display refresh rate, so the rule works on 60 Hz and 120 Hz screens. The validate step replaced this assumption with the one below.
 - The fonts come from the HTML design bundle. The repo is private and will not be released, so it has no license files for the fonts.
 - The client uses the light theme only.
 
@@ -61,3 +61,9 @@ Each entry gives the date, the phase, and the assumption.
 ## 2026-09-30, review for feature 3, frontend
 
 - The server queue holds batches that wait for the send to the client. I assume the closest match in the browser is a queue in the worker that waits for the main thread to apply each batch, so the ack stands for a finished send.
+
+## 2026-09-30, validate feature 3, frontend
+
+- The client runs in Chrome with Energy Saver off. Energy Saver caps the frame rate at 30 fps, which would show the red error line on an idle page.
+- The target frame rate is 60 fps. The red error line shows when the reading is below 90 percent of 60, which is 54 fps. The line hides for the first second, before the meter has a reading.
+- The test source rate goes up to 100,000,000 samples per second, so the stress test can push the browser past 10,000,000.

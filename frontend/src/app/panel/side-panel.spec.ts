@@ -97,7 +97,7 @@ describe('SidePanel', () => {
     expect(readoutValue('Frame rate')).toBe('60 fps');
   });
 
-  it('shows the red error line when the reading drops below the peak and hides it when it is back', async () => {
+  it('shows the red error line when the reading drops below 60 fps and hides it when it is back', async () => {
     run(60, 0, 999);
     run(30, 1000, 2200);
     await render();

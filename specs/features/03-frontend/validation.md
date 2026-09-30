@@ -52,16 +52,18 @@ The command for V1 to V9 is `make test`. The command for V10 is `make lint`. The
 
 - Before 1 s has passed, the meter reads 0.
 - With a tick every 1000/60 ms for 2 s, the meter reads 60 after the first second.
-- After 1 s at 60 fps and then 1 s at 30 fps, the meter reads 30, its peak is 60, and it reports that the rate is below the expected rate.
-- After 1 s at 60 fps and then 1 s at 55 fps, the meter reports that the rate is not below the expected rate, because 55 is at least 90 percent of 60.
+- After 1 s at 60 fps and then 1 s at 30 fps, the meter reads 30, and it reports that the rate is below the expected rate.
+- With a tick every 1000/30 ms from the start, the meter reports that the rate is below the expected 60 fps.
+- Before 1 s has passed, the meter does not report that the rate is below the expected rate.
+- After 1 s at 60 fps and then 1 s at 55 fps, the meter reports that the rate is not below the expected rate, because 55 is at least 90 percent of the target of 60.
 - With a tick every 1000/30 ms for 2 s, the meter reads 30 after the first second.
 
 ### V7. The test source settings and generator match the server
 
 - V7.1. With the default settings, one batch parses to 5,000 integers.
 - With no query, the settings are a rate of 100,000, an interval of 50 ms, and a max value of 1,024.
-- With `?rate=10000000&interval=1000&max=1`, the settings hold those values.
-- With `rate=0`, `rate=10000001`, or `rate=abc`, the rate takes its default, and the console gets a warning that names `rate`.
+- With `?rate=100000000&interval=1000&max=1`, the settings hold those values.
+- With `rate=0`, `rate=100000001`, or `rate=abc`, the rate takes its default, and the console gets a warning that names `rate`.
 - With `interval=49` or `interval=1001`, the interval takes its default, and the console gets a warning that names `interval`.
 - With `max=0` or `max=10001`, the max value takes its default, and the console gets a warning that names `max`.
 - With a rate of 1 and a 50 ms interval, 20 calls in a row give 19 nulls and one batch of 1 integer.
@@ -91,7 +93,7 @@ The renderer tests use a fake 2D context that records each fill.
 - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and ArrowDown takes away 1.
 - After 1,024 samples, the samples received readout shows "1,024".
 - The frame rate readout shows the meter value with the unit "fps".
-- When the meter reports a peak of 60 and a reading of 30, the panel shows the line "Below the expected 60 fps" below the frame rate, with the class that sets the color to --danger-text.
+- When the meter reads 30, the panel shows the line "Below the expected 60 fps" below the frame rate, with the class that sets the color to --danger-text.
 - When the reading is back at 60, the line is gone.
 
 ### V10. Linters pass
@@ -120,9 +122,9 @@ The renderer tests use a fake 2D context that records each fill.
 
 ### M3. Stress test the browser
 
-1. Run `make frontend`, and set N to 64 in each step below.
+1. Run `make frontend` and open the page in Chrome with Energy Saver off. Set N to 64 in each step below.
 2. Open http://localhost:4200/?rate=100000 and note the frame rate after 10 s. The expected result is a frame rate within 5 fps of the display refresh rate.
-3. Repeat step 2 with `rate=1000000`, `rate=5000000`, and `rate=10000000`. Note the frame rate for each. The expected result is a number for each rate, which goes into the Results section. When the frame rate falls below 90 percent of the peak, the expected result is a red line below the frame rate that reads "Below the expected" and the peak fps.
+3. Repeat step 2 with `rate=1000000`, `rate=5000000`, `rate=10000000`, and `rate=100000000`. Note the frame rate for each. The expected result is a number for each rate, which goes into the Results section. When the frame rate falls below 54 fps, the expected result is a red line below the frame rate that reads "Below the expected 60 fps".
 4. Open http://localhost:4200/?rate=abc. The expected result is a console warning that names `rate`, and a stream at 100,000 samples per second.
 
 ### M4. The README and the logs record this feature
@@ -131,3 +133,24 @@ The renderer tests use a fake 2D context that records each fill.
 2. The expected result is that each file has an entry dated for the frontend feature.
 3. Open README.md.
 4. The expected result is that it describes the client, lists the `rate`, `interval`, and `max` query settings with their defaults and ranges, and gives a stress test URL.
+
+## Results (2026-09-30)
+
+The validate step changed two things at the user's request before the final run. The expected frame rate is now a fixed 60 fps instead of the peak since load, and the test source rate limit is now 100,000,000. The V6, V7, V9, and M3 checks above show the new cases. The results below are from the final run.
+
+### Automated checks
+
+- V1 to V9 pass. `make test` passes 71 frontend tests in 15 files and 36 backend tests. Each case listed above has a matching test.
+- V10 passes. `make lint` exits with code 0.
+- V11 passes. `npx ng build` exits with code 0, and the output has the separate worker chunk worker-FGOCIK6W.js.
+
+### Manual checks
+
+- M1 passes. The user confirmed that the page matches the brief and the HTML design.
+- M2 passes. The user confirmed that the N control works at 1 and at 64.
+- M3 passes. The test ran in Chrome with Energy Saver off at N = 64. The frame rate was 60 fps at 100,000, 5,000,000, and 10,000,000 samples per second. It was 23 fps at 100,000,000. The user found the limit near 40,000,000 samples per second. The user did not report a separate number for 1,000,000.
+- M4 passes. The user confirmed that the README and the three logs record the feature.
+
+### Requirement coverage
+
+Each item from R1 to R14 has at least one passing check.

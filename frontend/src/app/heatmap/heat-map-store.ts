@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { FrameRateMeter } from './frame-rate';
+import { EXPECTED_FPS, FrameRateMeter } from './frame-rate';
 import { GridCounts } from './grid-counts';
 
 export const MIN_N = 1;
@@ -72,6 +72,6 @@ export class HeatMapStore {
     this.samplesSignal.set(counts.total);
     this.maxSignal.set(counts.max);
     this.fpsSignal.set(meter.reading);
-    this.fpsWarningSignal.set(meter.below ? `Below the expected ${meter.peak} fps` : null);
+    this.fpsWarningSignal.set(meter.below ? `Below the expected ${EXPECTED_FPS} fps` : null);
   }
 }

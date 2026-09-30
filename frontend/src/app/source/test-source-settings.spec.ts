@@ -21,14 +21,14 @@ describe('readTestSourceSettings', () => {
   });
 
   it('reads the highest rate, the longest interval, and the smallest max value', () => {
-    expect(readTestSourceSettings('?rate=10000000&interval=1000&max=1')).toEqual({
-      rate: 10_000_000,
+    expect(readTestSourceSettings('?rate=100000000&interval=1000&max=1')).toEqual({
+      rate: 100_000_000,
       interval: 1000,
       max: 1,
     });
   });
 
-  it.each(['0', '10000001', 'abc'])('falls back to the default rate for rate=%s', (value) => {
+  it.each(['0', '100000001', 'abc'])('falls back to the default rate for rate=%s', (value) => {
     expect(readTestSourceSettings(`?rate=${value}`).rate).toBe(100_000);
     expectWarningFor('rate');
   });

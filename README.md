@@ -66,7 +66,7 @@ Run `make frontend` and open http://localhost:4200. The page shows the heat map,
 - A cell with no hits is white. A cell with hits gets a color from blue (#1E00FF) at a count of 1 through cyan, green, and yellow to red (#FF0033) at the max count.
 - The color scale shows the max count at the top, the midpoint in the middle, and 1 at the bottom.
 - The minus and plus buttons change N from 1 to 64. The up and down arrow keys in the N field change N by 1, and by 10 with Shift. A change to N resets all counts to zero.
-- The side panel shows the samples received, the max count, and the frame rate. A red line shows below the frame rate when it falls below 90 percent of the highest rate since the page loaded.
+- The side panel shows the samples received, the max count, and the frame rate. A red line shows below the frame rate when it falls below 90 percent of the target of 60 fps. Run the client in Chrome with Energy Saver off, because Energy Saver caps the frame rate at 30 fps.
 
 ### Test source
 
@@ -74,7 +74,7 @@ Until feature 4 connects the server, a test source in a Web Worker makes the dat
 
 | Setting | Default | Range | Meaning |
 | --- | --- | --- | --- |
-| `rate` | 100000 | 1 to 10000000 | This sets how many integers the source makes each second. The range goes past the server limit, so a stress test can push the browser. |
+| `rate` | 100000 | 1 to 100000000 | This sets how many integers the source makes each second. The range goes past the server limit, so a stress test can push the browser. |
 | `interval` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
 | `max` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 

@@ -17,7 +17,7 @@ export const DEFAULT_TEST_SOURCE_SETTINGS: TestSourceSettings = {
 
 /** The interval and the max value have the server ranges. The rate goes past the server limit for stress tests. */
 const RANGES: Record<keyof TestSourceSettings, [number, number]> = {
-  rate: [1, 10_000_000],
+  rate: [1, 100_000_000],
   interval: [50, 1000],
   max: [1, 10_000],
 };

@@ -70,7 +70,7 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The scale shows three labels, which are the max, the midpoint, and 1. The scale stays easy to read. The cost is fewer reference points, and the midpoint shows a decimal, such as 5.5, when the max is even.
 - The client draws the axis labels on the same canvas as the cells. The labels stay lined up with the cells at any size. The cost is that the labels are not in the DOM, so the tests check them through a fake canvas context.
 - The panel readouts update at most once every 150 ms, as the HTML design does. Text updates do not cost a frame. The cost is that the numbers lag the grid by up to 150 ms.
-- The frame rate counts requestAnimationFrame callbacks, and the error line compares the count with the peak since load. It shows when the main thread falls behind, on any display. The cost is that the peak is low when the page loads under heavy load, and then the line does not show a drop that is real.
+- The frame rate counts requestAnimationFrame callbacks, and the error line compares the count with the peak since load. It shows when the main thread falls behind, on any display. The cost is that the peak is low when the page loads under heavy load, and then the line does not show a drop that is real. The validate step replaced the peak with a fixed target, as the entry below records.
 - The N buttons hide with `visibility: hidden` at the limits instead of going disabled. The field does not move. The cost is that the button under the pointer or the keyboard focus disappears at the limit, and the focus leaves it.
 - The heat map state lives in one store service, the drawing lives in a plain renderer class, and the components only bind signals and forward events. Each part is small and has its own tests. The cost is more files than one component that does it all.
 
@@ -86,3 +86,7 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The frame rate reading is the frame count divided by the real window length, so a stall lowers it. The cost is that a hidden tab pauses requestAnimationFrame, and the first window after the tab shows again reads low and can show the error line for up to 1 s.
 - A resize draws the grid at once, outside the frame loop, so the grid never paints blank. The cost is a second draw in a frame when a batch and a resize land in the same frame, which happens only while the user resizes.
 - The test source worker sends one batch at a time and waits for an ack from the main thread, with a queue of 2 behind it. A slow main thread gets fresh batches and the backlog stays at 3 batches at most. The cost is one extra message per batch, and the queue fills only when the main thread lags. The server queue in feature 4 fills when the network lags, because the browser reads the SSE stream off the main thread.
+
+## 2026-09-30, validate feature 3, frontend
+
+- The error line compares the frame rate with a fixed target of 60 fps instead of the peak since load. A page that loads under heavy load now shows the drop. The cost is that a 120 Hz display running at 60 fps shows no line, and a browser capped at 30 fps shows the line at all times.

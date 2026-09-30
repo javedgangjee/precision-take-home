@@ -31,8 +31,19 @@ describe('FrameRateMeter', () => {
     run(meter, 60, 0, 999);
     run(meter, 30, 1000, 2000);
     expect(meter.reading).toBe(30);
-    expect(meter.peak).toBe(60);
     expect(meter.below).toBe(true);
+  });
+
+  it('reports 30 fps from the start as below the expected 60 fps', () => {
+    const meter = new FrameRateMeter();
+    run(meter, 30, 0, 2000);
+    expect(meter.below).toBe(true);
+  });
+
+  it('does not report a drop before the first second has passed', () => {
+    const meter = new FrameRateMeter();
+    run(meter, 60, 0, 999);
+    expect(meter.below).toBe(false);
   });
 
   it('does not report 55 fps after 60 fps as below the expected rate', () => {

@@ -82,3 +82,21 @@ The tests run the app in Uvicorn on a free local port.
 2. The expected result is that each file has an entry dated for the backend feature.
 3. Open README.md.
 4. The expected result is that it lists `GET /stream`, the four environment variables with their defaults and ranges, and a curl command that shows the stream.
+
+## Results
+
+These results are from 2026-09-30.
+
+- V1 passes. All 10 settings cases pass.
+- V2 passes. All 7 generator cases pass, and V2.1 is one of them.
+- V3 passes. All 6 broadcaster cases pass.
+- V4 passes. All 5 stream cases pass.
+- V5 passes. All 3 health and CORS cases pass.
+- V6 passes. `make lint` exits with code 0.
+- M1 passes. The user confirmed it.
+- M2 passes. The user confirmed it.
+- M3 passes. The user confirmed it.
+
+`make test` runs 36 backend tests, and all of them pass. Backend line coverage is 100%. The suite has 5 tests that this file does not list. Three tests check the tick schedule after a late or stalled tick. One test checks that the CORS preflight allows the `Last-Event-ID` header. One test checks that the server strips a trailing slash from `CORS_ORIGINS`. docs/ai-changes.md records the two CORS fixes and the user's approval.
+
+Each item in requirements.md has at least one passing check. R1 is covered by V4, and R2 is covered by V2 and V4. R3 is covered by V3 and V4, and R4 by V3. R5 is covered by V4, and R6 by V1 and V2. R7 is covered by V5, and R8 by V5. R9 is covered by M3.

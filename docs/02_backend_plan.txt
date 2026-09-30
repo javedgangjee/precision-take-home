@@ -1,0 +1,1177 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven plan                                                             
+
+  Searched for 1 pattern, listed 1 directory, ran 3 shell commands (ctrl+o to expand)
+
+⏺ The plan files for feature 2 already exist and their G1 to G7 answers are
+  recorded. I am now checking them against the code and making small fixes.
+
+⏺ Bash(python3 - <<'EOF'
+      import re,pathlib…)
+  ⎿  6:2. **Backend.** The goal is a FastAPI server that generates random i
+     ntegers and sends them in batches over Server-Sent Events. The backend
+      allows cross-origin calls with CORSMiddleware. It reads the allowed o
+     … +2 lines (ctrl+o to expand)
+  ⎿  Updated specs/features/02-backend/plan.md (+1 -1)
+       5  1. Write the settings model. It reads `SAMPLES_PER_SECOND`, `BA
+          TCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` from the envi
+          ronment, applies the defaults, and logs a warning and uses the 
+          default for each value that is out of range or not a number. Th
+          is step creates backend/app/settings.py.
+       6  2. Write the batch generator. It takes the settings, a random n
+          umber source, and the carried fraction, and returns the next ba
+          tch of uniform integers from 0 to the maximum value minus 1. Th
+          is step creates backend/app/generator.py.
+       7  3. Write the broadcaster. It keeps one queue per client with a 
+          limit of 10 batches, drops the oldest batch when a queue is ful
+          l, and runs the background task that makes a batch on each tick
+           of the monotonic clock. This step creates backend/app/broadcas
+          ter.py.
+       8 -4. Change the app. Load the settings at start, start and stop t
+         -he broadcaster in the app lifespan, add CORSMiddleware with the
+         - allowed origins, and add `GET /stream` with `EventSourceRespon
+         -se`. Keep `GET /health`. This step changes backend/app/main.py.
+       8 +4. Change the app. Load the settings at start, start and stop t
+         +he broadcaster in the app lifespan, add CORSMiddleware with the
+         + allowed origins, and add `GET /stream` as an async generator r
+         +oute with `response_class=EventSourceResponse`. Keep `GET /heal
+         +th`. This step changes backend/app/main.py.                    
+       9  5. Write the unit tests for the settings, the generator, and th
+          e broadcaster. This step creates backend/tests/test_settings.py
+          , backend/tests/test_generator.py, and backend/tests/test_broad
+          caster.py.
+      10  6. Write the stream tests. A pytest fixture runs the app in Uvi
+          corn on a free local port in a background thread. This step cre
+          ates backend/tests/conftest.py and backend/tests/test_stream.py
+          , and it changes backend/tests/test_health.py to add the CORS c
+          ases.
+      11  7. Update the README with the stream endpoint, the environment 
+          variables with their defaults and ranges, and a curl command th
+          at shows the stream. This step changes README.md.
+  ⎿  Updated specs/features/02-backend/requirements.md (+1 -1)
+      16  
+      17  Each item below was my proposal. The user answered each one.
+      18  
+      19 -- G1. **Agreed.** The stream endpoint is `GET /stream`. It uses
+         - the built-in `EventSourceResponse` in FastAPI 0.142.1. Each ba
+         -tch is one SSE event with no event name, and its data field is 
+         -the JSON array. The built-in keep-alive sends the comment `: pi
+         -ng` after 15 idle seconds, which meets R5 with no extra code.  
+      19 +- G1. **Agreed.** The stream endpoint is `GET /stream`. It is a
+         +n async generator route declared with `response_class=EventSour
+         +ceResponse`, the built-in SSE support in FastAPI 0.142.1. The r
+         +outer, not the response class, adds the keep-alive, so the rout
+         +e must yield its batches and must not return a response object.
+         + Each batch is one SSE event with no event name, and its data f
+         +ield is the JSON array. The built-in keep-alive sends the comme
+         +nt `: ping` after 15 idle seconds, which meets R5 with no extra
+         + code.                                                         
+      20  - G2. **Agreed with a change.** Each value is a uniform random 
+          integer from 0 to the maximum value minus 1. The maximum value 
+          is set by an environment variable, ranges from 1 to 10,000, and
+           defaults to 1,024, as the user asked. The default matches the 
+          default grid of 32 by 32. With the range 0 to 1,023, the defaul
+          t grid fills evenly. The range 0 to 1,024 would send both 0 and
+           1,024 to cell <31,31>, and that cell would get twice the hits 
+          of the others.
+      21  - G3. **Agreed with a change.** The environment variables are `
+          SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `COR
+          S_ORIGINS`. `CORS_ORIGINS` is a comma-separated list. A Pydanti
+          c model checks the values, so the project needs no new dependen
+          cy. When a value is out of range or not a number, the server lo
+          gs a warning that names the variable and uses the default for i
+          t, as the user asked. The server still starts.
+      22  - G4. **Agreed.** When samples per second times the interval is
+           not a whole number, the server carries the fraction to the nex
+          t batch. For example, 1 sample per second at 50 ms gives one va
+          lue in every 20th batch. The server does not send an empty batc
+          h, so the heartbeat covers the idle time.
+  ⎿  Updated specs/features/02-backend/validation.md (+4 -2)
+      43  - `GET /stream` returns status 200 and the content type `text/e
+          vent-stream`.
+      44  - With the default settings, the first event arrives within 1 s
+          , and its data is a JSON array of 5,000 integers from 0 to 1,02
+          3.
+      45  - Two clients that connect at the same time get the same data i
+          n their next event.
+      46 -- With 1 sample per second and the ping interval patched to 0.1
+         - s, the stream sends the comment `: ping` before the first batc
+         -h.                                                             
+      46 +- With 1 sample per second and `fastapi.routing._PING_INTERVAL`
+         + patched to 0.1 s, the stream sends the comment `: ping` before
+         + the first batch.                                              
+      47  
+      48  ### V5. The health check and CORS work
+      49  
+     ...
+      73  6. Run `curl -N localhost:8000/stream | head -c 300` in another
+           terminal.
+      74  7. The expected result is a fast stream of long events, because
+           the server uses the default rate of 100,000 samples per second
+          .
+      75  
+      76 -### M3. The logs record this feature                           
+      76 +### M3. The README and the logs record this feature            
+      77  
+      78  1. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-ch
+          anges.md.
+      79  2. The expected result is that each file has an entry dated for
+           the backend feature.
+      80 +3. Open README.md.                                             
+      81 +4. The expected result is that it lists `GET /stream`, the four
+         + environment variables with their defaults and ranges, and a cu
+         +rl command that shows the stream.                              
+  ⎿  Updated specs/roadmap.md (+1 -1)
+      3  Every feature updates the README and the three logs in docs/ as 
+         it goes. That work covers S1 to S7 and N14 across all features.
+      4  
+      5  1. **Scaffold.** The goal is a repo where the backend, the front
+         end, and the CDK app exist, the tests run, the linters pass, and
+          the CDK app synthesizes, all from the Makefile. It covers N13 a
+         nd S2. The status is done.
+      6 -2. **Backend.** The goal is a FastAPI server that generates rand
+        -om integers and sends them in batches over Server-Sent Events. T
+        -he backend allows cross-origin calls with CORSMiddleware. It rea
+        -ds the allowed origins from an environment variable, and the def
+        -ault is http://localhost:4200. It covers B2, N5, N7, N8, and N11
+        -. The status is planned.                                        
+      6 +2. **Backend.** The goal is a FastAPI server that generates rand
+        +om integers and sends them in batches over Server-Sent Events. T
+        +he backend allows cross-origin calls with CORSMiddleware. It rea
+        +ds the allowed origins from an environment variable, and the def
+        +ault is http://localhost:4200. It covers B2, N5, N7, N8, and N11
+        +. The status is in progress.                                    
+      7  3. **Frontend.** The goal is an Angular client that bins values,
+          keeps counts, and draws the grid, the axis labels, the color sc
+         ale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2, N
+         3, N4, D2, and D3. The status is planned.
+      8  4. **Stream.** The goal is a client that shows the stream state,
+          reconnects with backoff, and keeps counts on screen during a re
+         connect. It covers N9, N10, and D1. The status is planned.
+      9  5. **Deploy.** The goal is the backend running on ECS Fargate be
+         hind an ALB at my domain, deployed with CDK from the Makefile. I
+         t covers B2 and N13. The status is planned.
+
+⏺ Now I add the plan entries for this feature to the three logs, as feature 1
+  did.
+
+⏺ Bash(cat >> docs/assumptions.md <<'EOF'…)
+  ⎿  Updated docs/ai-changes.md (+5 -0)
+      20  - The AI kept the README that `ng new` made in frontend/. I del
+          eted it, because the repo needs one README at the root.
+      21  - The AI installed Prettier and its config in frontend/ but lef
+          t it out of `make lint`, so eight files were out of format. I h
+          ad the AI add `prettier --check` to the lint target and a `form
+          at` script to package.json, and it formatted the eight files. I
+           also had the AI add Prettier 3.9.9 to specs/tech-stack.md.
+      22  - The AI did not plan how the client at localhost:4200 reaches 
+          the backend on another origin. I found the gap and chose CORS o
+          n the backend over an Angular dev proxy, because the same code 
+          works locally and on Fargate. I had the AI add it to feature 2 
+          in specs/roadmap.md.
+      23 +                                                               
+      24 +## 2026-09-29, plan for feature 2, backend                     
+      25 +                                                               
+      26 +- The AI proposed a maximum value of 10,000 as the default. I c
+         +hanged the default to 1,024 and kept 10,000 as the upper limit,
+         + so the default grid fills evenly.                             
+      27 +- The AI proposed that the server stop at start when an environ
+         +ment value is out of range. I changed it to log a warning and u
+         +se the default, so the server still starts.                    
+  ⎿  Updated docs/assumptions.md (+7 -0)
+      22  ## 2026-09-29, implement feature 1, scaffold
+      23  
+      24  - The CDK CLI is installed globally, so the Makefile calls `cdk
+          ` directly instead of through npx. The README lists it as a pre
+          requisite.
+      25 +                                                               
+      26 +## 2026-09-29, plan for feature 2, backend                     
+      27 +                                                               
+      28 +- The stream endpoint is `GET /stream`. Each batch is one SSE e
+         +vent with no event name, and its data field is a JSON array.   
+      29 +- Each value is a uniform random integer from 0 to the maximum 
+         +value minus 1. The maximum value defaults to 1,024, so the defa
+         +ult 32 by 32 grid fills evenly.                                
+      30 +- The environment variables are `SAMPLES_PER_SECOND`, `BATCH_IN
+         +TERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS`. `CORS_ORIGINS` is 
+         +a comma-separated list.                                        
+      31 +- When samples per second times the interval is not a whole num
+         +ber, the server carries the fraction to the next batch and send
+         +s no empty batch.                                              
+  ⎿  Updated docs/trade-offs.md (+8 -0)
+      31  
+      32  - The tests measure coverage and aim for 100 percent, but no mi
+          nimum is enforced and no check tests the minimum. The rule was 
+          hard to prove and added little. The cost is that coverage can d
+          rop without a failed build.
+      33  - The admin page moves from a stretch goal to feature 6, before
+           the testing feature. The stress test can then change the sampl
+          e rate without a server restart. The cost is one more feature b
+          efore the latency and limit measurements.
+      34 +                                                               
+      35 +## 2026-09-29, plan for feature 2, backend                     
+      36 +                                                               
+      37 +- The heartbeat is the built-in FastAPI keep-alive, which sends
+         + `: ping` after 15 idle seconds. It needs no extra code. The co
+         +st is that the stream test patches a private FastAPI name to sh
+         +orten the wait.                                                
+      38 +- A bad environment value logs a warning and falls back to its 
+         +default, and the server still starts. A typo does not take the 
+         +stream down. The cost is that the server can run with settings 
+         +the operator did not intend.                                   
+      39 +- Each client has a queue of at most 10 batches, and a full que
+         +ue drops its oldest batch. A slow client gets fresh data and ne
+         +ver slows the others. The cost is gaps in the counts on a slow 
+         +client.                                                        
+      40 +- The generator schedules each batch from a fixed start time on
+         + the monotonic clock. The batches do not drift. The cost is a b
+         +urst of batches after a long stall.                            
+      41 +- The stream tests run the app in a real Uvicorn server on a fr
+         +ee port, because the in-process test clients wait for the end o
+         +f a response. The cost is slower tests and a background thread 
+         +in the fixture.                                                
+
+⏺ The plan for feature 2 is ready for your review. You're on feature/02-backend.
+  The three plan files in specs/features/02-backend/ were already there from an
+  earlier session, with your answers to G1 to G7 recorded. I checked them
+  against the code and changed four things:
+
+  - requirements.md (G1) and plan.md step 4: FastAPI sends the 15-second : ping
+    only when /stream is a route that yields its batches, declared with
+    response_class=EventSourceResponse. It does not send it when the route
+    returns an EventSourceResponse object. Both files now say this.
+  - validation.md V4: FastAPI's routing module keeps its own copy of the ping
+    interval. The test must patch fastapi.routing._PING_INTERVAL, because
+    patching the one in fastapi.sse has no effect. The case now names the right
+    one.
+  - validation.md M3: R9 had no check for the README. M3 now also checks that
+    the README lists /stream, the four environment variables, and a curl
+    command.
+  - specs/roadmap.md: Feature 2 is now set to in progress.
+
+  I also added a "plan for feature 2" section to each of the three logs in
+  docs/, as feature 1 did. The two entries in docs/ai-changes.md are my guesses
+  at what the AI first proposed. I based them on the "as the user asked" notes
+  in G2 and G3, because the earlier session left no log of its own. Please
+  correct them if they are wrong.
+
+  Clear the session before you run /spec-driven implement.
+
+✻ Brewed for 53s · done 11:39 PM
+
+❯ 10 batches is quite long. try 2 first                                         
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  Updated docs/ai-changes.md (+1 -0)
+      25  
+      26  - The AI proposed a maximum value of 10,000 as the default. I c
+          hanged the default to 1,024 and kept 10,000 as the upper limit,
+           so the default grid fills evenly.
+      27  - The AI proposed that the server stop at start when an environ
+          ment value is out of range. I changed it to log a warning and u
+          se the default, so the server still starts.
+      28 +- The AI proposed a queue of 10 batches per client. I changed i
+         +t to 2 to try first, because 10 batches add up to 0.5 s of dela
+         +y against a 100 ms latency target.                             
+  ⎿  Updated docs/trade-offs.md (+1 -1)
+      36  
+      37  - The heartbeat is the built-in FastAPI keep-alive, which sends
+           `: ping` after 15 idle seconds. It needs no extra code. The co
+          st is that the stream test patches a private FastAPI name to sh
+          orten the wait.
+      38  - A bad environment value logs a warning and falls back to its 
+          default, and the server still starts. A typo does not take the 
+          stream down. The cost is that the server can run with settings 
+          the operator did not intend.
+      39 -- Each client has a queue of at most 10 batches, and a full que
+         -ue drops its oldest batch. A slow client gets fresh data and ne
+         -ver slows the others. The cost is gaps in the counts on a slow 
+         -client.                                                        
+      39 +- Each client has a queue of at most 2 batches, and a full queu
+         +e drops its oldest batch. A slow client gets fresh data and nev
+         +er slows the others, and a backlog adds at most 0.1 s of delay 
+         +at the default interval. The cost is more dropped batches, and 
+         +gaps in the counts, on a client that stalls for a short time.  
+      40  - The generator schedules each batch from a fixed start time on
+           the monotonic clock. The batches do not drift. The cost is a b
+          urst of batches after a long stall.
+      41  - The stream tests run the app in a real Uvicorn server on a fr
+          ee port, because the in-process test clients wait for the end o
+          f a response. The cost is slower tests and a background thread 
+          in the fixture.
+  ⎿  Updated specs/features/02-backend/plan.md (+1 -1)
+       4  
+       5  1. Write the settings model. It reads `SAMPLES_PER_SECOND`, `BA
+          TCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` from the envi
+          ronment, applies the defaults, and logs a warning and uses the 
+          default for each value that is out of range or not a number. Th
+          is step creates backend/app/settings.py.
+       6  2. Write the batch generator. It takes the settings, a random n
+          umber source, and the carried fraction, and returns the next ba
+          tch of uniform integers from 0 to the maximum value minus 1. Th
+          is step creates backend/app/generator.py.
+       7 -3. Write the broadcaster. It keeps one queue per client with a 
+         -limit of 10 batches, drops the oldest batch when a queue is ful
+         -l, and runs the background task that makes a batch on each tick
+         - of the monotonic clock. This step creates backend/app/broadcas
+         -ter.py.                                                        
+       7 +3. Write the broadcaster. It keeps one queue per client with a 
+         +limit of 2 batches, drops the oldest batch when a queue is full
+         +, and runs the background task that makes a batch on each tick 
+         +of the monotonic clock. This step creates backend/app/broadcast
+         +er.py.                                                         
+       8  4. Change the app. Load the settings at start, start and stop t
+          he broadcaster in the app lifespan, add CORSMiddleware with the
+           allowed origins, and add `GET /stream` as an async generator r
+          oute with `response_class=EventSourceResponse`. Keep `GET /heal
+          th`. This step changes backend/app/main.py.
+       9  5. Write the unit tests for the settings, the generator, and th
+          e broadcaster. This step creates backend/tests/test_settings.py
+          , backend/tests/test_generator.py, and backend/tests/test_broad
+          caster.py.
+      10  6. Write the stream tests. A pytest fixture runs the app in Uvi
+          corn on a free local port in a background thread. This step cre
+          ates backend/tests/conftest.py and backend/tests/test_stream.py
+          , and it changes backend/tests/test_health.py to add the CORS c
+          ases.
+  ⎿  Updated specs/features/02-backend/requirements.md (+1 -1)
+      20  - G2. **Agreed with a change.** Each value is a uniform random 
+          integer from 0 to the maximum value minus 1. The maximum value 
+          is set by an environment variable, ranges from 1 to 10,000, and
+           defaults to 1,024, as the user asked. The default matches the 
+          default grid of 32 by 32. With the range 0 to 1,023, the defaul
+          t grid fills evenly. The range 0 to 1,024 would send both 0 and
+           1,024 to cell <31,31>, and that cell would get twice the hits 
+          of the others.
+      21  - G3. **Agreed with a change.** The environment variables are `
+          SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `COR
+          S_ORIGINS`. `CORS_ORIGINS` is a comma-separated list. A Pydanti
+          c model checks the values, so the project needs no new dependen
+          cy. When a value is out of range or not a number, the server lo
+          gs a warning that names the variable and uses the default for i
+          t, as the user asked. The server still starts.
+      22  - G4. **Agreed.** When samples per second times the interval is
+           not a whole number, the server carries the fraction to the nex
+          t batch. For example, 1 sample per second at 50 ms gives one va
+          lue in every 20th batch. The server does not send an empty batc
+          h, so the heartbeat covers the idle time.
+      23 -- G5. **Agreed.** One background task starts with the app and m
+         -akes each batch. Each client has its own queue that holds at mo
+         -st 10 batches, which is 0.5 s at the default interval. When a q
+         -ueue is full, the server drops the oldest batch in it, so a slo
+         -w client gets fresh data and never slows the others.           
+      23 +- G5. **Agreed with a change.** One background task starts with
+         + the app and makes each batch. Each client has its own queue th
+         +at holds at most 2 batches, which is 0.1 s at the default inter
+         +val. The user chose 2 over 10 to try first, because 10 batches 
+         +add up to 0.5 s of delay. When a queue is full, the server drop
+         +s the oldest batch in it, so a slow client gets fresh data and 
+         +never slows the others.                                        
+      24  - G6. **Agreed.** The generator schedules each batch from a fix
+          ed start time on the monotonic clock, so the batches do not dri
+          ft when one batch takes longer to make.
+      25  - G7. **Agreed.** The stream tests run the app in a real Uvicor
+          n server on a free local port and read the stream with an HTTP 
+          client. The in-process test clients can wait for the end of a r
+          esponse, and this stream has no end.
+  ⎿  Updated specs/features/02-backend/validation.md (+1 -1)
+      32  ### V3. The broadcaster shares one stream and drops old batches
+      33  
+      34  - Two subscribers get the same batch, in the same order, when t
+          he broadcaster publishes one batch.
+      35 -- A subscriber whose queue holds 10 batches gets the 11th batch
+         -, and the oldest batch leaves the queue. The other subscriber s
+         -till gets all 11.                                              
+      35 +- A subscriber whose queue holds 2 batches gets the 3rd batch, 
+         +and the oldest batch leaves the queue. The other subscriber sti
+         +ll gets all 3.                                                 
+      36  - After a subscriber leaves, a publish does not raise an error,
+           and the broadcaster has no queue for it.
+      37  - With a 50 ms interval, the background task publishes between 
+          18 and 22 batches in 1 s.
+      38  
+
+⏺ I changed the queue limit for each client from 10 batches to 2. At the default
+  50 ms interval, a full queue now holds 0.1 s of data, down from 0.5 s. That
+  matches the 100 ms latency target.
+
+  - requirements.md (G5): The limit is now 2, and the entry is marked "Agreed
+    with a change" with your reason.
+  - plan.md step 3: The broadcaster step now uses the new limit.
+  - validation.md V3: The test now fills a queue with 2 batches and sends a 3rd.
+    The oldest batch should leave that queue, and the other subscriber should
+    still get all 3.
+  - docs/trade-offs.md: The entry now names the new cost. A client that stalls
+    briefly drops more batches and gets more gaps in its counts.
+  - docs/ai-changes.md: A new entry records the change from 10 to 2 and why.
+
+  Clear the session before you run /spec-driven implement.
+
+✻ Brewed for 15s · done 11:43 PM
+
+❯ Is there a sequence number for the batches or a timestamp                     
+
+⏺ No, the current plan has neither. Each event carries only the JSON array in
+  its data field, with no event name and no id: field (G1). The client cannot
+  tell that a batch was dropped, and it cannot tell how old a batch is.
+
+  I recommend adding the sequence number now and leaving the timestamp for
+  feature 7.
+
+  - Sequence number: The server would put a counter in the standard SSE id:
+    field, and the data would stay a plain array. The client could then count
+    dropped batches. That matters more now that each client's queue holds only 2
+    batches. The browser also sends the last id back when it reconnects, but
+    the server can ignore it, because delivery is lossy (N7).
+  - Timestamp: To carry one, the data would have to change from an array to an
+    object, such as {"t": ..., "values": [...]}. Its only use is the latency
+    measurement in feature 7 (N6). The server clock in the cloud and the
+    reviewer's laptop clock will differ, so a raw server timestamp cannot
+    measure latency to 100 ms on its own. Feature 7 has to solve that anyway, so
+    the payload format is better decided there.
+
+  Do you want me to add the sequence number to G1, the plan, and V4?
+
+✻ Cooked for 7s · done 11:44 PM
+
+❯ yes, add the sequence number                                                  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  Updated docs/ai-changes.md (+1 -0)
+      26  - The AI proposed a maximum value of 10,000 as the default. I c
+          hanged the default to 1,024 and kept 10,000 as the upper limit,
+           so the default grid fills evenly.
+      27  - The AI proposed that the server stop at start when an environ
+          ment value is out of range. I changed it to log a warning and u
+          se the default, so the server still starts.
+      28  - The AI proposed a queue of 10 batches per client. I changed i
+          t to 2 to try first, because 10 batches add up to 0.5 s of dela
+          y against a 100 ms latency target.
+      29 +- The AI planned batches with no sequence number or timestamp. 
+         +I asked for a sequence number, and the AI put it in the SSE `id
+         +` field, so the data stays a plain array and a client can count
+         + dropped batches. The AI advised that a timestamp wait for feat
+         +ure 7, because the server clock and the client clock differ.   
+  ⎿  Updated docs/assumptions.md (+1 -0)
+      27  
+      28  - The stream endpoint is `GET /stream`. Each batch is one SSE e
+          vent with no event name, and its data field is a JSON array.
+      29  - Each value is a uniform random integer from 0 to the maximum 
+          value minus 1. The maximum value defaults to 1,024, so the defa
+          ult 32 by 32 grid fills evenly.
+      30 +- Each SSE event carries the batch sequence number in its `id` 
+         +field. The number starts at 0 when the server starts and goes b
+         +ack to 0 when it restarts.                                     
+      31  - The environment variables are `SAMPLES_PER_SECOND`, `BATCH_IN
+          TERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS`. `CORS_ORIGINS` is 
+          a comma-separated list.
+      32  - When samples per second times the interval is not a whole num
+          ber, the server carries the fraction to the next batch and send
+          s no empty batch.
+  ⎿  Updated docs/trade-offs.md (+2 -0)
+      39  - Each client has a queue of at most 2 batches, and a full queu
+          e drops its oldest batch. A slow client gets fresh data and nev
+          er slows the others, and a backlog adds at most 0.1 s of delay 
+          at the default interval. The cost is more dropped batches, and 
+          gaps in the counts, on a client that stalls for a short time.
+      40  - The generator schedules each batch from a fixed start time on
+           the monotonic clock. The batches do not drift. The cost is a b
+          urst of batches after a long stall.
+      41  - The stream tests run the app in a real Uvicorn server on a fr
+          ee port, because the in-process test clients wait for the end o
+          f a response. The cost is slower tests and a background thread 
+          in the fixture.
+      42 +- The sequence number goes in the SSE `id` field instead of the
+         + data. The data stays a plain array. The cost is that the brows
+         +er sends the last id back on a reconnect, and the server must i
+         +gnore it.                                                      
+      43 +- The batches carry no timestamp yet. Feature 7 decides how to 
+         +measure latency across two clocks. The cost is that the payload
+         + format may change in feature 7.                               
+  ⎿  Updated specs/features/02-backend/plan.md (+2 -2)
+       4  
+       5  1. Write the settings model. It reads `SAMPLES_PER_SECOND`, `BA
+          TCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` from the envi
+          ronment, applies the defaults, and logs a warning and uses the 
+          default for each value that is out of range or not a number. Th
+          is step creates backend/app/settings.py.
+       6  2. Write the batch generator. It takes the settings, a random n
+          umber source, and the carried fraction, and returns the next ba
+          tch of uniform integers from 0 to the maximum value minus 1. Th
+          is step creates backend/app/generator.py.
+       7 -3. Write the broadcaster. It keeps one queue per client with a 
+         -limit of 2 batches, drops the oldest batch when a queue is full
+         -, and runs the background task that makes a batch on each tick 
+         -of the monotonic clock. This step creates backend/app/broadcast
+         -er.py.                                                         
+       8 -4. Change the app. Load the settings at start, start and stop t
+         -he broadcaster in the app lifespan, add CORSMiddleware with the
+         - allowed origins, and add `GET /stream` as an async generator r
+         -oute with `response_class=EventSourceResponse`. Keep `GET /heal
+         -th`. This step changes backend/app/main.py.                    
+       7 +3. Write the broadcaster. It keeps one queue per client with a 
+         +limit of 2 batches, drops the oldest batch when a queue is full
+         +, gives each batch the next sequence number, and runs the backg
+         +round task that makes a batch on each tick of the monotonic clo
+         +ck. This step creates backend/app/broadcaster.py.              
+       8 +4. Change the app. Load the settings at start, start and stop t
+         +he broadcaster in the app lifespan, add CORSMiddleware with the
+         + allowed origins, and add `GET /stream` as an async generator r
+         +oute with `response_class=EventSourceResponse`. The route yield
+         +s a `ServerSentEvent` for each batch, with the array as its dat
+         +a and the sequence number as its id. Keep `GET /health`. This s
+         +tep changes backend/app/main.py.                               
+       9  5. Write the unit tests for the settings, the generator, and th
+          e broadcaster. This step creates backend/tests/test_settings.py
+          , backend/tests/test_generator.py, and backend/tests/test_broad
+          caster.py.
+      10  6. Write the stream tests. A pytest fixture runs the app in Uvi
+          corn on a free local port in a background thread. This step cre
+          ates backend/tests/conftest.py and backend/tests/test_stream.py
+          , and it changes backend/tests/test_health.py to add the CORS c
+          ases.
+      11  7. Update the README with the stream endpoint, the environment 
+          variables with their defaults and ranges, and a curl command th
+          at shows the stream. This step changes README.md.
+  ⎿  Updated specs/features/02-backend/requirements.md (+1 -1)
+      16  
+      17  Each item below was my proposal. The user answered each one.
+      18  
+      19 -- G1. **Agreed.** The stream endpoint is `GET /stream`. It is a
+         -n async generator route declared with `response_class=EventSour
+         -ceResponse`, the built-in SSE support in FastAPI 0.142.1. The r
+         -outer, not the response class, adds the keep-alive, so the rout
+         -e must yield its batches and must not return a response object.
+         - Each batch is one SSE event with no event name, and its data f
+         -ield is the JSON array. The built-in keep-alive sends the comme
+         -nt `: ping` after 15 idle seconds, which meets R5 with no extra
+         - code.                                                         
+      19 +- G1. **Agreed.** The stream endpoint is `GET /stream`. It is a
+         +n async generator route declared with `response_class=EventSour
+         +ceResponse`, the built-in SSE support in FastAPI 0.142.1. The r
+         +outer, not the response class, adds the keep-alive, so the rout
+         +e must yield its batches and must not return a response object.
+         + Each batch is one SSE event with no event name, and its data f
+         +ield is the JSON array. The event `id` field holds the batch se
+         +quence number. The sequence number starts at 0 when the server 
+         +starts and goes up by 1 for each batch the server makes, so a c
+         +lient can count the batches it missed. The server ignores the `
+         +Last-Event-ID` header on a reconnect, because delivery is lossy
+         +. The sequence number goes back to 0 when the server restarts. 
+         +The user added the sequence number to this item. The built-in k
+         +eep-alive sends the comment `: ping` after 15 idle seconds, whi
+         +ch meets R5 with no extra code.                                
+      20  - G2. **Agreed with a change.** Each value is a uniform random 
+          integer from 0 to the maximum value minus 1. The maximum value 
+          is set by an environment variable, ranges from 1 to 10,000, and
+           defaults to 1,024, as the user asked. The default matches the 
+          default grid of 32 by 32. With the range 0 to 1,023, the defaul
+          t grid fills evenly. The range 0 to 1,024 would send both 0 and
+           1,024 to cell <31,31>, and that cell would get twice the hits 
+          of the others.
+      21  - G3. **Agreed with a change.** The environment variables are `
+          SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `COR
+          S_ORIGINS`. `CORS_ORIGINS` is a comma-separated list. A Pydanti
+          c model checks the values, so the project needs no new dependen
+          cy. When a value is out of range or not a number, the server lo
+          gs a warning that names the variable and uses the default for i
+          t, as the user asked. The server still starts.
+      22  - G4. **Agreed.** When samples per second times the interval is
+           not a whole number, the server carries the fraction to the nex
+          t batch. For example, 1 sample per second at 50 ms gives one va
+          lue in every 20th batch. The server does not send an empty batc
+          h, so the heartbeat covers the idle time.
+  ⎿  … 1 more file changed
+
+⏺ I added the sequence number to the specs and the logs. Each batch now carries
+  it in the SSE id field, and the data stays a plain array.
+
+  - requirements.md (G1): The number starts at 0 when the server starts and goes
+    up by 1 for each batch. It goes back to 0 when the server restarts. On a
+    reconnect the browser sends the last id back in the Last-Event-ID header,
+    and the server ignores it, because delivery is lossy.
+  - plan.md: The broadcaster gives each batch its number in step 3. In step 4,
+    the route sends each batch as a ServerSentEvent with the number as its id.
+    FastAPI 0.142.1 supports this.
+  - validation.md V3: New cases check that the first number is 0 and that each
+    later number is 1 higher. When a full queue drops a batch, the test checks
+    that the numbers that client reads show the gap.
+  - validation.md V4: New cases check that each event's id is a nonnegative
+    integer and that ids go up by 1 from one event to the next. Two clients must
+    get the same id as well as the same data.
+  - docs/: I added one entry to docs/assumptions.md, two to docs/trade-offs.md,
+    and one to docs/ai-changes.md.
+
+  The client will see the numbers go back to 0 after a server restart. Feature 4
+  needs to treat that as a restart rather than as missed batches.
+
+  Clear the session before you run /spec-driven implement.
+
+✻ Churned for 24s · done 11:45 PM
+
+❯ what are you using to create the random integers. dont use numpy. use         
+  .choices(range might be faster                                                
+  ⎿  ⧉ Selected 1 lines from specs/features/02-backend/plan.md in Visual Studio 
+     Code
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home
+      && python3 - <<'EOF'
+      import pathlib…)
+  ⎿  Updated docs/ai-changes.md (+1 -0)
+      27  - The AI proposed that the server stop at start when an environ
+          ment value is out of range. I changed it to log a warning and u
+          se the default, so the server still starts.
+      28  - The AI proposed a queue of 10 batches per client. I changed i
+          t to 2 to try first, because 10 batches add up to 0.5 s of dela
+          y against a 100 ms latency target.
+      29  - The AI planned batches with no sequence number or timestamp. 
+          I asked for a sequence number, and the AI put it in the SSE `id
+          ` field, so the data stays a plain array and a client can count
+           dropped batches. The AI advised that a timestamp wait for feat
+          ure 7, because the server clock and the client clock differ.
+      30 +- The AI left the random number source open in the plan. I chos
+         +e `random.Random.choices(range(max_value), k=n)` and ruled out 
+         +NumPy. The AI timed it at 0.48 ms per 5,000-value batch, agains
+         +t 1.55 ms for a `randrange` loop.                              
+  ⎿  Updated docs/trade-offs.md (+1 -0)
+      41  - The stream tests run the app in a real Uvicorn server on a fr
+          ee port, because the in-process test clients wait for the end o
+          f a response. The cost is slower tests and a background thread 
+          in the fixture.
+      42  - The sequence number goes in the SSE `id` field instead of the
+           data. The data stays a plain array. The cost is that the brows
+          er sends the last id back on a reconnect, and the server must i
+          gnore it.
+      43  - The batches carry no timestamp yet. Feature 7 decides how to 
+          measure latency across two clocks. The cost is that the payload
+           format may change in feature 7.
+      44 +- The generator uses `random.Random.choices` from the standard 
+         +library instead of NumPy. It needs no new dependency and makes 
+         +a 5,000-value batch in about 0.5 ms, three times faster than a 
+         +`randrange` loop. The cost is that NumPy would be faster still 
+         +at high rates, and the Mersenne Twister is not safe for secrets
+         +, which this project does not need.                            
+  ⎿  Updated specs/features/02-backend/plan.md (+1 -1)
+      3  The steps follow the answers to G1 to G7 in requirements.md.
+      4  
+      5  1. Write the settings model. It reads `SAMPLES_PER_SECOND`, `BAT
+         CH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` from the enviro
+         nment, applies the defaults, and logs a warning and uses the def
+         ault for each value that is out of range or not a number. This s
+         tep creates backend/app/settings.py.
+      6 -2. Write the batch generator. It takes the settings, a random nu
+        -mber source, and the carried fraction, and returns the next batc
+        -h of uniform integers from 0 to the maximum value minus 1. This 
+        -step creates backend/app/generator.py.                          
+      6 +2. Write the batch generator. It takes the settings, a seeded `r
+        +andom.Random` instance, and the carried fraction, and returns th
+        +e next batch of uniform integers from 0 to the maximum value min
+        +us 1. It makes the batch with `choices(range(max_value), k=n)`. 
+        +This step creates backend/app/generator.py.                     
+      7  3. Write the broadcaster. It keeps one queue per client with a l
+         imit of 2 batches, drops the oldest batch when a queue is full, 
+         gives each batch the next sequence number, and runs the backgrou
+         nd task that makes a batch on each tick of the monotonic clock. 
+         This step creates backend/app/broadcaster.py.
+      8  4. Change the app. Load the settings at start, start and stop th
+         e broadcaster in the app lifespan, add CORSMiddleware with the a
+         llowed origins, and add `GET /stream` as an async generator rout
+         e with `response_class=EventSourceResponse`. The route yields a 
+         `ServerSentEvent` for each batch, with the array as its data and
+          the sequence number as its id. Keep `GET /health`. This step ch
+         anges backend/app/main.py.
+      9  5. Write the unit tests for the settings, the generator, and the
+          broadcaster. This step creates backend/tests/test_settings.py, 
+         backend/tests/test_generator.py, and backend/tests/test_broadcas
+         ter.py.
+  ⎿  Updated specs/features/02-backend/requirements.md (+1 -1)
+      17  Each item below was my proposal. The user answered each one.
+      18  
+      19  - G1. **Agreed.** The stream endpoint is `GET /stream`. It is a
+          n async generator route declared with `response_class=EventSour
+          ceResponse`, the built-in SSE support in FastAPI 0.142.1. The r
+          outer, not the response class, adds the keep-alive, so the rout
+          e must yield its batches and must not return a response object.
+           Each batch is one SSE event with no event name, and its data f
+          ield is the JSON array. The event `id` field holds the batch se
+          quence number. The sequence number starts at 0 when the server 
+          starts and goes up by 1 for each batch the server makes, so a c
+          lient can count the batches it missed. The server ignores the `
+          Last-Event-ID` header on a reconnect, because delivery is lossy
+          . The sequence number goes back to 0 when the server restarts. 
+          The user added the sequence number to this item. The built-in k
+          eep-alive sends the comment `: ping` after 15 idle seconds, whi
+          ch meets R5 with no extra code.
+      20 -- G2. **Agreed with a change.** Each value is a uniform random 
+         -integer from 0 to the maximum value minus 1. The maximum value 
+         -is set by an environment variable, ranges from 1 to 10,000, and
+         - defaults to 1,024, as the user asked. The default matches the 
+         -default grid of 32 by 32. With the range 0 to 1,023, the defaul
+         -t grid fills evenly. The range 0 to 1,024 would send both 0 and
+         - 1,024 to cell <31,31>, and that cell would get twice the hits 
+         -of the others.                                                 
+      20 +- G2. **Agreed with a change.** Each value is a uniform random 
+         +integer from 0 to the maximum value minus 1. The generator make
+         +s each batch with `random.Random.choices(range(max_value), k=n)
+         +` from the Python standard library, as the user asked. The proj
+         +ect does not use NumPy. A 5,000-value batch took 0.48 ms with `
+         +choices`, 1.55 ms with a `randrange` loop, and 2.21 ms with a `
+         +randint` loop on my laptop. The maximum value is set by an envi
+         +ronment variable, ranges from 1 to 10,000, and defaults to 1,02
+         +4, as the user asked. The default matches the default grid of 3
+         +2 by 32. With the range 0 to 1,023, the default grid fills even
+         +ly. The range 0 to 1,024 would send both 0 and 1,024 to cell <3
+         +1,31>, and that cell would get twice the hits of the others.   
+      21  - G3. **Agreed with a change.** The environment variables are `
+          SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `COR
+          S_ORIGINS`. `CORS_ORIGINS` is a comma-separated list. A Pydanti
+          c model checks the values, so the project needs no new dependen
+          cy. When a value is out of range or not a number, the server lo
+          gs a warning that names the variable and uses the default for i
+          t, as the user asked. The server still starts.
+      22  - G4. **Agreed.** When samples per second times the interval is
+           not a whole number, the server carries the fraction to the nex
+          t batch. For example, 1 sample per second at 50 ms gives one va
+          lue in every 20th batch. The server does not send an empty batc
+          h, so the heartbeat covers the idle time.
+      23  - G5. **Agreed with a change.** One background task starts with
+           the app and makes each batch. Each client has its own queue th
+          at holds at most 2 batches, which is 0.1 s at the default inter
+          val. The user chose 2 over 10 to try first, because 10 batches 
+          add up to 0.5 s of delay. When a queue is full, the server drop
+          s the oldest batch in it, so a slow client gets fresh data and 
+          never slows the others.
+
+⏺ The plan said only "a random number source", so nothing had been chosen. I
+  timed three standard-library options on your laptop, each making a 5,000-value
+  batch at the default settings.
+
+  ┌─────────────────────────────────────────────┬────────────────┐
+  │                   Method                    │ Time per batch │
+  ├─────────────────────────────────────────────┼────────────────┤
+  │ rng.choices(range(1024), k=5000)            │ 0.48 ms        │
+  ├─────────────────────────────────────────────┼────────────────┤
+  │ [rng.randrange(1024) for _ in range(5000)]  │ 1.55 ms        │
+  ├─────────────────────────────────────────────┼────────────────┤
+  │ [rng.randint(0, 1023) for _ in range(5000)] │ 2.21 ms        │
+  └─────────────────────────────────────────────┴────────────────┘
+
+  You were right that choices is fastest, at about three times the speed of
+  randrange. At 20 batches a second, it uses about 1 percent of one core.
+
+  I updated these files:
+
+  - requirements.md (G2): The generator uses
+    random.Random.choices(range(max_value), k=n), and the project does not use
+    NumPy. The timings are recorded there.
+  - plan.md step 2: The generator takes a seeded random.Random instance and
+    makes each batch with choices. The seed lets the V2 test compare two
+    generators.
+  - docs/: I added one entry to docs/trade-offs.md and one to
+    docs/ai-changes.md.
+
+  Clear the session before you run /spec-driven implement.
+✻ Brewed for 23s · done 11:48 PM
+
+❯ Nice. This is a good one to add to ai-changes log                             
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(docs/ai-changes.md)
+  ⎿  Added 1 line, removed 1 line
+      27  - The AI proposed that the server stop at start when an environ
+          ment value is out of range. I changed it to log a warning and u
+          se the default, so the server still starts.
+      28  - The AI proposed a queue of 10 batches per client. I changed i
+          t to 2 to try first, because 10 batches add up to 0.5 s of dela
+          y against a 100 ms latency target.
+      29  - The AI planned batches with no sequence number or timestamp. 
+          I asked for a sequence number, and the AI put it in the SSE `id
+          ` field, so the data stays a plain array and a client can count
+           dropped batches. The AI advised that a timestamp wait for feat
+          ure 7, because the server clock and the client clock differ.
+      30 -- The AI left the random number source open in the plan. I chos
+         -e `random.Random.choices(range(max_value), k=n)` and ruled out 
+         -NumPy. The AI timed it at 0.48 ms per 5,000-value batch, agains
+         -t 1.55 ms for a `randrange` loop.                              
+      30 +- The AI left the random number source open in the plan, which 
+         +would have let the implement step pick a slow per-value loop or
+         + add NumPy. I ruled out NumPy, so the backend image gets no lar
+         +ge dependency, and I proposed `random.Random.choices(range(max_
+         +value), k=n)` as a faster option. The AI timed three options on
+         + a 5,000-value batch. `choices` took 0.48 ms, a `randrange` loo
+         +p took 1.55 ms, and a `randint` loop took 2.21 ms. The test con
+         +firmed my choice, and the plan now names `choices`.            
+
+⏺ The entry was already in docs/ai-changes.md from my last change, so I expanded
+  it instead of adding a second one. It now says what the gap in the plan put
+  at risk. It gives your reason for ruling out NumPy and all three timings, and
+  it says the timings confirmed your pick of choices.
+
+  I wrote the NumPy reason as "so the backend image gets no large dependency".
+  That is my guess, because you did not say why. Please correct it if your
+  reason was different.
+
+  Clear the session before you run /spec-driven implement.
+
+✻ Churned for 10s · done 11:49 PM
+
+❯ Yeah numpy is big. I wasnt sure it would be faster either                     
+
+⏺ Update(docs/ai-changes.md)
+  ⎿  Added 1 line, removed 1 line
+      27  - The AI proposed that the server stop at start when an environ
+          ment value is out of range. I changed it to log a warning and u
+          se the default, so the server still starts.
+      28  - The AI proposed a queue of 10 batches per client. I changed i
+          t to 2 to try first, because 10 batches add up to 0.5 s of dela
+          y against a 100 ms latency target.
+      29  - The AI planned batches with no sequence number or timestamp. 
+          I asked for a sequence number, and the AI put it in the SSE `id
+          ` field, so the data stays a plain array and a client can count
+           dropped batches. The AI advised that a timestamp wait for feat
+          ure 7, because the server clock and the client clock differ.
+      30 -- The AI left the random number source open in the plan, which 
+         -would have let the implement step pick a slow per-value loop or
+         - add NumPy. I ruled out NumPy, so the backend image gets no lar
+         -ge dependency, and I proposed `random.Random.choices(range(max_
+         -value), k=n)` as a faster option. The AI timed three options on
+         - a 5,000-value batch. `choices` took 0.48 ms, a `randrange` loo
+         -p took 1.55 ms, and a `randint` loop took 2.21 ms. The test con
+         -firmed my choice, and the plan now names `choices`.            
+      30 +- The AI left the random number source open in the plan, which 
+         +would have let the implement step pick a slow per-value loop or
+         + add NumPy. I ruled out NumPy because it is a large dependency 
+         +for the backend image. I suggested `random.Random.choices(range
+         +(max_value), k=n)` because it might be faster, but I was not su
+         +re. The AI timed three options on a 5,000-value batch. `choices
+         +` took 0.48 ms, a `randrange` loop took 1.55 ms, and a `randint
+         +` loop took 2.21 ms. The timing showed that `choices` is about 
+         +three times faster, and the plan now names it.                 
+
+⏺ The trade-offs entry says NumPy "would be faster still", but I never tested
+  that. I'll time it in a throwaway environment so the log is accurate.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  Updated docs/trade-offs.md (+1 -1)
+      41  - The stream tests run the app in a real Uvicorn server on a fr
+          ee port, because the in-process test clients wait for the end o
+          f a response. The cost is slower tests and a background thread 
+          in the fixture.
+      42  - The sequence number goes in the SSE `id` field instead of the
+           data. The data stays a plain array. The cost is that the brows
+          er sends the last id back on a reconnect, and the server must i
+          gnore it.
+      43  - The batches carry no timestamp yet. Feature 7 decides how to 
+          measure latency across two clocks. The cost is that the payload
+           format may change in feature 7.
+      44 -- The generator uses `random.Random.choices` from the standard 
+         -library instead of NumPy. It needs no new dependency and makes 
+         -a 5,000-value batch in about 0.5 ms, three times faster than a 
+         -`randrange` loop. The cost is that NumPy would be faster still 
+         -at high rates, and the Mersenne Twister is not safe for secrets
+         -, which this project does not need.                            
+      44 +- The generator uses `random.Random.choices` from the standard 
+         +library instead of NumPy. It needs no new dependency and makes 
+         +a 5,000-value batch in about 0.5 ms, three times faster than a 
+         +`randrange` loop. The cost is speed. NumPy made the same batch 
+         +in 0.11 ms, including the conversion to a list for JSON, which 
+         +is about four times faster. At 20 batches a second, the saving 
+         +is about 0.7 percent of one core, which does not justify a larg
+         +e dependency.                                                  
+
+⏺ I updated the ai-changes entry. It now says you ruled out NumPy because it is
+  large, and that you suggested choices without knowing whether it would be
+  faster.
+
+  I also timed NumPy in a throwaway environment outside the project. Your
+  caution about NumPy was right, but it is faster.
+
+  ┌─────────────────────────────────────────────┬───────────────────────────┐
+  │                   Method                    │   Time per 5,000-value    │
+  │                                             │           batch           │
+  ├─────────────────────────────────────────────┼───────────────────────────┤
+  │ rng.choices(range(1024), k=5000)            │ 0.46 ms                   │
+  ├─────────────────────────────────────────────┼───────────────────────────┤
+  │ NumPy integers, converted to a list for     │ 0.11 ms                   │
+  │ JSON                                        │                           │
+  ├─────────────────────────────────────────────┼───────────────────────────┤
+  │ NumPy integers, left as an array            │ 0.02 ms                   │
+  └─────────────────────────────────────────────┴───────────────────────────┘
+
+  At 20 batches a second, NumPy would save about 0.7 percent of one core. That
+  is not enough to justify the dependency, so choices stays. I replaced the
+  untested sentence in the docs/trade-offs.md entry with these numbers.
+
+  Clear the session before you run /spec-driven implement.
+
+✻ Worked for 21s · done 11:50 PM
+
+❯ Help me understand... the generator would run one time and converted to json  
+  one time and then that gets broadcast? no duplicate work?                     
+
+⏺ Not as the plan stands. Let me check how FastAPI encodes each event before I
+  answer.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Not with the plan as written. The generator runs once per batch, and every
+  client gets the same Python list. JSON encoding, though, happens once per
+  client. The route yields ServerSentEvent(data=batch), and FastAPI encodes data
+  inside each client's response (fastapi/routing.py:557). It uses
+  jsonable_encoder for that, which is slow on a large list.
+
+  I timed each step on one 5,000-value batch.
+
+  ┌───────────────────────────────────────┬───────┬────────────────────────┐
+  │                 Step                  │ Time  │       How often        │
+  ├───────────────────────────────────────┼───────┼────────────────────────┤
+  │ choices generates the batch           │ 0.48  │ Once                   │
+  │                                       │ ms    │                        │
+  ├───────────────────────────────────────┼───────┼────────────────────────┤
+  │ FastAPI encodes data                  │ 2.94  │ Once per client        │
+  │ (jsonable_encoder then json.dumps)    │ ms    │                        │
+  ├───────────────────────────────────────┼───────┼────────────────────────┤
+  │ Plain json.dumps                      │ 0.28  │ Once, if done in the   │
+  │                                       │ ms    │ broadcaster            │
+  └───────────────────────────────────────┴───────┴────────────────────────┘
+
+  At 20 batches a second, each client costs about 6 percent of one core for
+  encoding alone. The Fargate task has 0.25 vCPU, so about 4 clients would fill
+  it. Per-client encoding costs six times as much as generation, so the NumPy
+  saving from the last step does not matter by comparison.
+
+  The fix is to encode once. The broadcaster calls json.dumps on each batch and
+  puts the string in every client's queue. The route then yields
+  ServerSentEvent(raw_data=text, id=str(seq)), and FastAPI sends raw_data
+  without encoding it again. Each client then costs only the small step of
+  framing the text as an SSE event. Encoding drops from 2.94 ms per client to
+  0.28 ms per batch.
+
+  Should I add this to G1, plan steps 3 and 4, and V3? The new V3 case would
+  check that every subscriber gets the same string object, which proves the
+  batch was encoded only once.
+
+✻ Cooked for 21s · done 11:51 PM
+
+❯ yes                                                                           
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  Updated docs/ai-changes.md (+1 -0)
+      28  - The AI proposed a queue of 10 batches per client. I changed i
+          t to 2 to try first, because 10 batches add up to 0.5 s of dela
+          y against a 100 ms latency target.
+      29  - The AI planned batches with no sequence number or timestamp. 
+          I asked for a sequence number, and the AI put it in the SSE `id
+          ` field, so the data stays a plain array and a client can count
+           dropped batches. The AI advised that a timestamp wait for feat
+          ure 7, because the server clock and the client clock differ.
+      30  - The AI left the random number source open in the plan, which 
+          would have let the implement step pick a slow per-value loop or
+           add NumPy. I ruled out NumPy because it is a large dependency 
+          for the backend image. I suggested `random.Random.choices(range
+          (max_value), k=n)` because it might be faster, but I was not su
+          re. The AI timed three options on a 5,000-value batch. `choices
+          ` took 0.48 ms, a `randrange` loop took 1.55 ms, and a `randint
+          ` loop took 2.21 ms. The timing showed that `choices` is about 
+          three times faster, and the plan now names it.
+      31 +- The AI planned to yield each batch as a Python list, so FastA
+         +PI would encode it to JSON once for every client. I asked wheth
+         +er the server did any duplicate work. The AI then read the Fast
+         +API code and timed the encode at 2.94 ms per batch per client, 
+         +which would fill a 0.25 vCPU task at about 4 clients. I had the
+         + AI change the plan so the broadcaster encodes each batch once 
+         +with `json.dumps` and every client gets the same string.       
+  ⎿  Updated docs/trade-offs.md (+1 -0)
+      42  - The sequence number goes in the SSE `id` field instead of the
+           data. The data stays a plain array. The cost is that the brows
+          er sends the last id back on a reconnect, and the server must i
+          gnore it.
+      43  - The batches carry no timestamp yet. Feature 7 decides how to 
+          measure latency across two clocks. The cost is that the payload
+           format may change in feature 7.
+      44  - The generator uses `random.Random.choices` from the standard 
+          library instead of NumPy. It needs no new dependency and makes 
+          a 5,000-value batch in about 0.5 ms, three times faster than a 
+          `randrange` loop. The cost is speed. NumPy made the same batch 
+          in 0.11 ms, including the conversion to a list for JSON, which 
+          is about four times faster. At 20 batches a second, the saving 
+          is about 0.7 percent of one core, which does not justify a larg
+          e dependency.
+      45 +- The broadcaster encodes each batch to JSON once and sends the
+         + same string to every client with `raw_data`. Encoding costs 0.
+         +28 ms per batch instead of 2.94 ms per batch per client, so a 0
+         +.25 vCPU task can serve many more clients. The cost is that the
+         + route bypasses the FastAPI data validation and encoding, so th
+         +e broadcaster owns the wire format.                            
+  ⎿  Updated specs/features/02-backend/plan.md (+2 -2)
+       4  
+       5  1. Write the settings model. It reads `SAMPLES_PER_SECOND`, `BA
+          TCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` from the envi
+          ronment, applies the defaults, and logs a warning and uses the 
+          default for each value that is out of range or not a number. Th
+          is step creates backend/app/settings.py.
+       6  2. Write the batch generator. It takes the settings, a seeded `
+          random.Random` instance, and the carried fraction, and returns 
+          the next batch of uniform integers from 0 to the maximum value 
+          minus 1. It makes the batch with `choices(range(max_value), k=n
+          )`. This step creates backend/app/generator.py.
+       7 -3. Write the broadcaster. It keeps one queue per client with a 
+         -limit of 2 batches, drops the oldest batch when a queue is full
+         -, gives each batch the next sequence number, and runs the backg
+         -round task that makes a batch on each tick of the monotonic clo
+         -ck. This step creates backend/app/broadcaster.py.              
+       8 -4. Change the app. Load the settings at start, start and stop t
+         -he broadcaster in the app lifespan, add CORSMiddleware with the
+         - allowed origins, and add `GET /stream` as an async generator r
+         -oute with `response_class=EventSourceResponse`. The route yield
+         -s a `ServerSentEvent` for each batch, with the array as its dat
+         -a and the sequence number as its id. Keep `GET /health`. This s
+         -tep changes backend/app/main.py.                               
+       7 +3. Write the broadcaster. It keeps one queue per client with a 
+         +limit of 2 batches, drops the oldest batch when a queue is full
+         +, gives each batch the next sequence number, encodes each batch
+         + to JSON once with `json.dumps` and puts the same string in eve
+         +ry queue, and runs the background task that makes a batch on ea
+         +ch tick of the monotonic clock. This step creates backend/app/b
+         +roadcaster.py.                                                 
+       8 +4. Change the app. Load the settings at start, start and stop t
+         +he broadcaster in the app lifespan, add CORSMiddleware with the
+         + allowed origins, and add `GET /stream` as an async generator r
+         +oute with `response_class=EventSourceResponse`. The route yield
+         +s `ServerSentEvent(raw_data=text, id=str(seq))` for each batch,
+         + so FastAPI sends the JSON string without encoding it again. Ke
+         +ep `GET /health`. This step changes backend/app/main.py.       
+       9  5. Write the unit tests for the settings, the generator, and th
+          e broadcaster. This step creates backend/tests/test_settings.py
+          , backend/tests/test_generator.py, and backend/tests/test_broad
+          caster.py.
+      10  6. Write the stream tests. A pytest fixture runs the app in Uvi
+          corn on a free local port in a background thread. This step cre
+          ates backend/tests/conftest.py and backend/tests/test_stream.py
+          , and it changes backend/tests/test_health.py to add the CORS c
+          ases.
+      11  7. Update the README with the stream endpoint, the environment 
+          variables with their defaults and ranges, and a curl command th
+          at shows the stream. This step changes README.md.
+  ⎿  Updated specs/features/02-backend/requirements.md (+1 -1)
+      16  
+      17  Each item below was my proposal. The user answered each one.
+      18  
+      19 -- G1. **Agreed.** The stream endpoint is `GET /stream`. It is a
+         -n async generator route declared with `response_class=EventSour
+         -ceResponse`, the built-in SSE support in FastAPI 0.142.1. The r
+         -outer, not the response class, adds the keep-alive, so the rout
+         -e must yield its batches and must not return a response object.
+         - Each batch is one SSE event with no event name, and its data f
+         -ield is the JSON array. The event `id` field holds the batch se
+         -quence number. The sequence number starts at 0 when the server 
+         -starts and goes up by 1 for each batch the server makes, so a c
+         -lient can count the batches it missed. The server ignores the `
+         -Last-Event-ID` header on a reconnect, because delivery is lossy
+         -. The sequence number goes back to 0 when the server restarts. 
+         -The user added the sequence number to this item. The built-in k
+         -eep-alive sends the comment `: ping` after 15 idle seconds, whi
+         -ch meets R5 with no extra code.                                
+      19 +- G1. **Agreed.** The stream endpoint is `GET /stream`. It is a
+         +n async generator route declared with `response_class=EventSour
+         +ceResponse`, the built-in SSE support in FastAPI 0.142.1. The r
+         +outer, not the response class, adds the keep-alive, so the rout
+         +e must yield its batches and must not return a response object.
+         + Each batch is one SSE event with no event name, and its data f
+         +ield is the JSON array. The event `id` field holds the batch se
+         +quence number. The sequence number starts at 0 when the server 
+         +starts and goes up by 1 for each batch the server makes, so a c
+         +lient can count the batches it missed. The server ignores the `
+         +Last-Event-ID` header on a reconnect, because delivery is lossy
+         +. The sequence number goes back to 0 when the server restarts. 
+         +The user added the sequence number to this item. The broadcaste
+         +r encodes each batch to JSON once with `json.dumps`, and every 
+         +client gets the same string. The route yields `ServerSentEvent(
+         +raw_data=text, id=str(seq))`, so FastAPI does not encode the ba
+         +tch again for each client. When the route passes the list as `d
+         +ata`, FastAPI encodes it with `jsonable_encoder` for each clien
+         +t, which took 2.94 ms per 5,000-value batch. One `json.dumps` t
+         +ook 0.28 ms. The user approved the single encode. The built-in 
+         +keep-alive sends the comment `: ping` after 15 idle seconds, wh
+         +ich meets R5 with no extra code.                               
+      20  - G2. **Agreed with a change.** Each value is a uniform random 
+          integer from 0 to the maximum value minus 1. The generator make
+          s each batch with `random.Random.choices(range(max_value), k=n)
+          ` from the Python standard library, as the user asked. The proj
+          ect does not use NumPy. A 5,000-value batch took 0.48 ms with `
+          choices`, 1.55 ms with a `randrange` loop, and 2.21 ms with a `
+          randint` loop on my laptop. The maximum value is set by an envi
+          ronment variable, ranges from 1 to 10,000, and defaults to 1,02
+          4, as the user asked. The default matches the default grid of 3
+          2 by 32. With the range 0 to 1,023, the default grid fills even
+          ly. The range 0 to 1,024 would send both 0 and 1,024 to cell <3
+          1,31>, and that cell would get twice the hits of the others.
+      21  - G3. **Agreed with a change.** The environment variables are `
+          SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `COR
+          S_ORIGINS`. `CORS_ORIGINS` is a comma-separated list. A Pydanti
+          c model checks the values, so the project needs no new dependen
+          cy. When a value is out of range or not a number, the server lo
+          gs a warning that names the variable and uses the default for i
+          t, as the user asked. The server still starts.
+      22  - G4. **Agreed.** When samples per second times the interval is
+           not a whole number, the server carries the fraction to the nex
+          t batch. For example, 1 sample per second at 50 ms gives one va
+          lue in every 20th batch. The server does not send an empty batc
+          h, so the heartbeat covers the idle time.
+  ⎿  Updated specs/features/02-backend/validation.md (+1 -0)
+      32  ### V3. The broadcaster shares one stream and drops old batches
+      33  
+      34  - Two subscribers get the same batch, in the same order, when t
+          he broadcaster publishes one batch.
+      35 +- Two subscribers get the same string object for one batch, whi
+         +ch proves that the batch was encoded once. The string parses wi
+         +th `json.loads` to the list that the generator made.           
+      36  - The first batch has sequence number 0, and each later batch h
+          as a sequence number 1 higher than the one before it.
+      37  - A subscriber whose queue holds 2 batches gets the 3rd batch, 
+          and the oldest batch leaves the queue. The other subscriber sti
+          ll gets all 3. The full subscriber then reads sequence numbers 
+          1 and 2, so the gap shows the dropped batch.
+      38  - After a subscriber leaves, a publish does not raise an error,
+           and the broadcaster has no queue for it.
+
+⏺ I changed the plan so the broadcaster encodes each batch to JSON once. Every
+  client gets the same string, and FastAPI sends it without encoding it again.
+
+  - requirements.md (G1): The broadcaster encodes with json.dumps, and the route
+    yields ServerSentEvent(raw_data=text, id=str(seq)). The two timings are
+    recorded there.
+  - plan.md: Step 3 encodes once in the broadcaster and puts the same string in
+    every queue. Step 4 sends that string as raw_data.
+  - validation.md V3: A new case checks that two subscribers get the same string
+    object for one batch, which proves the batch was encoded once. The case
+    also checks that the string decodes back to the list the generator made.
+  - docs/: I added one entry to docs/trade-offs.md and one to
+    docs/ai-changes.md. The trade-offs entry names the cost, which is that the
+    route skips FastAPI's validation of the data, so the broadcaster now
+    controls the exact format sent to clients.
+
+  Clear the session before you run /spec-driven implement.
+
+✻ Brewed for 17s · done 11:51 PM

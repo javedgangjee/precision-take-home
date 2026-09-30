@@ -22,3 +22,11 @@ Each entry gives the date, the phase, and the assumption.
 ## 2026-09-29, implement feature 1, scaffold
 
 - The CDK CLI is installed globally, so the Makefile calls `cdk` directly instead of through npx. The README lists it as a prerequisite.
+
+## 2026-09-29, plan for feature 2, backend
+
+- The stream endpoint is `GET /stream`. Each batch is one SSE event with no event name, and its data field is a JSON array.
+- Each value is a uniform random integer from 0 to the maximum value minus 1. The maximum value defaults to 1,024, so the default 32 by 32 grid fills evenly.
+- Each SSE event carries the batch sequence number in its `id` field. The number starts at 0 when the server starts and goes back to 0 when it restarts.
+- The environment variables are `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS`. `CORS_ORIGINS` is a comma-separated list.
+- When samples per second times the interval is not a whole number, the server carries the fraction to the next batch and sends no empty batch.

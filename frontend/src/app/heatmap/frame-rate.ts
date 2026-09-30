@@ -2,8 +2,9 @@
 const BELOW_RATIO = 0.9;
 
 /**
- * Counts animation frames. The reading is the frame count of the last full
- * second. The peak is the highest reading so far, which stands for the
+ * Counts animation frames. The reading is the frame rate of the last window
+ * of at least 1 s, which is the frame count divided by the real window length.
+ * A late frame makes the window longer, so a stall lowers the reading. The peak is the highest reading so far, which stands for the
  * refresh rate of the display.
  */
 export class FrameRateMeter {
@@ -17,7 +18,7 @@ export class FrameRateMeter {
     if (this.windowStart === null) {
       this.windowStart = now;
     } else if (now - this.windowStart >= 1000) {
-      this.reading = this.frames;
+      this.reading = Math.round((this.frames * 1000) / (now - this.windowStart));
       this.peak = Math.max(this.peak, this.reading);
       this.windowStart = now;
       this.frames = 0;

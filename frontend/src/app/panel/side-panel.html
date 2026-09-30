@@ -8,9 +8,7 @@
       [style.visibility]="atMin() ? 'hidden' : null"
       (click)="change(-1)"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M5 12 L19 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-      </svg>
+      <span class="material-symbols-outlined" aria-hidden="true">remove</span>
     </button>
     <div class="field">
       <input id="grid-size" type="text" readonly [value]="sizeText()" (keydown)="onKey($event)" />
@@ -22,14 +20,7 @@
       [style.visibility]="atMax() ? 'hidden' : null"
       (click)="change(1)"
     >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path
-          d="M12 5 L12 19 M5 12 L19 12"
-          stroke="currentColor"
-          stroke-width="1.5"
-          stroke-linecap="round"
-        />
-      </svg>
+      <span class="material-symbols-outlined" aria-hidden="true">add</span>
     </button>
   </div>
 </div>

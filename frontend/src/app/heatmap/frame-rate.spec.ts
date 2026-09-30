@@ -43,6 +43,13 @@ describe('FrameRateMeter', () => {
     expect(meter.below).toBe(false);
   });
 
+  it('divides the frames by the real window length when a frame closes the window late', () => {
+    const meter = new FrameRateMeter();
+    run(meter, 60, 0, 999);
+    meter.tick(2000);
+    expect(meter.reading).toBe(30);
+  });
+
   it('reads 30 after the first second at 30 fps', () => {
     const meter = new FrameRateMeter();
     run(meter, 30, 0, 2000);

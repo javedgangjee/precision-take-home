@@ -79,3 +79,9 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The renderer fills each cell with its own `fillRect` call, which is 4,096 calls a frame at N = 64. The code is short and easy to test with a fake context. The cost is that it is slower than writing the pixels to one ImageData. The stress test shows whether that matters.
 - The worker makes batches on a `setInterval` timer. The code is short. The cost is that a busy worker sends late batches and does not skip or catch up, as the server does after a stall.
 - tsconfig.app.json leaves out the worker files, which tsconfig.worker.json compiles with the web worker types. The plan named only the new config and angular.json. The cost is one more changed config file.
+
+## 2026-09-30, review for feature 3, frontend
+
+- The Material Symbols font is a subset from Google Fonts that holds only the add and remove glyphs, and the client serves it from frontend/public/fonts/. The file is 1 KB and the client needs no network for it, as G9 asks for the other fonts. The cost is that a new icon needs a new subset download.
+- The frame rate reading is the frame count divided by the real window length, so a stall lowers it. The cost is that a hidden tab pauses requestAnimationFrame, and the first window after the tab shows again reads low and can show the error line for up to 1 s.
+- A resize draws the grid at once, outside the frame loop, so the grid never paints blank. The cost is a second draw in a frame when a batch and a resize land in the same frame, which happens only while the user resizes.

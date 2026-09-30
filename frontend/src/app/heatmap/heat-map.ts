@@ -53,9 +53,7 @@ export class HeatMap {
     this.observer.observe(this.host.nativeElement);
     document.fonts?.ready.then(() => this.store.markDirty());
     const loop = (now: number) => {
-      if (this.store.frame(now) && this.ctx) {
-        this.renderer.draw(this.ctx, this.store.counts, this.gridDevicePx, this.pixelRatio);
-      }
+      if (this.store.frame(now)) this.draw();
       this.frameId = requestAnimationFrame(loop);
     };
     this.frameId = requestAnimationFrame(loop);
@@ -66,7 +64,17 @@ export class HeatMap {
     this.observer?.disconnect();
   }
 
-  /** Fits the grid, its axis labels, and the color scale in the host. */
+  private draw(): void {
+    if (this.ctx) {
+      this.renderer.draw(this.ctx, this.store.counts, this.gridDevicePx, this.pixelRatio);
+    }
+  }
+
+  /**
+   * Fits the grid, its axis labels, and the color scale in the host. Setting the
+   * canvas size clears the canvas, and the browser paints before the next frame,
+   * so this draws the grid again at once.
+   */
   private layout(): void {
     const host = this.host.nativeElement;
     const scaleWidth = (this.scale().nativeElement as HTMLElement).offsetWidth;
@@ -85,6 +93,6 @@ export class HeatMap {
     canvas.style.width = `${device.width / this.pixelRatio}px`;
     canvas.style.height = `${device.height / this.pixelRatio}px`;
     this.gridPx.set(gridPx);
-    this.store.markDirty();
+    this.draw();
   }
 }

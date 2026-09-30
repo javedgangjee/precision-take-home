@@ -49,3 +49,9 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 - The AI proposed a frame rate readout with no warning. I asked for a red error line below the frame rate when it drops below the expected rate. The AI asked what the expected rate is, and I chose the peak reading since the page loaded, so the rule works on any display. The AI used the design red #B33A3A, which passes WCAG AA on the white panel.
 - The AI proposed disabled N buttons at the limits, as in the HTML design. I had the AI hide them instead.
 - The AI proposed a store service but put the render loop, the drawing, and the color scale in one heat map component. I asked for thin components with the state in its own unit. The AI moved the drawing into a plain renderer class, moved the scale into its own component, and made the store the only owner of the state.
+
+## 2026-09-30, review for feature 3, frontend
+
+- The AI drew the minus and plus icons on the N buttons as inline SVG paths. I asked for Google Material icons instead. The AI replaced both SVGs with Material Symbols Outlined glyphs, weight 300 at 20 px, from a font subset in frontend/public/fonts/.
+- The AI closed each frame rate window on the first frame at or after 1 s and used the raw frame count as the reading. I pointed out that the window did not end at 1 s but kept going until the next frame. After a stall, 60 frames over 2 s read as 60 fps. The AI now divides the frame count by the real window length, and a new test covers a late frame.
+- The AI marked the grid dirty after a resize and left the redraw to the next frame. Setting the canvas size clears the canvas, and the browser painted it blank before that frame, so the grid went blank while I resized. I changed layout() to draw at once. The AI then moved the draw call into one private method, fixed the frame loop test that my change broke, and added a test that a resize draws without a frame.

@@ -1,0 +1,223 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ Before I merge is there any way to compact the json packets. Binary wont work 
+  since I have to send as a string with SSE. There must be another way to       
+  compact. Test it                                                              
+
+  Searched for 1 pattern, read 1 file, ran 3 shell commands (ctrl+o to expand)
+
+⏺ I have the size numbers. Now I'm checking the browser side: how long each
+  format takes to decode in Node.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(cd /private/tmp/claude-501/-Users-javedgangjee-Documents-Projects--precis
+      ion-precision-take-home/c979d3e8-8c46-4921-b0e2-6944f836a411/scratchpad &&
+      mv /Users/ja…)
+  ⎿  JSON.parse compact     0.089 ms
+     base64 uint16          0.597 ms
+     base64 bitpack10       0.396 ms
+     u16 roundtrip ok true
+  ⎿  1 file changed (binary, mode only or too large to show)
+
+⏺ Compact separators keep the JSON array format and cost nothing, so I'm
+  applying that change now. The other options change the format or need more
+  work, so they are listed below for you to decide.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Now the edits: the code, the tests, and the logs.
+
+⏺ Bash(python3 - <<'EOF'
+      import re,pathlib…)
+  ⎿  --------------------------------------------------
+     TOTAL                  124      0   100%
+     36 passed in 2.42s
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated README.md (+1 -1)
+      38  
+      39  ## Backend stream
+      40  
+      41 -`GET /stream` sends the stream as Server-Sent Events. Each even
+         -t holds one batch as a JSON array of random integers in its `da
+         -ta` field. The `id` field holds the batch sequence number, whic
+         -h starts at 0 when the server starts and goes up by 1 for each 
+         -batch. A gap in the ids shows that the client missed batches. T
+         -he server generates one shared stream, so every client gets the
+         - same batches. When the server sends nothing for 15 seconds, it
+         - sends the comment `: ping`.                                   
+      41 +`GET /stream` sends the stream as Server-Sent Events. Each even
+         +t holds one batch as a compact JSON array of random integers in
+         + its `data` field, with no spaces. The `id` field holds the bat
+         +ch sequence number, which starts at 0 when the server starts an
+         +d goes up by 1 for each batch. A gap in the ids shows that the 
+         +client missed batches. The server generates one shared stream, 
+         +so every client gets the same batches. When the server sends no
+         +thing for 15 seconds, it sends the comment `: ping`.           
+      42  
+      43  Run `make backend`, and then run this command in another termin
+          al to see the stream.
+      44  
+  ⎿  Updated backend/app/broadcaster.py (+3 -2)
+      50          self._queues.discard(queue)
+      51  
+      52      def publish(self, values: list[int]) -> None:
+      53 -        # Encode once, so every subscriber gets the same string
+         -.                                                              
+      54 -        batch = Batch(self.next_seq, json.dumps(values))       
+      53 +        # Encode once, so every subscriber gets the same string
+         +. The compact separators                                       
+      54 +        # drop the space after each comma, which makes a defaul
+         +t batch 20 percent smaller.                                    
+      55 +        batch = Batch(self.next_seq, json.dumps(values, separat
+         +ors=(",", ":")))                                               
+      56          self.next_seq += 1
+      57          for queue in self._queues:
+      58              if queue.full():
+  ⎿  Updated backend/tests/test_broadcaster.py (+2 -2)
+      19      broadcaster.publish([1, 2])
+      20      broadcaster.publish([3])
+      21  
+      22 -    assert [first.get_nowait().text for _ in range(2)] == ["[1,
+         - 2]", "[3]"]                                                   
+      23 -    assert [second.get_nowait().text for _ in range(2)] == ["[1
+         -, 2]", "[3]"]                                                  
+      22 +    assert [first.get_nowait().text for _ in range(2)] == ["[1,
+         +2]", "[3]"]                                                    
+      23 +    assert [second.get_nowait().text for _ in range(2)] == ["[1
+         +,2]", "[3]"]                                                   
+      24  
+      25  
+      26  def test_batch_is_encoded_once() -> None:
+  ⎿  Updated docs/ai-changes.md (+4 -0)
+      36  - The AI built the batch loop so that it made every missed batc
+          h in a burst after a stall. After a one hour stall, that is 72,
+          000 batches, and the client queues drop almost all of them. I h
+          ad the AI change the loop to skip the missed ticks and run only
+           the latest one that is due.
+      37  - The AI typed the lifespan function as `AsyncIterator[None]` u
+          nder `@asynccontextmanager`. The type stubs mark that form as d
+          eprecated, and my editor flagged it. The AI first said that not
+          hing was deprecated, because it checked only for runtime warnin
+          gs. I had the AI change the type to `AsyncGenerator[None]`.
+      38  - I asked which CORS origin forms the server must cover. The AI
+           found two gaps in its own code. The server kept a trailing sla
+          sh in `CORS_ORIGINS`, so `http://localhost:4200/` would match n
+          o browser. The CORS rule allowed no extra headers, so a reconne
+          ct with `Last-Event-ID` could fail in a browser that sends a pr
+          eflight for it. I approved both fixes.
+      39 +                                                               
+      40 +## 2026-09-30, compact the batch payload, backend              
+      41 +                                                               
+      42 +- The AI encoded each batch with the default `json.dumps` separ
+         +ators, which put a space after each comma. I asked for a way to
+         + make the payload smaller that still works as a string over SSE
+         +. The AI timed five formats. I kept the compact separators, whi
+         +ch cut a default batch by 20 percent at no extra cost and keep 
+         +the JSON array. The formats that save more break the JSON array
+         + in R2, and trade-offs.md records them.                        
+  ⎿  Updated docs/trade-offs.md (+7 -0)
+      54  
+      55  - `make backend` gives open streams 3 seconds to close on shutd
+          own, and then Uvicorn cancels them. The server always stops in 
+          about 3 seconds. The cost is that Uvicorn logs an error line fo
+          r the cancelled streams, and a client sees its stream cut off.
+      56  - \* After a stall, the broadcaster runs only the latest tick t
+          hat is due and skips the older ticks. The server does not spend
+           CPU on batches that the client queues would drop, and it does 
+          not send a flood of old data. The cost is that the samples of t
+          he skipped ticks are never made, so the rate over a stall falls
+           below the setting. The sequence number counts only the batches
+           that the server sends, so a client cannot see the skipped tick
+          s as a gap.
+      57 +                                                               
+      58 +## 2026-09-30, compact the batch payload, backend              
+      59 +                                                               
+      60 +- The broadcaster encodes each batch with the compact JSON sepa
+         +rators `(",", ":")`. A default batch drops from 24,558 characte
+         +rs to 19,559, which is 20 percent less, and the encode time sta
+         +ys at 0.29 ms. The client still gets a plain JSON array, so R2 
+         +holds. The cost is that the stream is harder to read by eye in 
+         +curl.                                                          
+      61 +- The server does not send the batch as base64 of packed intege
+         +rs. Base64 of 16-bit values is 13,336 characters, and 10-bit pa
+         +cking is 8,336 characters. Both break R2, because the data is n
+         +o longer a JSON array. The browser also decodes base64 slower t
+         +han `JSON.parse`, at 0.4 to 0.6 ms against 0.09 ms per batch in
+         + Node 22.                                                      
+      62 +- The server does not gzip the stream. The Starlette GZipMiddle
+         +ware skips `text/event-stream`, because it buffers the response
+         +. A custom per-event gzip needs one compressor for each client 
+         +and must flush after each event. Gzip alone cuts the compact ba
+         +tch only to 8,149 bytes, because random values do not compress 
+         +well.                                                          
+      63 +- The server does not send counts per value in place of the val
+         +ues. Counts make a batch 2,078 characters, but they break R2 an
+         +d the brief, which asks for an array of random integers.       
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Yes. I tested five formats on a default batch of 5,000 values from 0 to 1,023.
+  I applied one of them: the server now encodes each batch with no space after
+  each comma. The other options either break the rule that each batch is a JSON
+  array (R2, from N5 in the brief) or need a custom gzip layer.
+
+  ┌─────────────────┬────────────┬──────────┬─────────┬────────┬───────────┐
+  │                 │            │ Size vs. │ Encode  │ Gzip   │ Keeps the │
+  │     Format      │ Characters │  before  │  (ms)   │ bytes  │   JSON    │
+  │                 │            │          │         │        │   array   │
+  ├─────────────────┼────────────┼──────────┼─────────┼────────┼───────────┤
+  │ Before          │ 24,558     │ 100%     │ 0.28    │ 8,897  │ Yes       │
+  │ (json.dumps)    │            │          │         │        │           │
+  ├─────────────────┼────────────┼──────────┼─────────┼────────┼───────────┤
+  │ No spaces       │ 19,559     │ 80%      │ 0.29    │ 8,149  │ Yes       │
+  │ (applied)       │            │          │         │        │           │
+  ├─────────────────┼────────────┼──────────┼─────────┼────────┼───────────┤
+  │ Sorted, no      │ 19,559     │ 80%      │ 0.69    │ 1,768  │ Yes       │
+  │ spaces          │            │          │         │        │           │
+  ├─────────────────┼────────────┼──────────┼─────────┼────────┼───────────┤
+  │ Base64 of       │ 13,336     │ 54%      │ 0.12    │ 8,683  │ No        │
+  │ 16-bit values   │            │          │         │        │           │
+  ├─────────────────┼────────────┼──────────┼─────────┼────────┼───────────┤
+  │ Base64 of       │ 8,336      │ 34%      │ 3.3     │ not    │ No        │
+  │ 10-bit values   │            │          │         │ run    │           │
+  ├─────────────────┼────────────┼──────────┼─────────┼────────┼───────────┤
+  │ Count for each  │ 2,078      │ 8%       │ 0.18    │ 591    │ No        │
+  │ value           │            │          │         │        │           │
+  └─────────────────┴────────────┴──────────┴─────────┴────────┴───────────┘
+
+  - No spaces makes each batch 20 percent smaller at no extra cost. The client
+    still gets a plain JSON array.
+  - Base64 formats are smaller, but they break R2. They also make the browser
+    slower. In Node 22, decoding took 0.4 to 0.6 ms per batch, against 0.09 ms
+    for JSON.parse. I did not test the newer Uint8Array.fromBase64, which could
+    be faster.
+  - Gzip does little on its own, because random numbers do not compress well.
+    Starlette's built-in gzip also skips text/event-stream, because it holds
+    back the response. To add it, you would need to write per-event gzip with
+    one compressor for each client.
+  - Sorted plus gzip is the only big saving that keeps the JSON array. It comes
+    to 1,768 bytes, 7 percent of the original. The client only counts values
+    into cells, so their order does not matter. Its cost is the custom gzip
+    layer above, and I do not know if the load balancer or CDN in feature 5 will
+    pass it through unchanged. It could be a later task.
+  - Counts for each value is the smallest format, but the brief asks for an
+    array of random integers.
+
+  Files changed:
+  - backend/app/broadcaster.py: the server now uses json.dumps(values, 
+    separators=(",", ":")).
+  - backend/tests/test_broadcaster.py: the expected strings now have no spaces.
+  - README.md: the stream section says the array has no spaces.
+  - docs/trade-offs.md and docs/ai-changes.md: each has a new entry that records
+    these results.
+
+  All 36 tests pass, and ruff, ruff format and mypy are clean. The test scripts
+  are in the scratchpad, outside the repo. Nothing is committed.
+
+✻ Cooked for 1m 50s · done 12:50 AM

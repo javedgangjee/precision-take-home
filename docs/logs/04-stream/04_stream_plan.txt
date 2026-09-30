@@ -1,0 +1,987 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/…/_precision/precision-take-home/specs/features/04-stream
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven plan                                                             
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ User answered Claude's questions:
+  ⎿  · The next planned feature is 4, Stream. Should I plan that one? → Yes, 
+     plan 04 Stream
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the backend, the Makefile, the source code the feature touches, and the
+  brief docs.
+
+  Searched for 1 pattern, read 1 file, ran 3 shell commands (ctrl+o to expand)
+
+⏺ I am reading the stream badge in the HTML design. Next I write the three plan
+  files.
+
+  Listed 1 directory, ran 4 shell commands (ctrl+o to expand)
+
+⏺ Writing the three files now.
+
+⏺ Write(requirements.md)
+  ⎿  Wrote 27 lines to requirements.md
+       1 # Feature 4 requirements: Stream
+       3 ## Requirements from the sources
+       5 - R1. The client reads the stream of nonnegative integers from t
+         he server over Server-Sent Events and applies each batch to the 
+       6 - R2. The client shows one of three stream states, which are Liv
+       7 - R3. The client reconnects with backoff after the stream drops.
+       8 - R4. The counts stay on screen while the client reconnects. (N9
+         )
+         e, as in the HTML design. (D1)
+         runs in Docker Desktop on my laptop and on ECS Fargate wit
+     … +85 lines (ctrl+o to expand)
+
+⏺ Write(plan.md)
+  ⎿  Wrote 17 lines to plan.md
+      1 # Feature 4 plan: Stream
+      3 The steps follow the answers to G1 to G9 in requirements.md. Fron
+        tend paths are under frontend/, and each step that adds code also
+      4 
+      5 1. Write the source settings. `readSourceSettings(query)` reads `
+        m G1 and G2, and logs a warning for each bad value. It returns th
+        e source kind and the stream URL. This step creates src/app/sourc
+      6 2. Write the backoff function. `reconnectDelay(attempt, random)` 
+        returns the delay in ms from G4. The tests pass a fixed random va
+      7 3. Write the stream status service. It 
+     … +40 lines (ctrl+o to expand)
+
+⏺ Write(validation.md)
+  ⎿  Wrote 108 lines to validation.md
+      1 # Feature 4 validation: Stream
+      2 
+        e brief examples stay covered by the feature 3 tests, which must 
+        still pass.
+      4 
+      6 
+      7 The command for V1 to V6 is `make test`. The command for V7 is `m
+        ake lint`. The command for V8 is `cd frontend && npx ng build`. T
+      8 
+      9 ### V1. The source settings pick the source and the server
+     … +147 lines (ctrl+o to expand)
+
+⏺ Bash(sed -i '' 's/It covers N9, N10, and D1. The status is planned./It covers
+      N9, N10, and D1. The status is in progress./' specs/roadmap.md && grep -n
+      "^4\." specs/…)
+  ⎿  loys. It covers N9, N10, and D1. The status is in progress.
+  ⎿  Updated
+     ~/Documents/Projects/_precision/precision-take-home/specs/roadmap.md
+     (+1 -1)
+       5  1. **Scaffold.** The goal is a repo where the backend, the fron
+          tend, and the CDK app exist, the tests run, the linters pass, a
+          nd the CDK app synthesizes, all from the Makefile. It covers N1
+          3 and S2. The status is done.
+       6  2. **Backend.** The goal is a FastAPI server that generates ran
+          dom integers and sends them in batches over Server-Sent Events.
+           The backend allows cross-origin calls with CORSMiddleware. It 
+          reads the allowed origins from an environment variable, and the
+           default is http://localhost:4200. It covers B2, N5, N7, N8, an
+          d N11. The status is done.
+       7  3. **Frontend.** The goal is an Angular client that bins values
+          , keeps counts, and draws the grid, the axis labels, the color 
+          scale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2
+          , N3, N4, D2, and D3. The status is done.
+       8 -4. **Stream.** The goal is a client that shows the stream state
+         -, reconnects with backoff, and keeps counts on screen during a 
+         -reconnect. The feature also adds a Dockerfile for the backend a
+         -nd a Makefile target that runs the stream in Docker Desktop on 
+         -my laptop, so the client can connect to the same image that fea
+         -ture 5 deploys. It covers N9, N10, and D1. The status is planne
+         -d.                                                             
+       8 +4. **Stream.** The goal is a client that shows the stream state
+         +, reconnects with backoff, and keeps counts on screen during a 
+         +reconnect. The feature also adds a Dockerfile for the backend a
+         +nd a Makefile target that runs the stream in Docker Desktop on 
+         +my laptop, so the client can connect to the same image that fea
+         +ture 5 deploys. It covers N9, N10, and D1. The status is in pro
+         +gress.                                                         
+       9  5. **Deploy.** The goal is the backend running on ECS Fargate b
+          ehind an ALB at my domain, deployed with CDK from the Makefile.
+           It covers B2 and N13. The status is planned.
+      10  6. **Admin Page.** The goal is a backend page that changes the 
+          stream settings while the server runs, so that a test of a new 
+          sample rate needs no restart. It covers no required item. The s
+          tatus is planned.
+      11  7. **Testing.** The goal is a measured generation-to-render lat
+          ency and a measured set of limits from a stress test. The featu
+          re writes docs/results.md, which breaks down the findings. It c
+          overs N6 and N12. The status is planned.
+
+⏺ User answered Claude's questions:
+  ⎿  · G1: The client uses the server by default, and `?source=test` runs the 
+     feature 3 test source instead. With the test source, the badge shows a 
+     neutral "Test source". Do you agree? → do source=frontend
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      specs/features/04-stream && python3 - <<'EOF'
+      import re…)
+  ⎿  19:- G1. **Agreed with a change.** The client uses the server by defau
+     lt. The URL query `source=frontend` runs, as the user named it, the te
+     st source from feature 3 instead, with its `rate`, `interval`, and `ma
+     … +4 lines (ctrl+o to expand)
+  ⎿  Updated requirements.md (+1 -1)
+      16  
+      17  Each item below is my proposal. I ask the user about each one.
+      18  
+      19 -- G1. **Proposed.** The client uses the server by default. The 
+         -URL query `source=test` runs the test source from feature 3 ins
+         -tead, with its `rate`, `interval`, and `max` settings. Only one
+         - source runs at a time. Any other value of `source` logs a warn
+         -ing and uses the server. With the test source, the badge shows 
+         -"Test source" in the neutral tone, so a reviewer cannot mistake
+         - it for the server.                                            
+      19 +- G1. **Agreed with a change.** The client uses the server by d
+         +efault. The URL query `source=frontend` runs, as the user named
+         + it, the test source from feature 3 instead, with its `rate`, `
+         +interval`, and `max` settings. Only one source runs at a time. 
+         +Any other value of `source` logs a warning and uses the server.
+         + With the test source, the badge shows "Test source" in the neu
+         +tral tone, so a reviewer cannot mistake it for the server.     
+      20  - G2. **Proposed.** The client reads the server address from th
+          e URL query `server`, and the default is http://localhost:8000.
+           The client strips a trailing slash and connects to the address
+           plus `/stream`. A value that is not an http or https URL logs 
+          a warning and uses the default. Feature 5 changes the default t
+          o the cloud URL.
+      21  - G3. **Proposed.** The state is Connecting from the start unti
+          l the first `open` event. It is Live after an `open` event. Whe
+          n the stream drops after it was Live, the state is Reconnecting
+           until the next `open` event. A failed first attempt keeps the 
+          state at Connecting. The stream code never resets the counts. O
+          nly a change to N resets them.
+      22  - G4. **Proposed.** EventSource retries on its own at a fixed d
+          elay, with no backoff. So on each `error` event the client clos
+          es the EventSource and makes a new one after a delay. The delay
+           is min(30 s, 1 s × 2^k) × f, where k is the number of failed a
+          ttempts since the last `open` event and f is a random factor fr
+          om 0.5 to 1. The random factor stops many clients from reconnec
+          ting at the same moment after a server restart. A new EventSour
+          ce sends no `Last-Event-ID` header, so the preflight concern in
+           docs/assumptions.md goes away.
+  ⎿  Updated validation.md (+3 -3)
+       9  ### V1. The source settings pick the source and the server
+      10  
+      11  - With no query, the source is the server, and the stream URL i
+          s http://localhost:8000/stream.
+      12 -- With `?source=test`, the source is the test source.          
+      12 +- With `?source=frontend`, the source is the test source.      
+      13  - With `?source=abc`, the source is the server, and the console
+           gets a warning that names `source`.
+      14  - With `?server=https://precision.jgangjee.com`, the stream URL
+           is https://precision.jgangjee.com/stream.
+      15  - With `?server=http://localhost:8000/`, the stream URL is http
+          ://localhost:8000/stream, with no double slash.
+     ...
+      52  ### V6. The app starts one source
+      53  
+      54  - With no query, the app starts the server source and makes no 
+          worker.
+      55 -- With `?source=test`, the app starts the test source and makes
+         - no EventSource.                                               
+      55 +- With `?source=frontend`, the app starts the test source and m
+         +akes no EventSource.                                           
+      56  
+      57  ### V7. Linters pass
+      58  
+     ...
+       97  
+       98  ### M5. The test source still runs
+       99  
+      100 -1. Run `make frontend` and open http://localhost:4200/?source=
+          -test&rate=1000000.                                            
+      100 +1. Run `make frontend` and open http://localhost:4200/?source=
+          +frontend&rate=1000000.                                        
+      101  2. The expected result is a neutral "Test source" badge, a fil
+           ling grid, and no `stream` requests in the DevTools network pa
+           nel.
+      102  
+      103  ### M6. The README and the logs record this feature
+
+⏺ Fix the sentence order in G1.
+
+⏺ Bash(sed -i '' 's/The URL query `source=frontend` runs, as the user named it,
+      the test source from feature 3 instead, with its `rate`, `interval`, and
+      `max` settings…)
+  ⎿  19:- G1. **Agreed with a change.** The client uses the server by defau
+     lt. The URL query `source=frontend` runs the test source from feature
+     3 instead, with its `rate`, `interval`, and `max` settings. The user c
+     … +4 lines (ctrl+o to expand)
+  ⎿  Updated requirements.md (+1 -1)
+      16  
+      17  Each item below is my proposal. I ask the user about each one.
+      18  
+      19 -- G1. **Agreed with a change.** The client uses the server by d
+         -efault. The URL query `source=frontend` runs, as the user named
+         - it, the test source from feature 3 instead, with its `rate`, `
+         -interval`, and `max` settings. Only one source runs at a time. 
+         -Any other value of `source` logs a warning and uses the server.
+         - With the test source, the badge shows "Test source" in the neu
+         -tral tone, so a reviewer cannot mistake it for the server.     
+      19 +- G1. **Agreed with a change.** The client uses the server by d
+         +efault. The URL query `source=frontend` runs the test source fr
+         +om feature 3 instead, with its `rate`, `interval`, and `max` se
+         +ttings. The user chose the name `frontend`. Only one source run
+         +s at a time. Any other value of `source` logs a warning and use
+         +s the server. With the test source, the badge shows "Test sourc
+         +e" in the neutral tone, so a reviewer cannot mistake it for the
+         + server.                                                       
+      20  - G2. **Proposed.** The client reads the server address from th
+          e URL query `server`, and the default is http://localhost:8000.
+           The client strips a trailing slash and connects to the address
+           plus `/stream`. A value that is not an http or https URL logs 
+          a warning and uses the default. Feature 5 changes the default t
+          o the cloud URL.
+      21  - G3. **Proposed.** The state is Connecting from the start unti
+          l the first `open` event. It is Live after an `open` event. Whe
+          n the stream drops after it was Live, the state is Reconnecting
+           until the next `open` event. A failed first attempt keeps the 
+          state at Connecting. The stream code never resets the counts. O
+          nly a change to N resets them.
+      22  - G4. **Proposed.** EventSource retries on its own at a fixed d
+          elay, with no backoff. So on each `error` event the client clos
+          es the EventSource and makes a new one after a delay. The delay
+           is min(30 s, 1 s × 2^k) × f, where k is the number of failed a
+          ttempts since the last `open` event and f is a random factor fr
+          om 0.5 to 1. The random factor stops many clients from reconnec
+          ting at the same moment after a server restart. A new EventSour
+          ce sends no `Last-Event-ID` header, so the preflight concern in
+           docs/assumptions.md goes away.
+
+⏺ User answered Claude's questions:
+  ⎿  · G2: The client reads the server address from `?server=`, and the default 
+     is http://localhost:8000. A bad value logs a warning and uses the default. 
+     Feature 5 changes the default to the cloud URL. Do you agree? → Agree 
+     (Recommended)
+
+⏺ Bash(sed -i '' 's/^- G2\. \*\*Proposed\.\*\*/- G2. **Agreed.**/'
+      requirements.md && grep -c "Agreed" requirements.md)
+  ⎿  2
+  ⎿  Updated requirements.md (+1 -1)
+      17  Each item below is my proposal. I ask the user about each one.
+      18  
+      19  - G1. **Agreed with a change.** The client uses the server by d
+          efault. The URL query `source=frontend` runs the test source fr
+          om feature 3 instead, with its `rate`, `interval`, and `max` se
+          ttings. The user chose the name `frontend`. Only one source run
+          s at a time. Any other value of `source` logs a warning and use
+          s the server. With the test source, the badge shows "Test sourc
+          e" in the neutral tone, so a reviewer cannot mistake it for the
+           server.
+      20 -- G2. **Proposed.** The client reads the server address from th
+         -e URL query `server`, and the default is http://localhost:8000.
+         - The client strips a trailing slash and connects to the address
+         - plus `/stream`. A value that is not an http or https URL logs 
+         -a warning and uses the default. Feature 5 changes the default t
+         -o the cloud URL.                                               
+      20 +- G2. **Agreed.** The client reads the server address from the 
+         +URL query `server`, and the default is http://localhost:8000. T
+         +he client strips a trailing slash and connects to the address p
+         +lus `/stream`. A value that is not an http or https URL logs a 
+         +warning and uses the default. Feature 5 changes the default to 
+         +the cloud URL.                                                 
+      21  - G3. **Proposed.** The state is Connecting from the start unti
+          l the first `open` event. It is Live after an `open` event. Whe
+          n the stream drops after it was Live, the state is Reconnecting
+           until the next `open` event. A failed first attempt keeps the 
+          state at Connecting. The stream code never resets the counts. O
+          nly a change to N resets them.
+      22  - G4. **Proposed.** EventSource retries on its own at a fixed d
+          elay, with no backoff. So on each `error` event the client clos
+          es the EventSource and makes a new one after a delay. The delay
+           is min(30 s, 1 s × 2^k) × f, where k is the number of failed a
+          ttempts since the last `open` event and f is a random factor fr
+          om 0.5 to 1. The random factor stops many clients from reconnec
+          ting at the same moment after a server restart. A new EventSour
+          ce sends no `Last-Event-ID` header, so the preflight concern in
+           docs/assumptions.md goes away.
+      23  - G5. **Proposed.** EventSource hides SSE comments, so the clie
+          nt cannot see the `: ping` heartbeat. At the lowest server sett
+          ings, a batch arrives at least once each second. So the client 
+          treats the stream as dropped when no batch arrives for 5 s whil
+          e the state is Live, and it reconnects with the backoff from G4
+          . This catches a connection that hangs without an `error` event
+          .
+
+⏺ User answered Claude's questions:
+  ⎿  · G3: The state is Connecting until the first `open` event, then Live. 
+     After a drop it is Reconnecting until the next `open`. A failed first 
+     attempt stays at Connecting. Only an N change resets the counts. Do you 
+     agree? → Agree (Recommended)
+
+⏺ Update(requirements.md)
+  ⎿  Updated requirements.md (+1 -1)
+      18  
+      19  - G1. **Agreed with a change.** The client uses the server by d
+          efault. The URL query `source=frontend` runs the test source fr
+          om feature 3 instead, with its `rate`, `interval`, and `max` se
+          ttings. The user chose the name `frontend`. Only one source run
+          s at a time. Any other value of `source` logs a warning and use
+          s the server. With the test source, the badge shows "Test sourc
+          e" in the neutral tone, so a reviewer cannot mistake it for the
+           server.
+      20  - G2. **Agreed.** The client reads the server address from the 
+          URL query `server`, and the default is http://localhost:8000. T
+          he client strips a trailing slash and connects to the address p
+          lus `/stream`. A value that is not an http or https URL logs a 
+          warning and uses the default. Feature 5 changes the default to 
+          the cloud URL.
+      21 -- G3. **Proposed.** The state is Connecting from the start unti
+         -l the first `open` event. It is Live after an `open` event. Whe
+         -n the stream drops after it was Live, the state is Reconnecting
+         - until the next `open` event. A failed first attempt keeps the 
+         -state at Connecting. The stream code never resets the counts. O
+         -nly a change to N resets them.                                 
+      21 +- G3. **Agreed.** The state is Connecting from the start until 
+         +the first `open` event. It is Live after an `open` event. When 
+         +the stream drops after it was Live, the state is Reconnecting u
+         +ntil the next `open` event. A failed first attempt keeps the st
+         +ate at Connecting. The stream code never resets the counts. Onl
+         +y a change to N resets them.                                   
+      22  - G4. **Proposed.** EventSource retries on its own at a fixed d
+          elay, with no backoff. So on each `error` event the client clos
+          es the EventSource and makes a new one after a delay. The delay
+           is min(30 s, 1 s × 2^k) × f, where k is the number of failed a
+          ttempts since the last `open` event and f is a random factor fr
+          om 0.5 to 1. The random factor stops many clients from reconnec
+          ting at the same moment after a server restart. A new EventSour
+          ce sends no `Last-Event-ID` header, so the preflight concern in
+           docs/assumptions.md goes away.
+      23  - G5. **Proposed.** EventSource hides SSE comments, so the clie
+          nt cannot see the `: ping` heartbeat. At the lowest server sett
+          ings, a batch arrives at least once each second. So the client 
+          treats the stream as dropped when no batch arrives for 5 s whil
+          e the state is Live, and it reconnects with the backoff from G4
+          . This catches a connection that hangs without an `error` event
+          .
+      24  - G6. **Proposed.** The badge follows the `md-badge` style in t
+          he HTML design. It is a pill at the top of the side panel, with
+           an hr line below it. Connecting uses the neutral tone, which i
+          s outlined. Live uses the success tone, which is a #157A42 fill
+          . Reconnecting uses the warning tone, which is a #95560F fill. 
+          The bundled icon font has only the add and remove glyphs, so th
+          e badge draws a small inline SVG icon for each state. The icons
+           are a turning arc for Connecting, a dot for Live, and a circul
+          ar arrow for Reconnecting.
+
+⏺ User answered Claude's questions:
+  ⎿  · G4: On each error, the client closes the EventSource and opens a new one 
+     after min(30 s, 1 s × 2^k) × a random factor from 0.5 to 1. k counts failed
+     attempts since the last open. Do you agree? → Agree (Recommended)
+
+⏺ Update(requirements.md)  ⎿  Updated requirements.md (+1 -1)
+      19  - G1. **Agreed with a change.** The client uses the server by d
+          efault. The URL query `source=frontend` runs the test source fr
+          om feature 3 instead, with its `rate`, `interval`, and `max` se
+          ttings. The user chose the name `frontend`. Only one source run
+          s at a time. Any other value of `source` logs a warning and use
+          s the server. With the test source, the badge shows "Test sourc
+          e" in the neutral tone, so a reviewer cannot mistake it for the
+           server.
+      20  - G2. **Agreed.** The client reads the server address from the 
+          URL query `server`, and the default is http://localhost:8000. T
+          he client strips a trailing slash and connects to the address p
+          lus `/stream`. A value that is not an http or https URL logs a 
+          warning and uses the default. Feature 5 changes the default to 
+          the cloud URL.
+      21  - G3. **Agreed.** The state is Connecting from the start until 
+          the first `open` event. It is Live after an `open` event. When 
+          the stream drops after it was Live, the state is Reconnecting u
+          ntil the next `open` event. A failed first attempt keeps the st
+          ate at Connecting. The stream code never resets the counts. Onl
+          y a change to N resets them.
+      22 -- G4. **Proposed.** EventSource retries on its own at a fixed d
+         -elay, with no backoff. So on each `error` event the client clos
+         -es the EventSource and makes a new one after a delay. The delay
+         - is min(30 s, 1 s × 2^k) × f, where k is the number of failed a
+         -ttempts since the last `open` event and f is a random factor fr
+         -om 0.5 to 1. The random factor stops many clients from reconnec
+         -ting at the same moment after a server restart. A new EventSour
+         -ce sends no `Last-Event-ID` header, so the preflight concern in
+         - docs/assumptions.md goes away.                                
+      22 +- G4. **Agreed.** EventSource retries on its own at a fixed del
+         +ay, with no backoff. So on each `error` event the client closes
+         + the EventSource and makes a new one after a delay. The delay i
+         +s min(30 s, 1 s × 2^k) × f, where k is the number of failed att
+         +empts since the last `open` event and f is a random factor from
+         + 0.5 to 1. The random factor stops many clients from reconnecti
+         +ng at the same moment after a server restart. A new EventSource
+         + sends no `Last-Event-ID` header, so the preflight concern in d
+         +ocs/assumptions.md goes away.                                  
+      23  - G5. **Proposed.** EventSource hides SSE comments, so the clie
+          nt cannot see the `: ping` heartbeat. At the lowest server sett
+          ings, a batch arrives at least once each second. So the client 
+          treats the stream as dropped when no batch arrives for 5 s whil
+          e the state is Live, and it reconnects with the backoff from G4
+          . This catches a connection that hangs without an `error` event
+          .
+      24  - G6. **Proposed.** The badge follows the `md-badge` style in t
+          he HTML design. It is a pill at the top of the side panel, with
+           an hr line below it. Connecting uses the neutral tone, which i
+          s outlined. Live uses the success tone, which is a #157A42 fill
+          . Reconnecting uses the warning tone, which is a #95560F fill. 
+          The bundled icon font has only the add and remove glyphs, so th
+          e badge draws a small inline SVG icon for each state. The icons
+           are a turning arc for Connecting, a dot for Live, and a circul
+          ar arrow for Reconnecting.
+      25  - G7. **Proposed.** The new client code lives in frontend/src/a
+          pp/source/ and frontend/src/app/panel/. The file source-setting
+          s.ts reads `source` and `server` from the query. The file backo
+          ff.ts holds the delay function. The file stream-status.ts is a 
+          small injectable service that holds the state as one signal. Th
+          e source in use writes it, and the badge reads it. The file ser
+          ver-source.ts is the service that owns the EventSource, the bac
+          koff timer, and the watchdog. An injection token makes the Even
+          tSource, so the tests use a fake, as the test source does with 
+          its worker. The panel/stream-badge component shows the badge.
+
+⏺ User answered Claude's questions:
+  ⎿  · G5: EventSource cannot see the `: ping` heartbeat. The server sends a 
+     batch at least once each second at its lowest settings. So the client 
+     treats 5 s with no batch while Live as a drop and reconnects. Do you agree?
+     → Agree (Recommended)
+
+⏺ Update(requirements.md)
+  ⎿  Updated requirements.md (+1 -1)
+      20  - G2. **Agreed.** The client reads the server address from the 
+          URL query `server`, and the default is http://localhost:8000. T
+          he client strips a trailing slash and connects to the address p
+          lus `/stream`. A value that is not an http or https URL logs a 
+          warning and uses the default. Feature 5 changes the default to 
+          the cloud URL.
+      21  - G3. **Agreed.** The state is Connecting from the start until 
+          the first `open` event. It is Live after an `open` event. When 
+          the stream drops after it was Live, the state is Reconnecting u
+          ntil the next `open` event. A failed first attempt keeps the st
+          ate at Connecting. The stream code never resets the counts. Onl
+          y a change to N resets them.
+      22  - G4. **Agreed.** EventSource retries on its own at a fixed del
+          ay, with no backoff. So on each `error` event the client closes
+           the EventSource and makes a new one after a delay. The delay i
+          s min(30 s, 1 s × 2^k) × f, where k is the number of failed att
+          empts since the last `open` event and f is a random factor from
+           0.5 to 1. The random factor stops many clients from reconnecti
+          ng at the same moment after a server restart. A new EventSource
+           sends no `Last-Event-ID` header, so the preflight concern in d
+          ocs/assumptions.md goes away.
+      23 -- G5. **Proposed.** EventSource hides SSE comments, so the clie
+         -nt cannot see the `: ping` heartbeat. At the lowest server sett
+         -ings, a batch arrives at least once each second. So the client 
+         -treats the stream as dropped when no batch arrives for 5 s whil
+         -e the state is Live, and it reconnects with the backoff from G4
+         -. This catches a connection that hangs without an `error` event
+         -.                                                              
+      23 +- G5. **Agreed.** EventSource hides SSE comments, so the client
+         + cannot see the `: ping` heartbeat. At the lowest server settin
+         +gs, a batch arrives at least once each second. So the client tr
+         +eats the stream as dropped when no batch arrives for 5 s while 
+         +the state is Live, and it reconnects with the backoff from G4. 
+         +This catches a connection that hangs without an `error` event. 
+      24  - G6. **Proposed.** The badge follows the `md-badge` style in t
+          he HTML design. It is a pill at the top of the side panel, with
+           an hr line below it. Connecting uses the neutral tone, which i
+          s outlined. Live uses the success tone, which is a #157A42 fill
+          . Reconnecting uses the warning tone, which is a #95560F fill. 
+          The bundled icon font has only the add and remove glyphs, so th
+          e badge draws a small inline SVG icon for each state. The icons
+           are a turning arc for Connecting, a dot for Live, and a circul
+          ar arrow for Reconnecting.
+      25  - G7. **Proposed.** The new client code lives in frontend/src/a
+          pp/source/ and frontend/src/app/panel/. The file source-setting
+          s.ts reads `source` and `server` from the query. The file backo
+          ff.ts holds the delay function. The file stream-status.ts is a 
+          small injectable service that holds the state as one signal. Th
+          e source in use writes it, and the badge reads it. The file ser
+          ver-source.ts is the service that owns the EventSource, the bac
+          koff timer, and the watchdog. An injection token makes the Even
+          tSource, so the tests use a fake, as the test source does with 
+          its worker. The panel/stream-badge component shows the badge.
+      26  - G8. **Proposed.** The Dockerfile is backend/Dockerfile and ha
+          s two stages. The build stage starts from python:3.13.15-slim, 
+          copies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `
+          uv sync --frozen --no-dev`. The run stage starts from python:3.
+          13.15-slim, copies the virtual environment and backend/app/, an
+          d runs as a user that is not root. It runs `uvicorn app.main:ap
+          p --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so
+           `docker stop` ends it within 3 s. The image targets linux/arm6
+          4, which is native on my laptop and matches Fargate ARM64. A ba
+          ckend/.dockerignore file keeps .venv, tests, and caches out of 
+          the build.
+
+⏺ User answered Claude's questions:
+  ⎿  · G6: The badge follows `md-badge` in the HTML design at the top of the 
+     side panel. Connecting is outlined neutral, Live is a green #157A42 fill, 
+     and Reconnecting is an amber #95560F fill. The icon font lacks the design 
+     icons, so each state gets a small inline SVG icon. Do you agree? → Pick a 
+     material icon that matches
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(requirements.md)
+  ⎿  Added 1 line, removed 1 line
+      21  - G3. **Agreed.** The state is Connecting from the start until 
+          the first `open` event. It is Live after an `open` event. When 
+          the stream drops after it was Live, the state is Reconnecting u
+          ntil the next `open` event. A failed first attempt keeps the st
+          ate at Connecting. The stream code never resets the counts. Onl
+          y a change to N resets them.
+      22  - G4. **Agreed.** EventSource retries on its own at a fixed del
+          ay, with no backoff. So on each `error` event the client closes
+           the EventSource and makes a new one after a delay. The delay i
+          s min(30 s, 1 s × 2^k) × f, where k is the number of failed att
+          empts since the last `open` event and f is a random factor from
+           0.5 to 1. The random factor stops many clients from reconnecti
+          ng at the same moment after a server restart. A new EventSource
+           sends no `Last-Event-ID` header, so the preflight concern in d
+          ocs/assumptions.md goes away.
+      23  - G5. **Agreed.** EventSource hides SSE comments, so the client
+           cannot see the `: ping` heartbeat. At the lowest server settin
+          gs, a batch arrives at least once each second. So the client tr
+          eats the stream as dropped when no batch arrives for 5 s while 
+          the state is Live, and it reconnects with the backoff from G4. 
+          This catches a connection that hangs without an `error` event.
+      24 -- G6. **Proposed.** The badge follows the `md-badge` style in t
+         -he HTML design. It is a pill at the top of the side panel, with
+         - an hr line below it. Connecting uses the neutral tone, which i
+         -s outlined. Live uses the success tone, which is a #157A42 fill
+         -. Reconnecting uses the warning tone, which is a #95560F fill. 
+         -The bundled icon font has only the add and remove glyphs, so th
+         -e badge draws a small inline SVG icon for each state. The icons
+         - are a turning arc for Connecting, a dot for Live, and a circul
+         -ar arrow for Reconnecting.                                     
+      24 +- G6. **Agreed with a change.** The badge follows the `md-badge
+         +` style in the HTML design. It is a pill at the top of the side
+         + panel, with an hr line below it. Connecting uses the neutral t
+         +one, which is outlined. Live uses the success tone, which is a 
+         +#157A42 fill. Reconnecting uses the warning tone, which is a #9
+         +5560F fill. The user asked for Material Symbols icons that matc
+         +h each state. Connecting uses `progress_activity`, Live uses `s
+         +ensors`, and Reconnecting uses `sync`. The bundled font subset 
+         +has only the add and remove glyphs. So the implement step makes
+         + a new subset from the full Material Symbols Outlined font with
+         + fonttools, with the five glyphs at opsz 20 and wght 300, and r
+         +eplaces frontend/public/fonts/material-symbols-outlined.woff2. 
+         +The Test source badge has no icon.                             
+      25  - G7. **Proposed.** The new client code lives in frontend/src/a
+          pp/source/ and frontend/src/app/panel/. The file source-setting
+          s.ts reads `source` and `server` from the query. The file backo
+          ff.ts holds the delay function. The file stream-status.ts is a 
+          small injectable service that holds the state as one signal. Th
+          e source in use writes it, and the badge reads it. The file ser
+          ver-source.ts is the service that owns the EventSource, the bac
+          koff timer, and the watchdog. An injection token makes the Even
+          tSource, so the tests use a fake, as the test source does with 
+          its worker. The panel/stream-badge component shows the badge.
+      26  - G8. **Proposed.** The Dockerfile is backend/Dockerfile and ha
+          s two stages. The build stage starts from python:3.13.15-slim, 
+          copies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `
+          uv sync --frozen --no-dev`. The run stage starts from python:3.
+          13.15-slim, copies the virtual environment and backend/app/, an
+          d runs as a user that is not root. It runs `uvicorn app.main:ap
+          p --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so
+           `docker stop` ends it within 3 s. The image targets linux/arm6
+          4, which is native on my laptop and matches Fargate ARM64. A ba
+          ckend/.dockerignore file keeps .venv, tests, and caches out of 
+          the build.
+      27  - G9. **Proposed.** `make docker-build` builds the image with t
+          he tag `precision-backend`. `make docker` builds the image and 
+          runs it with `docker run --rm -p 8000:8000`. It passes `SAMPLES
+          _PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGI
+          NS` into the container when they are set in the shell. Ctrl+C s
+          tops the container. `make docker` and `make backend` both use p
+          ort 8000, so the client needs no change to use either.
+
+⏺ Update(plan.md)
+  ⎿  Added 2 lines, removed 1 line
+       7  3. Write the stream status service. It holds the state as a sig
+          nal with the values connecting, live, reconnecting, and test. T
+          his step creates src/app/source/stream-status.ts.
+       8  4. Write the server source service. It makes the EventSource th
+          rough an injection token, sets the state from G3, parses each m
+          essage and calls `store.applyBatch`, closes and reopens the Eve
+          ntSource with the delay from step 2, and runs the 5 s watchdog 
+          from G5. It closes the EventSource and clears its timers when i
+          t is destroyed. This step creates src/app/source/server-source.
+          ts.
+       9  5. Make the test source set the state to test when it starts. T
+          his step changes src/app/source/test-source.ts.
+      10 -6. Write the badge component. It reads the stream status and sh
+         -ows the label, the tone class, and the inline SVG icon from G6.
+         - Add the `--success-text` and `--warning-text` tokens and the `
+         -md-badge` styles from the HTML design. This step creates src/ap
+         -p/panel/stream-badge.ts, stream-badge.html, and stream-badge.sc
+         -ss, and it changes src/styles.scss.                            
+      10 +6. Make a new Material Symbols Outlined subset with the add, re
+         +move, progress_activity, sensors, and sync glyphs at opsz 20 an
+         +d wght 300, as G6 says. Update the font comment. This step repl
+         +aces public/fonts/material-symbols-outlined.woff2 and changes s
+         +rc/styles.scss.                                                
+      11 +7. Write the badge component. It reads the stream status and sh
+         +ows the label, the tone class, and the Material Symbols icon fr
+         +om G6. Add the `--success-text` and `--warning-text` tokens and
+         + the `md-badge` styles from the HTML design. This step creates 
+         +src/app/panel/stream-badge.ts, stream-badge.html, and stream-ba
+         +dge.scss, and it changes src/styles.scss.                      
+      12  7. Put the badge at the top of the side panel with an hr line b
+          elow it. This step changes src/app/panel/side-panel.ts and side
+          -panel.html.
+      13  8. Make the app read the source settings at start and start eit
+          her the server source or the test source. This step changes src
+          /app/app.ts and app.spec.ts.
+      14  9. Write the Dockerfile and the ignore file from G8. This step 
+          creates backend/Dockerfile and backend/.dockerignore.
+
+⏺ Bash(python3 - <<'EOF'
+      import re…)
+  ⎿  5:1. Write the source settings. `readSourceSettings(query)`
+     6:2. Write the backoff function. `reconnectDelay(attempt, ra
+     7:3. Write the stream status service. It holds the state as
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated plan.md (+7 -7)
+       9  5. Make the test source set the state to test when it starts. T
+          his step changes src/app/source/test-source.ts.
+      10  6. Make a new Material Symbols Outlined subset with the add, re
+          move, progress_activity, sensors, and sync glyphs at opsz 20 an
+          d wght 300, as G6 says. Update the font comment. This step repl
+          aces public/fonts/material-symbols-outlined.woff2 and changes s
+          rc/styles.scss.
+      11  7. Write the badge component. It reads the stream status and sh
+          ows the label, the tone class, and the Material Symbols icon fr
+          om G6. Add the `--success-text` and `--warning-text` tokens and
+           the `md-badge` styles from the HTML design. This step creates 
+          src/app/panel/stream-badge.ts, stream-badge.html, and stream-ba
+          dge.scss, and it changes src/styles.scss.
+      12 -7. Put the badge at the top of the side panel with an hr line b
+         -elow it. This step changes src/app/panel/side-panel.ts and side
+         --panel.html.                                                   
+      13 -8. Make the app read the source settings at start and start eit
+         -her the server source or the test source. This step changes src
+         -/app/app.ts and app.spec.ts.                                   
+      14 -9. Write the Dockerfile and the ignore file from G8. This step 
+         -creates backend/Dockerfile and backend/.dockerignore.          
+      15 -10. Add the `docker-build` and `docker` targets from G9. This s
+         -tep changes Makefile.                                          
+      16 -11. Update the README. It says how the client picks the source 
+         -and the server, what the badge states mean, how the reconnect w
+         -orks, and how to run the backend in Docker. It removes the text
+         - that says the client does not connect to the server. This step
+         - changes README.md at the repo root.                           
+      17 -12. Add entries for this feature to the three logs. Update the 
+         -feature 2 assumption about the `Last-Event-ID` preflight. This 
+         -step changes docs/assumptions.md, docs/trade-offs.md, and docs/
+         -ai-changes.md.                                                 
+      18 -13. Run every check in validation.md and fix the failures.     
+      12 +8. Put the badge at the top of the side panel with an hr line b
+         +elow it. This step changes src/app/panel/side-panel.ts and side
+         +-panel.html.                                                   
+      13 +9. Make the app read the source settings at start and start eit
+         +her the server source or the test source. This step changes src
+         +/app/app.ts and app.spec.ts.                                   
+      14 +10. Write the Dockerfile and the ignore file from G8. This step
+         + creates backend/Dockerfile and backend/.dockerignore.         
+      15 +11. Add the `docker-build` and `docker` targets from G9. This s
+         +tep changes Makefile.                                          
+      16 +12. Update the README. It says how the client picks the source 
+         +and the server, what the badge states mean, how the reconnect w
+         +orks, and how to run the backend in Docker. It removes the text
+         + that says the client does not connect to the server. This step
+         + changes README.md at the repo root.                           
+      17 +13. Add entries for this feature to the three logs. Update the 
+         +feature 2 assumption about the `Last-Event-ID` preflight. This 
+         +step changes docs/assumptions.md, docs/trade-offs.md, and docs/
+         +ai-changes.md.                                                 
+      18 +14. Run every check in validation.md and fix the failures.     
+  ⎿  Updated validation.md (+5 -5)
+      43  
+      44  ### V5. The badge shows the state
+      45  
+      46 -- For connecting, the badge shows "Connecting" with the neutral
+         - tone class.                                                   
+      47 -- For live, the badge shows "Live" with the success tone class.
+      48 -- For reconnecting, the badge shows "Reconnecting" with the war
+         -ning tone class.                                               
+      49 -- For test, the badge shows "Test source" with the neutral tone
+         - class.                                                        
+      46 +- For connecting, the badge shows "Connecting" with the neutral
+         + tone class and the `progress_activity` icon.                  
+      47 +- For live, the badge shows "Live" with the success tone class 
+         +and the `sensors` icon.                                        
+      48 +- For reconnecting, the badge shows "Reconnecting" with the war
+         +ning tone class and the `sync` icon.                           
+      49 +- For test, the badge shows "Test source" with the neutral tone
+         + class and no icon.                                            
+      50  - The side panel shows the badge above the grid size control.
+      51  
+      52  ### V6. The app starts one source
+     ...
+      73  ### M1. The client goes live with the local server
+      74  
+      75  1. Run `make dev` and open http://localhost:4200 in Chrome.
+      76 -2. The expected result is a Connecting badge that turns to a gr
+         -een Live badge within 2 s. The grid fills, and the samples rece
+         -ived readout rises by about 100,000 each second.               
+      76 +2. The expected result is a Connecting badge that turns to a gr
+         +een Live badge within 2 s. Each badge shows its icon, and no ic
+         +on shows as a word or a blank box. The grid fills, and the samp
+         +les received readout rises by about 100,000 each second.       
+      77  
+      78  ### M2. The counts stay during a reconnect
+      79  
+
+⏺ User answered Claude's questions:
+  ⎿  · G7: The new code goes in source/ (source-settings.ts, backoff.ts, 
+     stream-status.ts, server-source.ts) and panel/stream-badge. A small stream 
+     status service holds the state signal. An injection token makes the 
+     EventSource, so tests use a fake. Do you agree? → Agree (Recommended)
+
+⏺ Update(requirements.md)
+  ⎿  Updated requirements.md (+1 -1)
+      22  - G4. **Agreed.** EventSource retries on its own at a fixed del
+          ay, with no backoff. So on each `error` event the client closes
+           the EventSource and makes a new one after a delay. The delay i
+          s min(30 s, 1 s × 2^k) × f, where k is the number of failed att
+          empts since the last `open` event and f is a random factor from
+           0.5 to 1. The random factor stops many clients from reconnecti
+          ng at the same moment after a server restart. A new EventSource
+           sends no `Last-Event-ID` header, so the preflight concern in d
+          ocs/assumptions.md goes away.
+      23  - G5. **Agreed.** EventSource hides SSE comments, so the client
+           cannot see the `: ping` heartbeat. At the lowest server settin
+          gs, a batch arrives at least once each second. So the client tr
+          eats the stream as dropped when no batch arrives for 5 s while 
+          the state is Live, and it reconnects with the backoff from G4. 
+          This catches a connection that hangs without an `error` event.
+      24  - G6. **Agreed with a change.** The badge follows the `md-badge
+          ` style in the HTML design. It is a pill at the top of the side
+           panel, with an hr line below it. Connecting uses the neutral t
+          one, which is outlined. Live uses the success tone, which is a 
+          #157A42 fill. Reconnecting uses the warning tone, which is a #9
+          5560F fill. The user asked for Material Symbols icons that matc
+          h each state. Connecting uses `progress_activity`, Live uses `s
+          ensors`, and Reconnecting uses `sync`. The bundled font subset 
+          has only the add and remove glyphs. So the implement step makes
+           a new subset from the full Material Symbols Outlined font with
+           fonttools, with the five glyphs at opsz 20 and wght 300, and r
+          eplaces frontend/public/fonts/material-symbols-outlined.woff2. 
+          The Test source badge has no icon.
+      25 -- G7. **Proposed.** The new client code lives in frontend/src/a
+         -pp/source/ and frontend/src/app/panel/. The file source-setting
+         -s.ts reads `source` and `server` from the query. The file backo
+         -ff.ts holds the delay function. The file stream-status.ts is a 
+         -small injectable service that holds the state as one signal. Th
+         -e source in use writes it, and the badge reads it. The file ser
+         -ver-source.ts is the service that owns the EventSource, the bac
+         -koff timer, and the watchdog. An injection token makes the Even
+         -tSource, so the tests use a fake, as the test source does with 
+         -its worker. The panel/stream-badge component shows the badge.  
+      25 +- G7. **Agreed.** The new client code lives in frontend/src/app
+         +/source/ and frontend/src/app/panel/. The file source-settings.
+         +ts reads `source` and `server` from the query. The file backoff
+         +.ts holds the delay function. The file stream-status.ts is a sm
+         +all injectable service that holds the state as one signal. The 
+         +source in use writes it, and the badge reads it. The file serve
+         +r-source.ts is the service that owns the EventSource, the backo
+         +ff timer, and the watchdog. An injection token makes the EventS
+         +ource, so the tests use a fake, as the test source does with it
+         +s worker. The panel/stream-badge component shows the badge.    
+      26  - G8. **Proposed.** The Dockerfile is backend/Dockerfile and ha
+          s two stages. The build stage starts from python:3.13.15-slim, 
+          copies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `
+          uv sync --frozen --no-dev`. The run stage starts from python:3.
+          13.15-slim, copies the virtual environment and backend/app/, an
+          d runs as a user that is not root. It runs `uvicorn app.main:ap
+          p --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so
+           `docker stop` ends it within 3 s. The image targets linux/arm6
+          4, which is native on my laptop and matches Fargate ARM64. A ba
+          ckend/.dockerignore file keeps .venv, tests, and caches out of 
+          the build.
+      27  - G9. **Proposed.** `make docker-build` builds the image with t
+          he tag `precision-backend`. `make docker` builds the image and 
+          runs it with `docker run --rm -p 8000:8000`. It passes `SAMPLES
+          _PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGI
+          NS` into the container when they are set in the shell. Ctrl+C s
+          tops the container. `make docker` and `make backend` both use p
+          ort 8000, so the client needs no change to use either.
+
+⏺ User answered Claude's questions:
+  ⎿  · G8: backend/Dockerfile has two stages from python:3.13.15-slim with uv 
+     0.11.24. It runs uvicorn on 0.0.0.0:8000 with a 3 s graceful shutdown, as a
+     user that is not root, for linux/arm64. Do you agree? → Agree 
+     (Recommended)
+
+⏺ Update(requirements.md)
+  ⎿  Updated requirements.md (+1 -1)
+      23  - G5. **Agreed.** EventSource hides SSE comments, so the client
+           cannot see the `: ping` heartbeat. At the lowest server settin
+          gs, a batch arrives at least once each second. So the client tr
+          eats the stream as dropped when no batch arrives for 5 s while 
+          the state is Live, and it reconnects with the backoff from G4. 
+          This catches a connection that hangs without an `error` event.
+      24  - G6. **Agreed with a change.** The badge follows the `md-badge
+          ` style in the HTML design. It is a pill at the top of the side
+           panel, with an hr line below it. Connecting uses the neutral t
+          one, which is outlined. Live uses the success tone, which is a 
+          #157A42 fill. Reconnecting uses the warning tone, which is a #9
+          5560F fill. The user asked for Material Symbols icons that matc
+          h each state. Connecting uses `progress_activity`, Live uses `s
+          ensors`, and Reconnecting uses `sync`. The bundled font subset 
+          has only the add and remove glyphs. So the implement step makes
+           a new subset from the full Material Symbols Outlined font with
+           fonttools, with the five glyphs at opsz 20 and wght 300, and r
+          eplaces frontend/public/fonts/material-symbols-outlined.woff2. 
+          The Test source badge has no icon.
+      25  - G7. **Agreed.** The new client code lives in frontend/src/app
+          /source/ and frontend/src/app/panel/. The file source-settings.
+          ts reads `source` and `server` from the query. The file backoff
+          .ts holds the delay function. The file stream-status.ts is a sm
+          all injectable service that holds the state as one signal. The 
+          source in use writes it, and the badge reads it. The file serve
+          r-source.ts is the service that owns the EventSource, the backo
+          ff timer, and the watchdog. An injection token makes the EventS
+          ource, so the tests use a fake, as the test source does with it
+          s worker. The panel/stream-badge component shows the badge.
+      26 -- G8. **Proposed.** The Dockerfile is backend/Dockerfile and ha
+         -s two stages. The build stage starts from python:3.13.15-slim, 
+         -copies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `
+         -uv sync --frozen --no-dev`. The run stage starts from python:3.
+         -13.15-slim, copies the virtual environment and backend/app/, an
+         -d runs as a user that is not root. It runs `uvicorn app.main:ap
+         -p --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so
+         - `docker stop` ends it within 3 s. The image targets linux/arm6
+         -4, which is native on my laptop and matches Fargate ARM64. A ba
+         -ckend/.dockerignore file keeps .venv, tests, and caches out of 
+         -the build.                                                     
+      26 +- G8. **Agreed.** The Dockerfile is backend/Dockerfile and has 
+         +two stages. The build stage starts from python:3.13.15-slim, co
+         +pies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `uv
+         + sync --frozen --no-dev`. The run stage starts from python:3.13
+         +.15-slim, copies the virtual environment and backend/app/, and 
+         +runs as a user that is not root. It runs `uvicorn app.main:app 
+         +--host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so `
+         +docker stop` ends it within 3 s. The image targets linux/arm64,
+         + which is native on my laptop and matches Fargate ARM64. A back
+         +end/.dockerignore file keeps .venv, tests, and caches out of th
+         +e build.                                                       
+      27  - G9. **Proposed.** `make docker-build` builds the image with t
+          he tag `precision-backend`. `make docker` builds the image and 
+          runs it with `docker run --rm -p 8000:8000`. It passes `SAMPLES
+          _PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGI
+          NS` into the container when they are set in the shell. Ctrl+C s
+          tops the container. `make docker` and `make backend` both use p
+          ort 8000, so the client needs no change to use either.
+
+⏺ User answered Claude's questions:
+  ⎿  · G9: `make docker-build` builds the image `precision-backend`. `make 
+     docker` builds and runs it on port 8000 with --rm and passes the four 
+     stream environment variables when they are set. Ctrl+C stops it. Do you 
+     agree? → Agree (Recommended)
+
+⏺ Bash(sed -i '' 's/^- G9\. \*\*Proposed\.\*\*/- G9. **Agreed.**/; s/^Each item
+      below is my proposal\. I ask the user about each one\./Each item below was
+      my proposal.…)
+  ⎿  0
+     17:Each item below was my proposal. The user answered each one.
+      M specs/roadmap.md
+     ?? specs/features/04-stream/
+  ⎿  Updated requirements.md (+2 -2)
+      14  
+      15  ## Items the sources do not cover
+      16  
+      17 -Each item below is my proposal. I ask the user about each one. 
+      17 +Each item below was my proposal. The user answered each one.   
+      18  
+      19  - G1. **Agreed with a change.** The client uses the server by d
+          efault. The URL query `source=frontend` runs the test source fr
+          om feature 3 instead, with its `rate`, `interval`, and `max` se
+          ttings. The user chose the name `frontend`. Only one source run
+          s at a time. Any other value of `source` logs a warning and use
+          s the server. With the test source, the badge shows "Test sourc
+          e" in the neutral tone, so a reviewer cannot mistake it for the
+           server.
+      20  - G2. **Agreed.** The client reads the server address from the 
+          URL query `server`, and the default is http://localhost:8000. T
+          he client strips a trailing slash and connects to the address p
+          lus `/stream`. A value that is not an http or https URL logs a 
+          warning and uses the default. Feature 5 changes the default to 
+          the cloud URL.
+     ...
+      24  - G6. **Agreed with a change.** The badge follows the `md-badge
+          ` style in the HTML design. It is a pill at the top of the side
+           panel, with an hr line below it. Connecting uses the neutral t
+          one, which is outlined. Live uses the success tone, which is a 
+          #157A42 fill. Reconnecting uses the warning tone, which is a #9
+          5560F fill. The user asked for Material Symbols icons that matc
+          h each state. Connecting uses `progress_activity`, Live uses `s
+          ensors`, and Reconnecting uses `sync`. The bundled font subset 
+          has only the add and remove glyphs. So the implement step makes
+           a new subset from the full Material Symbols Outlined font with
+           fonttools, with the five glyphs at opsz 20 and wght 300, and r
+          eplaces frontend/public/fonts/material-symbols-outlined.woff2. 
+          The Test source badge has no icon.
+      25  - G7. **Agreed.** The new client code lives in frontend/src/app
+          /source/ and frontend/src/app/panel/. The file source-settings.
+          ts reads `source` and `server` from the query. The file backoff
+          .ts holds the delay function. The file stream-status.ts is a sm
+          all injectable service that holds the state as one signal. The 
+          source in use writes it, and the badge reads it. The file serve
+          r-source.ts is the service that owns the EventSource, the backo
+          ff timer, and the watchdog. An injection token makes the EventS
+          ource, so the tests use a fake, as the test source does with it
+          s worker. The panel/stream-badge component shows the badge.
+      26  - G8. **Agreed.** The Dockerfile is backend/Dockerfile and has 
+          two stages. The build stage starts from python:3.13.15-slim, co
+          pies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `uv
+           sync --frozen --no-dev`. The run stage starts from python:3.13
+          .15-slim, copies the virtual environment and backend/app/, and 
+          runs as a user that is not root. It runs `uvicorn app.main:app 
+          --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so `
+          docker stop` ends it within 3 s. The image targets linux/arm64,
+           which is native on my laptop and matches Fargate ARM64. A back
+          end/.dockerignore file keeps .venv, tests, and caches out of th
+          e build.
+      27 -- G9. **Proposed.** `make docker-build` builds the image with t
+         -he tag `precision-backend`. `make docker` builds the image and 
+         -runs it with `docker run --rm -p 8000:8000`. It passes `SAMPLES
+         -_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGI
+         -NS` into the container when they are set in the shell. Ctrl+C s
+         -tops the container. `make docker` and `make backend` both use p
+         -ort 8000, so the client needs no change to use either.         
+      27 +- G9. **Agreed.** `make docker-build` builds the image with the
+         + tag `precision-backend`. `make docker` builds the image and ru
+         +ns it with `docker run --rm -p 8000:8000`. It passes `SAMPLES_P
+         +ER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS
+         +` into the container when they are set in the shell. Ctrl+C sto
+         +ps the container. `make docker` and `make backend` both use por
+         +t 8000, so the client needs no change to use either.           
+
+⏺ I made the branch feature/04-stream and wrote the plan for feature 4, Stream.
+  You answered all nine open items, and none are still open.
+
+  - Requirements: R1 to R9 come from the sources. G1 to G9 are the items the
+    sources did not cover, and each one records your answer.
+  - Plan: it has 14 steps, and each step names the files it creates or changes.
+  - Validation: it has 9 automated checks (V1 to V9) and 6 manual checks (M1 to
+    M6). The project documents have no worked example for this feature.
+
+  I changed the plan in two places from your answers:
+  - G1: the query ?source=frontend picks the test source from feature 3. With
+    that source, the badge shows a grey "Test source" label with no icon.
+  - G6: the badge uses Material Symbols icons. They are progress_activity for
+    Connecting, sensors for Live, and sync for Reconnecting. The font file in
+    the repo has only the add and remove icons. So step 6 builds a new font file
+    that has all five icons, from the full Material Symbols font.
+
+  I also set feature 4 to "in progress" in specs/roadmap.md.
+
+  Please review the files in specs/features/04-stream/ and approve the plan.
+  When you approve it, clear the session and run /spec-driven implement.
+
+✻ Baked for 4m 16s · done 6:31 PM

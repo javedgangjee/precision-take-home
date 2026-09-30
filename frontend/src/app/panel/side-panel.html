@@ -1,0 +1,56 @@
+<div class="control">
+  <label for="grid-size" class="control-label">Grid size</label>
+  <div class="control-row">
+    <button
+      type="button"
+      class="md-btn"
+      aria-label="Decrease grid size"
+      [style.visibility]="atMin() ? 'hidden' : null"
+      (click)="change(-1)"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12 L19 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+    </button>
+    <div class="field">
+      <input id="grid-size" type="text" readonly [value]="sizeText()" (keydown)="onKey($event)" />
+    </div>
+    <button
+      type="button"
+      class="md-btn"
+      aria-label="Increase grid size"
+      [style.visibility]="atMax() ? 'hidden' : null"
+      (click)="change(1)"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M12 5 L12 19 M5 12 L19 12"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+        />
+      </svg>
+    </button>
+  </div>
+</div>
+<hr />
+<div class="readouts">
+  <div class="md-readout">
+    <div class="md-readout-value">{{ samplesText() }}</div>
+    <div class="md-readout-label">Samples received</div>
+  </div>
+  <hr />
+  <div class="md-readout">
+    <div class="md-readout-value">{{ maxText() }}</div>
+    <div class="md-readout-label">Max count</div>
+  </div>
+  <hr />
+  <div class="md-readout">
+    <div class="md-readout-value">{{ store.fps() }}<span class="md-readout-unit"> fps</span></div>
+    <div class="md-readout-label">Frame rate</div>
+    @if (store.fpsWarning(); as warning) {
+      <p class="danger-text">{{ warning }}</p>
+    }
+  </div>
+  <hr />
+</div>

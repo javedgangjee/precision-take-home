@@ -1,0 +1,126 @@
+/* The layout and the classes follow the side panel and the design system in the HTML design. */
+:host {
+  flex: none;
+  width: 264px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-rest);
+}
+
+hr {
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.control-label {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.md-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-control);
+  background: var(--surface-card);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.md-btn:hover {
+  background: var(--surface-tint);
+}
+.md-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+}
+.field:focus-within {
+  box-shadow: var(--shadow-focus);
+}
+.field input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  text-align: center;
+  padding: 0 var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: default;
+}
+
+.readouts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.md-readout {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.md-readout-value {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.md-readout-unit {
+  font-weight: 400;
+  color: var(--ink-secondary);
+}
+.md-readout-label {
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.danger-text {
+  margin: var(--space-1) 0 0;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--danger-text);
+}

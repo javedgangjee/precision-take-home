@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold and the backend stream are in place, and the heat map comes in a later feature. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, and the heat map client are in place. The client does not connect to the server yet, and feature 4 adds that. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -56,6 +56,29 @@ The server reads these environment variables at start. When a value is out of ra
 | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. The server strips a trailing slash from each origin. | These origins can call the server from a browser. |
 
 For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends one batch of 20 integers each second.
+
+## Client
+
+Run `make frontend` and open http://localhost:4200. The page shows the heat map, a color scale, and a side panel.
+
+- The grid has N by N cells, and N is 32 at start. Row 0 is at the bottom, and column 0 is at the left. Row numbers run up the left side and column numbers run along the bottom. When N is above 16, every 2nd row and column has a label, and when N is above 32, every 4th one has a label.
+- Each value v goes to cell index (v - 1) mod N². The row is the index divided by N, and the column is the index mod N. On a 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and 0 goes to cell <3,3>.
+- A cell with no hits is white. A cell with hits gets a color from blue (#1E00FF) at a count of 1 through cyan, green, and yellow to red (#FF0033) at the max count.
+- The color scale shows the max count at the top, the midpoint in the middle, and 1 at the bottom.
+- The minus and plus buttons change N from 1 to 64. The up and down arrow keys in the N field change N by 1, and by 10 with Shift. A change to N resets all counts to zero.
+- The side panel shows the samples received, the max count, and the frame rate. A red line shows below the frame rate when it falls below 90 percent of the highest rate since the page loaded.
+
+### Test source
+
+Until feature 4 connects the server, a test source in a Web Worker makes the data in the browser. It makes uniform random integers as the server does, and it posts each batch as a JSON string. The client reads the settings from the URL query. When a value is out of range or not a whole number, the client logs a warning to the console and uses the default.
+
+| Setting | Default | Range | Meaning |
+| --- | --- | --- | --- |
+| `rate` | 100000 | 1 to 10000000 | This sets how many integers the source makes each second. The range goes past the server limit, so a stress test can push the browser. |
+| `interval` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
+| `max` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
+
+A change to the query needs a reload, which also resets the counts. For a stress test, open http://localhost:4200/?rate=1000000&interval=50&max=1024, set N to 64, and watch the frame rate.
 
 ## Specs and logs
 

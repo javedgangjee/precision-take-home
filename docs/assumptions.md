@@ -50,3 +50,10 @@ Each entry gives the date, the phase, and the assumption.
 - The expected frame rate is the highest one-second reading since the page loaded. On an idle page that reading is the display refresh rate, so the rule works on 60 Hz and 120 Hz screens.
 - The fonts come from the HTML design bundle. The repo is private and will not be released, so it has no license files for the fonts.
 - The client uses the light theme only.
+
+## 2026-09-30, implement feature 3, frontend
+
+- A call to set N to the value it already has does nothing. An arrow key press at 1 or 64 then keeps the counts.
+- The test source settings must be whole numbers. A value such as 1.5 falls back to its default, as a value out of range does.
+- The grid is never smaller than 120 CSS pixels on a side, as in the HTML design.
+- The client redraws the grid when the fonts finish loading, so the axis labels use IBM Plex Mono.

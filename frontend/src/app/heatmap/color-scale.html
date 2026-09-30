@@ -1,0 +1,8 @@
+<div class="scale" [style.height.px]="height()">
+  <div class="bar"></div>
+  <div class="labels">
+    @for (label of labels(); track $index) {
+      <span class="label">{{ label }}</span>
+    }
+  </div>
+</div>

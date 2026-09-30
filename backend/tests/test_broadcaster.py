@@ -2,7 +2,7 @@ import asyncio
 import json
 import random
 
-from app.broadcaster import Broadcaster
+from app.broadcaster import Broadcaster, next_tick
 from app.generator import BatchGenerator
 from app.settings import Settings
 
@@ -82,3 +82,16 @@ def test_task_publishes_about_20_batches_per_second() -> None:
         return broadcaster.next_seq
 
     assert 18 <= asyncio.run(run_for_1_second()) <= 22
+
+
+def test_next_tick_is_the_following_tick_when_on_time() -> None:
+    assert next_tick(3, elapsed_s=0.16, interval_s=0.05) == 4
+
+
+def test_next_tick_runs_a_tick_that_is_less_than_one_interval_late() -> None:
+    assert next_tick(3, elapsed_s=0.21, interval_s=0.05) == 4
+
+
+def test_next_tick_skips_the_ticks_that_a_stall_missed() -> None:
+    # Ticks 4 to 99 are missed. Tick 100 runs now, and the rest are skipped.
+    assert next_tick(3, elapsed_s=5.01, interval_s=0.05) == 100

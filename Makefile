@@ -15,7 +15,7 @@ install:
 	cd infra && uv sync
 
 backend:
-	cd backend && uv run uvicorn app.main:app --reload --port $(BACKEND_PORT)
+	cd backend && uv run uvicorn app.main:app --reload --port $(BACKEND_PORT) --timeout-graceful-shutdown 3
 
 frontend:
 	cd frontend && npx ng serve --port $(FRONTEND_PORT)

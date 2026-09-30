@@ -9,6 +9,15 @@ from app.generator import BatchGenerator
 QUEUE_SIZE = 2
 
 
+def next_tick(last_tick: int, elapsed_s: float, interval_s: float) -> int:
+    """Returns the tick to run after last_tick, given the time since the start.
+
+    After a stall, the latest tick that is due runs, and the older missed ticks
+    are skipped. The server does not make batches that would only be dropped.
+    """
+    return max(last_tick + 1, int(elapsed_s // interval_s))
+
+
 class Batch(NamedTuple):
     seq: int
     text: str
@@ -54,7 +63,7 @@ class Broadcaster:
         start = time.monotonic()
         tick = 0
         while True:
-            tick += 1
+            tick = next_tick(tick, time.monotonic() - start, self._interval_s)
             await asyncio.sleep(max(0.0, start + tick * self._interval_s - time.monotonic()))
             values = self._generator.next_batch()
             if values:

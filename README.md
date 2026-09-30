@@ -27,7 +27,7 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 
 ## Makefile targets
 
-- `make backend` runs the server at http://localhost:8000 with reload on file changes. The health check is at http://localhost:8000/health.
+- `make backend` runs the server at http://localhost:8000 with reload on file changes. It stops within 3 seconds of Ctrl+C, even with open streams. The health check is at http://localhost:8000/health.
 - `make frontend` runs the client at http://localhost:4200.
 - `make dev` runs the backend and the frontend together. Press Ctrl+C once to stop both.
 - `make test` runs the backend and frontend tests and reports coverage. The goal is 100 percent, and no minimum is enforced.

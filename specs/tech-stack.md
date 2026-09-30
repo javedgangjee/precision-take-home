@@ -9,7 +9,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - The web framework is FastAPI 0.142.1, with Pydantic 2.13.5.
 - The ASGI server is Uvicorn 0.54.0.
 - The backend sends the stream to the client with Server-Sent Events. The client sends nothing back, so the project does not use WebSockets.
-- The backend runs locally for development and in a Docker image in the cloud.
+- The backend runs locally for development, both with uv and in a Docker image in Docker Desktop 4.92.0. The same image runs in the cloud.
 - The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverage. The goal is 100 percent coverage, and no minimum is enforced.
 - The linters are ruff 0.16.9 and mypy 2.3.1.
 

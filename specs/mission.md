@@ -43,13 +43,13 @@ The brief is the main source of truth. Where my notes or the HTML design disagre
 - N2. The grid shows row numbers on the left and column numbers along the bottom, as in the brief picture. When N is too large to label every row and column, the labels appear at a fixed interval.
 - N3. N ranges from 1 to 64, and the default is 32. When the user changes N, all counts reset to zero.
 - N4. The color position of a cell is (count - 1) / (max - 1). A count of 1 is full blue, and the max count is full red. When the max count is 1, every non-empty cell is full blue. The scale labels run from 1 to the max count.
-- N5. The server sends the stream in batches, and each batch is a JSON array of random integers drawn from a uniform distribution. The server generates one shared stream, and every connected client gets the same batches.
+- N5. The server sends the stream in batches, and each batch is a JSON array of random integers drawn from a uniform distribution. The server generates one shared stream, and every connected client gets the same batches. Each batch carries a sequence number that starts at 0 when the server starts, so a client can count the batches it missed.
 - N6. The target latency from generation to render is 100 ms.
 - N7. Delivery is lossy and best effort.
 - N8. The server sends a heartbeat if it sends nothing for 15 seconds.
 - N9. Counts stay on screen while the client reconnects.
 - N10. The client reconnects with backoff and shows one of three states, which are Live, Connecting, and Reconnecting.
-- N11. The server settings are samples per second from 1 to 100,000, batch interval from 50 ms to 1 s, and a maximum value of 10,000. The defaults are 100,000 samples per second and a 50 ms batch interval, so each batch holds 5,000 integers. The server reads these settings from environment variables at start.
+- N11. The server settings are samples per second from 1 to 100,000, batch interval from 50 ms to 1 s, and a maximum value from 1 to 10,000. The defaults are 100,000 samples per second, a 50 ms batch interval, and a maximum value of 1,024, so each batch holds 5,000 integers from 0 to 1,023. A fourth setting lists the origins that can call the server from a browser, and the default is http://localhost:4200. The server reads these settings from environment variables at start.
 - N12. A stress test measures the limits on clients, samples, and payload size, if it is feasible.
 - N13. A Makefile runs the frontend and the backend, runs the tests, and deploys.
 - N14. Three logs in docs/ record the assumptions, the trade-offs, and my changes to AI output in each phase. They are assumptions.md, trade-offs.md, and ai-changes.md.

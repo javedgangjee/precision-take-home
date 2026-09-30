@@ -53,7 +53,7 @@ The server reads these environment variables at start. When a value is out of ra
 | `SAMPLES_PER_SECOND` | 100000 | 1 to 100000 | This sets how many integers the server makes each second. |
 | `BATCH_INTERVAL_MS` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
 | `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
-| `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. | These origins can call the server from a browser. |
+| `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. The server strips a trailing slash from each origin. | These origins can call the server from a browser. |
 
 For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends one batch of 20 integers each second.
 

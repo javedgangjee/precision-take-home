@@ -1,5 +1,5 @@
 import random
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -13,7 +13,7 @@ from app.settings import Settings, load_settings
 
 def create_app(settings: Settings) -> FastAPI:
     @asynccontextmanager
-    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         broadcaster = Broadcaster(
             BatchGenerator(settings, random.Random()), settings.batch_interval_ms / 1_000
         )
@@ -23,7 +23,13 @@ def create_app(settings: Settings) -> FastAPI:
         await broadcaster.stop()
 
     app = FastAPI(title="Bin There Done That", lifespan=lifespan)
-    app.add_middleware(CORSMiddleware, allow_origins=settings.cors_origins, allow_methods=["GET"])
+    # EventSource sends Last-Event-ID when it reconnects, which some browsers may preflight.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_methods=["GET"],
+        allow_headers=["Last-Event-ID"],
+    )
 
     @app.get("/health")
     def health() -> dict[str, str]:

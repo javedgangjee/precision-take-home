@@ -50,3 +50,10 @@ def test_bad_value_warns_and_uses_default(
 
     assert getattr(settings, field) == default
     assert name in caplog.text
+
+
+def test_strips_trailing_slash_from_cors_origins() -> None:
+    # A browser never sends a trailing slash in the Origin header.
+    settings = load_settings({"CORS_ORIGINS": "http://a.test/, http://b.test"})
+
+    assert settings.cors_origins == ["http://a.test", "http://b.test"]

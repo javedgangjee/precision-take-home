@@ -31,9 +31,9 @@ def load_settings(env: Mapping[str, str] | None = None) -> Settings:
         if env_name in source:
             values[field] = source[env_name]
     if "cors_origins" in values:
-        values["cors_origins"] = [
-            origin.strip() for origin in values["cors_origins"].split(",") if origin.strip()
-        ]
+        # A browser never sends a trailing slash in the Origin header, so strip it.
+        origins = (origin.strip().rstrip("/") for origin in values["cors_origins"].split(","))
+        values["cors_origins"] = [origin for origin in origins if origin]
 
     try:
         return Settings(**values)

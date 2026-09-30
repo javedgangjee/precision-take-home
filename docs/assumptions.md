@@ -35,3 +35,8 @@ Each entry gives the date, the phase, and the assumption.
 
 - The CORS rule allows only the GET method, because the client only reads from the server.
 - The app is built by a `create_app(settings)` function, and the module makes the served app from the environment at import. The tests build apps with their own settings.
+
+## 2026-09-30, review feature 2, backend
+
+- The backend will be served at https://api.precision.jgangjee.com in feature 5. That address is the backend's own origin, so it does not go in `CORS_ORIGINS`. The frontend's public origin goes there, and feature 5 decides it.
+- Some browsers may send a preflight request when EventSource reconnects with the `Last-Event-ID` header. The CORS rule allows that header, so the reconnect works in either case. Feature 4 checks it in real browsers.

@@ -1,0 +1,683 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven replan                                                           
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Feature 2 is merged into main. I set its status to done.
+
+⏺ Bash(sed -i '' 's/It covers B2, N5, N7, N8, and N11. The status is in
+      progress./It covers B2, N5, N7, N8, and N11. The status is done./'
+      specs/roadmap.md && grep -n…)
+  ⎿  6:2. **Backend.** The goal is a FastAPI server that generates random i
+     ntegers and sends them in batches over Server-Sent Events. The backend
+      allows cross-origin calls with CORSMiddleware. It reads the allowed o
+     … +2 lines (ctrl+o to expand)
+  ⎿  Updated specs/roadmap.md (+1 -1)
+      3  Every feature updates the README and the three logs in docs/ as 
+         it goes. That work covers S1 to S7 and N14 across all features.
+      4  
+      5  1. **Scaffold.** The goal is a repo where the backend, the front
+         end, and the CDK app exist, the tests run, the linters pass, and
+          the CDK app synthesizes, all from the Makefile. It covers N13 a
+         nd S2. The status is done.
+      6 -2. **Backend.** The goal is a FastAPI server that generates rand
+        -om integers and sends them in batches over Server-Sent Events. T
+        -he backend allows cross-origin calls with CORSMiddleware. It rea
+        -ds the allowed origins from an environment variable, and the def
+        -ault is http://localhost:4200. It covers B2, N5, N7, N8, and N11
+        -. The status is in progress.                                    
+      6 +2. **Backend.** The goal is a FastAPI server that generates rand
+        +om integers and sends them in batches over Server-Sent Events. T
+        +he backend allows cross-origin calls with CORSMiddleware. It rea
+        +ds the allowed origins from an environment variable, and the def
+        +ault is http://localhost:4200. It covers B2, N5, N7, N8, and N11
+        +. The status is done.                                           
+      7  3. **Frontend.** The goal is an Angular client that bins values,
+          keeps counts, and draws the grid, the axis labels, the color sc
+         ale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2, N
+         3, N4, D2, and D3. The status is planned.
+      8  4. **Stream.** The goal is a client that shows the stream state,
+          reconnects with backoff, and keeps counts on screen during a re
+         connect. It covers N9, N10, and D1. The status is planned.
+      9  5. **Deploy.** The goal is the backend running on ECS Fargate be
+         hind an ALB at my domain, deployed with CDK from the Makefile. I
+         t covers B2 and N13. The status is planned.
+
+⏺ Skill(changelog)
+  ⎿  Successfully loaded skill
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Here are the draft entries for feature 2. They go under Unreleased.
+
+  Added
+
+  - Feature 2 adds a GET /stream endpoint that sends batches of random integers
+    as Server-Sent Events, with one compact JSON array in each event.
+  - Feature 2 gives each event an id that holds the batch sequence number, which
+    starts at 0 when the server starts, so a client can count the batches it
+    missed.
+  - Feature 2 makes the server generate one shared stream, so every connected
+    client gets the same batches.
+  - Feature 2 makes delivery lossy, so each client queue holds at most 2 batches
+    and drops the oldest batch when it is full.
+  - Feature 2 makes the server send the comment : ping when it sends nothing for
+    15 seconds.
+  - Feature 2 adds the environment variables SAMPLES_PER_SECOND,
+    BATCH_INTERVAL_MS, MAX_VALUE, and CORS_ORIGINS, with the defaults 100,000,
+    50 ms, 1,024, and http://localhost:4200.
+  - Feature 2 makes the server log a warning and use the default when an
+    environment variable is out of range or is not a number.
+  - Feature 2 lets browser clients from the origins in CORS_ORIGINS call the
+    server.
+  - Feature 2 adds a section to the README that describes the stream, the
+    environment variables, and a curl command that shows the stream.
+
+  Changed
+
+  - Feature 2 makes make backend stop within 3 seconds of Ctrl+C, even when
+    streams are open.
+
+  The merge also adds session logs in docs/ and one file at
+  backend/02_backend_review.txt. I left the logs out of the changelog. The file
+  in backend/ is a second session log that was saved from the backend/ folder,
+  so it may be in the wrong place.
+
+  Do you approve these entries?
+
+✻ Worked for 26s · done 12:52 AM
+
+❯ yes                                                                           
+
+⏺ Bash(python3 - <<'EOF'
+      p='CHANGELOG.md'…)
+  ⎿  - Feature 1 adds a backend project in backend/ that uses Python 3.13,
+     uv, and FastAPI, with one `GET /health` endpoint that returns `{"statu
+     s": "ok"}`.
+     … +29 lines (ctrl+o to expand)
+  ⎿  Updated CHANGELOG.md (+13 -0)
+      13  - Feature 1 makes the backend and frontend test runs fail when 
+          coverage is below 80 percent.
+      14  - Feature 1 adds a README at the repo root that explains how to
+           install, run, test, and lint the project.
+      15  - Feature 1 adds the three logs in docs/ for assumptions, trade
+          -offs, and changes to AI output.
+      16 +- Feature 2 adds a `GET /stream` endpoint that sends batches of
+         + random integers as Server-Sent Events, with one compact JSON a
+         +rray in each event.                                            
+      17 +- Feature 2 gives each event an `id` that holds the batch seque
+         +nce number, which starts at 0 when the server starts, so a clie
+         +nt can count the batches it missed.                            
+      18 +- Feature 2 makes the server generate one shared stream, so eve
+         +ry connected client gets the same batches.                     
+      19 +- Feature 2 makes delivery lossy, so each client queue holds at
+         + most 2 batches and drops the oldest batch when it is full.    
+      20 +- Feature 2 makes the server send the comment `: ping` when it 
+         +sends nothing for 15 seconds.                                  
+      21 +- Feature 2 adds the environment variables `SAMPLES_PER_SECOND`
+         +, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS`, with th
+         +e defaults 100,000, 50 ms, 1,024, and `http://localhost:4200`. 
+      22 +- Feature 2 makes the server log a warning and use the default 
+         +when an environment variable is out of range or is not a number
+         +.                                                              
+      23 +- Feature 2 lets browser clients from the origins in `CORS_ORIG
+         +INS` call the server.                                          
+      24 +- Feature 2 adds a section to the README that describes the str
+         +eam, the environment variables, and a curl command that shows t
+         +he stream.                                                     
+      25 +                                                               
+      26 +### Changed                                                    
+      27 +                                                               
+      28 +- Feature 2 makes `make backend` stop within 3 seconds of Ctrl+
+         +C, even when streams are open.                                 
+
+⏺ I saved the entries in CHANGELOG.md.
+
+  What changed during the backend feature? For example, did anything drift from
+  the plan, or did you learn something that affects later features?
+
+  I found three changes that the constitution files do not show yet. Please
+  confirm them or add to them.
+
+  - MAX_VALUE defaults to 1,024 and ranges from 1 to 10,000. N11 in mission.md
+    gives only "a maximum value of 10,000".
+  - The server takes a fourth environment variable, CORS_ORIGINS. N11 lists only
+    three settings.
+  - Each event carries a batch sequence number in its id field. The frontend and
+    stream features can use it to count missed batches.
+
+  One more thing is out of step. The feature 1 changelog entry says the test
+  runs fail below 80 percent coverage. The tech stack says no minimum is
+  enforced.
+
+✻ Sautéed for 12s · done 12:53 AM
+
+❯ First I want you to sort the docs > logs into folders based on the number     
+  feature                                                                       
+
+  Listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(cd
+      /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/docs
+      && mkdir -p logs/00-constitution logs/01-scaffold logs/02-backend && mv
+      00_constit…)
+  ⎿  ./ai-changes.md
+     ./assumptions.md
+     ./logs/00-constitution/00_constitution.txt
+     … +31 lines (ctrl+o to expand)
+  ⎿  Deleted docs/01_scaffold_replan.txt (+0 -336)
+        1 - ▐▛███▛█   Claude Code v2.1.285                               
+        2 -▝▜██████▀  Opus 5.5 · Claude Max                              
+        3 - ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+        4 -                                                              
+        5 -                                                              
+        6 -❯ /clear                                                      
+          -                                                              
+        7 -                                                              
+        8 -❯ /spec-driven replan                                         
+          -                                                              
+        9 -                                                              
+       10 -  Ran 2 shell commands (ctrl+o to expand)                     
+       11 -                                                              
+       12 -⏺ The feature branch is merged into main. I will set the statu
+          -s to done and then                                            
+       13 -  run the changelog skill.                                    
+       14 -                                                              
+       15 -⏺ Bash(sed -i '' 's/It covers N13 and S2. The status is in pro
+          -gress./It covers                                              
+       16 -      N13 and S2. The status is done./' specs/roadmap.md && gr
+          -ep -n "Scaffold"                                              
+       17 -      specs/roadmap.m…)                                       
+       18 -  ⎿  5:1. **Scaffold.** The goal is a repo where the backend, 
+          -the frontend,                                                 
+       19 -      and the CDK app exist, the tests run, the linters pass, 
+          -and the CDK a                                                 
+       20 -     pp synthesizes, all from the Makefile. It covers N13 and 
+          -S2. The statu                                                 
+       21 -     s is done.                                               
+       22 -  ⎿  Updated specs/roadmap.md (+1 -1)                         
+       23 -      2                                                       
+       24 -      3  Every feature updates the README and the three logs i
+          -n docs/ as                                                    
+       25 -         it goes. That work covers S1 to S7 and N14 across all
+          - features.                                                    
+       26 -      4                                                       
+       27 -      5 -1. **Scaffold.** The goal is a repo where the backend
+          -, the front                                                   
+       28 -        -end, and the CDK app exist, the tests run, the linter
+          -s pass, and                                                   
+       29 -        - the CDK app synthesizes, all from the Makefile. It c
+          -overs N13 a                                                   
+       30 -        -nd S2. The status is in progress.                    
+          -                                                              
+       31 -      5 +1. **Scaffold.** The goal is a repo where the backend
+          -, the front                                                   
+       32 -        +end, and the CDK app exist, the tests run, the linter
+          -s pass, and                                                   
+       33 -        + the CDK app synthesizes, all from the Makefile. It c
+          -overs N13 a                                                   
+       34 -        +nd S2. The status is done.                           
+          -                                                              
+       35 -      6  2. **Backend.** The goal is a FastAPI server that gen
+          -erates rand                                                   
+       36 -         om integers and sends them in batches over Server-Sen
+          -t Events. T                                                   
+       37 -         he backend allows cross-origin calls with CORSMiddlew
+          -are. It rea                                                   
+       38 -         ds the allowed origins from an environment variable, 
+          -and the def                                                   
+       39 -         ault is http://localhost:4200. It covers B2, N5, N7, 
+          -N8, and N11                                                   
+       40 -         . The status is planned.                             
+     … 296 more lines (ctrl+o to expand)
+  ⎿  Deleted docs/01_scaffold_review.txt (+0 -324)
+        1 - ▐▛███▛█   Claude Code v2.1.285                               
+        2 -▝▜██████▀  Opus 5.5 · Claude Max                              
+        3 - ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+        4 -                                                              
+        5 -                                                              
+        6 -❯ /clear                                                      
+          -                                                              
+        7 -                                                              
+        8 -❯ Reviewing scaffold now. I see youre not using prettier in th
+          -e frontend lint                                               
+        9 -  make                                                        
+          -                                                              
+       10 -                                                              
+       11 -  Listed 1 directory, ran 1 shell command (ctrl+o to expand)  
+       12 -                                                              
+       13 -⏺ You're right. Prettier is installed and frontend/.prettierrc
+          - exists, but no                                               
+       14 -  target checks it. Running it now shows 8 files out of format
+          -. I'll wire it in                                             
+       15 -  and fix the files.                                          
+       16 -                                                              
+       17 -  Ran 1 shell command (ctrl+o to expand)                      
+       18 -                                                              
+       19 -⏺ Bash(\                                                      
+       20 -      sed -i '' 's|^\tcd frontend \&\& npx ng lint$|\tcd front
+          -end \&\& npx ng                                               
+       21 -      lint \&\& npx prettier --check .|' Makefile && \…)      
+       22 -  ⎿  angular.json 5ms                                         
+       23 -     src/app/app.config.ts 25ms                               
+       24 -     src/app/app.html 102ms                                   
+       25 -     … +29 lines (ctrl+o to expand)                           
+       26 -  ⎿  Updated Makefile (+1 -1)                                 
+       27 -      37          cd backend && uv run ruff check . && uv run 
+          -ruff format                                                   
+       28 -           --check . && uv run mypy app tests                 
+       29 -      38                                                      
+       30 -      39  lint-frontend:                                      
+       31 -      40 -        cd frontend && npx ng lint                  
+          -                                                              
+       32 -      40 +        cd frontend && npx ng lint && npx prettier -
+          --check .                                                      
+       33 -      41                                                      
+       34 -      42  lint-infra:                                         
+       35 -      43          cd infra && uv run ruff check . && uv run ru
+          -ff format -                                                   
+       36 -          -check . && uv run mypy app.py infra                
+       37 -  ⎿  Updated README.md (+1 -1)                                
+       38 -      31  - `make frontend` runs the client at http://localhos
+          -t:4200.                                                       
+       39 -      32  - `make dev` runs the backend and the frontend toget
+          -her. Press                                                    
+       40 -          Ctrl+C once to stop both.                           
+     … 284 more lines (ctrl+o to expand)
+  ⎿  Deleted docs/01_scaffold_validate.txt (+0 -161)
+        1 - ▐▛███▛█   Claude Code v2.1.285                               
+        2 -▝▜██████▀  Opus 5.5 · Claude Max                              
+        3 - ▝▝   ▝▝   ~/…/_precision/precision-take-home/specs/features/0
+          -1-scaffold                                                    
+        4 -                                                              
+        5 -                                                              
+        6 -❯ /clear                                                      
+          -                                                              
+        7 -                                                              
+        8 -❯ /spec-driven validate                                       
+          -                                                              
+        9 -                                                              
+       10 -  Listed 2 directories, ran 3 shell commands (ctrl+o to expand
+          -)                                                             
+       11 -                                                              
+       12 -⏺ The automated checks all pass. The manual checks M1 to M5 ne
+          -ed you to run                                                 
+       13 -  them.                                                       
+       14 -                                                              
+       15 -  ┌────────────┬──────────────────────────────────────────────
+          -──────────────┐                                               
+       16 -  │   Check    │                           Result             
+          -              │                                               
+       17 -  ├────────────┼──────────────────────────────────────────────
+          -──────────────┤                                               
+       18 -  │ V1,        │ This check passes. One test passed, and cover
+          -age is 100    │                                               
+       19 -  │ backend    │ percent against a floor of 80.               
+          -              │                                               
+       20 -  │ tests      │                                              
+          -              │                                               
+       21 -  ├────────────┼──────────────────────────────────────────────
+          -──────────────┤                                               
+       22 -  │ V2,        │ This check passes. Two tests passed, and cove
+          -rage is 100   │                                               
+       23 -  │ frontend   │ percent on every measure.                    
+          -              │                                               
+       24 -  │ tests      │                                              
+          -              │                                               
+       25 -  ├────────────┼──────────────────────────────────────────────
+          -──────────────┤                                               
+       26 -  │ V3,        │ This check passes. ruff, strict mypy, ng lint
+          - and Prettier │                                               
+       27 -  │ linters    │  found no issues.                            
+          -              │                                               
+       28 -  ├────────────┼──────────────────────────────────────────────
+          -──────────────┤                                               
+       29 -  │ V4, synth  │ This check passes. The command exited with co
+          -de 0 and      │                                               
+       30 -  │            │ wrote infra/cdk.out/PrecisionStack.template.j
+          -son.          │                                               
+       31 -  ├────────────┼──────────────────────────────────────────────
+          -──────────────┤                                               
+       32 -  │ V5, Make   │ This check passes. /usr/bin/make reports 3.81
+          -, and install │                                               
+       33 -  │ 3.81       │  test lint synth exited with code 0.         
+          -              │                                               
+       34 -  └────────────┴──────────────────────────────────────────────
+          -──────────────┘                                               
+       35 -                                                              
+       36 -  I also checked the installed versions against specs/tech-sta
+          -ck.md, and they                                               
+       37 -  match.                                                      
+       38 -                                                              
+       39 -  R3 has only partial proof. The 80 percent floor is set in   
+       40 -  frontend/angular.json:75. No check shows that the run actual
+          -ly fails when                                                 
+     … 121 more lines (ctrl+o to expand)
+  ⎿  Deleted docs/02_backend_review.txt (+0 -223)
+        1 - ▐▛███▛█   Claude Code v2.1.285                               
+        2 -▝▜██████▀  Opus 5.5 · Claude Max                              
+        3 - ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+        4 -                                                              
+        5 -                                                              
+        6 -❯ /clear                                                      
+          -                                                              
+        7 -                                                              
+        8 -❯ Before I merge is there any way to compact the json packets.
+          - Binary wont work                                             
+        9 -  since I have to send as a string with SSE. There must be ano
+          -ther way to                                                   
+       10 -  compact. Test it                                            
+          -                                                              
+       11 -                                                              
+       12 -  Searched for 1 pattern, read 1 file, ran 3 shell commands (c
+          -trl+o to expand)                                              
+       13 -                                                              
+       14 -⏺ I have the size numbers. Now I'm checking the browser side: 
+          -how long each                                                 
+       15 -  format takes to decode in Node.                             
+       16 -                                                              
+       17 -  Ran 1 shell command (ctrl+o to expand)                      
+       18 -                                                              
+       19 -⏺ Bash(cd /private/tmp/claude-501/-Users-javedgangjee-Document
+          -s-Projects--precis                                            
+       20 -      ion-precision-take-home/c979d3e8-8c46-4921-b0e2-6944f836
+          -a411/scratchpad &&                                            
+       21 -      mv /Users/ja…)                                          
+       22 -  ⎿  JSON.parse compact     0.089 ms                          
+       23 -     base64 uint16          0.597 ms                          
+       24 -     base64 bitpack10       0.396 ms                          
+       25 -     u16 roundtrip ok true                                    
+       26 -  ⎿  1 file changed (binary, mode only or too large to show)  
+       27 -                                                              
+       28 -⏺ Compact separators keep the JSON array format and cost nothi
+          -ng, so I'm                                                    
+       29 -  applying that change now. The other options change the forma
+          -t or need more                                                
+       30 -  work, so they are listed below for you to decide.           
+       31 -                                                              
+       32 -  Searched for 1 pattern (ctrl+o to expand)                   
+       33 -                                                              
+       34 -⏺ Now the edits: the code, the tests, and the logs.           
+       35 -                                                              
+       36 -⏺ Bash(python3 - <<'EOF'                                      
+       37 -      import re,pathlib…)                                     
+       38 -  ⎿  --------------------------------------------------       
+       39 -     TOTAL                  124      0   100%                 
+       40 -     36 passed in 2.42s                                       
+     … 183 more lines (ctrl+o to expand)
+  ⎿  Deleted docs/02_backend_validate.txt (+0 -136)
+        1 - ▐▛███▛█   Claude Code v2.1.285                               
+        2 -▝▜██████▀  Opus 5.5 · Claude Max                              
+        3 - ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+        4 -                                                              
+        5 -                                                              
+        6 -❯ /clear                                                      
+          -                                                              
+        7 -                                                              
+        8 -❯ /spec-driven validate                                       
+          -                                                              
+        9 -                                                              
+       10 -  Listed 1 directory, ran 3 shell commands (ctrl+o to expand) 
+       11 -                                                              
+       12 -⏺ All automated checks pass. The manual checks come next, one 
+          -at a time.                                                    
+       13 -                                                              
+       14 -  Automated results                                           
+       15 -                                                              
+       16 -  ┌────────────────────┬──────────────────────────────────────
+          -──────┐                                                       
+       17 -  │       Check        │                   Result             
+          -      │                                                       
+       18 -  ├────────────────────┼──────────────────────────────────────
+          -──────┤                                                       
+       19 -  │ V1 settings        │ All 10 cases pass.                   
+          -      │                                                       
+       20 -  ├────────────────────┼──────────────────────────────────────
+          -──────┤                                                       
+       21 -  │ V2 generator       │ All 7 cases pass, and V2.1 is one of 
+          -them. │                                                       
+       22 -  ├────────────────────┼──────────────────────────────────────
+          -──────┤                                                       
+       23 -  │ V3 broadcaster     │ All 6 cases pass.                    
+          -      │                                                       
+       24 -  ├────────────────────┼──────────────────────────────────────
+          -──────┤                                                       
+       25 -  │ V4 stream          │ All 5 cases pass.                    
+          -      │                                                       
+       26 -  ├────────────────────┼──────────────────────────────────────
+          -──────┤                                                       
+       27 -  │ V5 health and CORS │ All 3 cases pass.                    
+          -      │                                                       
+       28 -  ├────────────────────┼──────────────────────────────────────
+          -──────┤                                                       
+       29 -  │ V6 linters         │ make lint exits with code 0.         
+          -      │                                                       
+       30 -  └────────────────────┴──────────────────────────────────────
+          -──────┘                                                       
+       31 -                                                              
+       32 -  The suite has 36 tests, and backend coverage is 100%. The su
+          -ite also has 5                                                
+       33 -  tests that validation.md does not list. Three of them test t
+          -he tick schedule.                                             
+       34 -  One tests the CORS preflight for Last-Event-ID, and one test
+          -s trailing-slash                                              
+       35 -  stripping. docs/ai-changes.md records the CORS fixes and you
+          -r approval, but                                               
+       36 -  validation.md does not list them. I will add them to the Res
+          -ults section.                                                 
+       37 -                                                              
+       38 -  M1. The stream runs in a terminal                           
+       39 -                                                              
+       40 -  1. Run make backend in one terminal.                        
+     … 96 more lines (ctrl+o to expand)
+  ⎿  … 17 more files changed
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The README does not mention the session logs, so I add one line for the new
+  folder.
+
+⏺ Update(README.md)
+  ⎿  Added 1 line
+      63  - The docs/assumptions.md file records the assumptions I made.
+      64  - The docs/trade-offs.md file records the trade-offs I made.
+      65  - The docs/ai-changes.md file records where I changed the AI ou
+          tput, and why.
+      66 +- The docs/logs/ folder holds my Claude Code session logs, with
+         + one folder for each roadmap feature.                          
+      67  - The context/ folder holds the brief, the HTML design, and my 
+          design notes.
+
+  Ran 1 shell command, wrote 1 memory (ctrl+o to expand)
+
+⏺ I moved the session logs into docs/logs/ with one folder for each feature. The
+  three log files (assumptions.md, trade-offs.md, ai-changes.md) stay in docs/.
+
+  - docs/logs/00-constitution/ has the constitution log.
+  - docs/logs/01-scaffold/ has the five scaffold logs.
+  - docs/logs/02-backend/ has the five backend logs.
+
+  There were two backend review logs with the same name, and their contents were
+  different. The first was in backend/ and covers the clean shutdown work. I
+  named it 02_backend_review_1.txt. The second covers the JSON compaction work,
+  and I named it 02_backend_review_2.txt. backend/ no longer has a log file in
+  it.
+
+  I added a line to the README that points to docs/logs/. No other file linked
+  to the old paths. I used a plain mv, so git shows the moves as deletes and new
+  files until you stage them.
+
+  Now back to the replan. What changed during the backend feature? Please also
+  confirm the three changes I listed before: the MAX_VALUE default and range,
+  the CORS_ORIGINS variable, and the batch sequence number.
+
+✻ Brewed for 32s · done 12:57 AM
+
+❯ Is Docker desktop part of Phase 4?                                            
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ No. Feature 4 is Stream, and it covers only the client's stream state and
+  reconnect logic. It needs no Docker.
+
+  Docker is part of feature 5, Deploy. specs/tech-stack.md says "Docker 29.8.0
+  builds the image" for ECS Fargate. The specs do not name Docker Desktop. They
+  name only the Docker engine version, and your laptop has Docker 29.8.0. CDK
+  needs a running Docker engine for make deploy because it builds the backend
+  image locally. Docker Desktop is one way to run that engine on macOS.
+
+  The backend runs with uv on your machine, so you do not need Docker until
+  feature 5.
+
+✻ Baked for 8s · done 1:00 AM
+
+❯ Add a note that I want to run the stream using docker desktop locally so      
+  include it as part of Phase 4                                                 
+
+  Ran 1 shell command (ctrl+o to expand)
+⏺ Bash(python3 - <<'EOF'
+      p='specs/roadmap.md'…)
+  ⎿  diff --git a/specs/roadmap.md b/specs/roadmap.md
+     index c1a7569..288c854 100644
+     --- a/specs/roadmap.md
+     … +41 lines (ctrl+o to expand)
+  ⎿  Updated specs/roadmap.md (+1 -1)
+       5  1. **Scaffold.** The goal is a repo where the backend, the fron
+          tend, and the CDK app exist, the tests run, the linters pass, a
+          nd the CDK app synthesizes, all from the Makefile. It covers N1
+          3 and S2. The status is done.
+       6  2. **Backend.** The goal is a FastAPI server that generates ran
+          dom integers and sends them in batches over Server-Sent Events.
+           The backend allows cross-origin calls with CORSMiddleware. It 
+          reads the allowed origins from an environment variable, and the
+           default is http://localhost:4200. It covers B2, N5, N7, N8, an
+          d N11. The status is done.
+       7  3. **Frontend.** The goal is an Angular client that bins values
+          , keeps counts, and draws the grid, the axis labels, the color 
+          scale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2
+          , N3, N4, D2, and D3. The status is planned.
+       8 -4. **Stream.** The goal is a client that shows the stream state
+         -, reconnects with backoff, and keeps counts on screen during a 
+         -reconnect. It covers N9, N10, and D1. The status is planned.   
+       8 +4. **Stream.** The goal is a client that shows the stream state
+         +, reconnects with backoff, and keeps counts on screen during a 
+         +reconnect. The feature also adds a Dockerfile for the backend a
+         +nd a Makefile target that runs the stream in Docker Desktop on 
+         +my laptop, so the client can connect to the same image that fea
+         +ture 5 deploys. It covers N9, N10, and D1. The status is planne
+         +d.                                                             
+       9  5. **Deploy.** The goal is the backend running on ECS Fargate b
+          ehind an ALB at my domain, deployed with CDK from the Makefile.
+           It covers B2 and N13. The status is planned.
+      10  6. **Admin Page.** The goal is a backend page that changes the 
+          stream settings while the server runs, so that a test of a new 
+          sample rate needs no restart. It covers no required item. The s
+          tatus is planned.
+      11  7. **Testing.** The goal is a measured generation-to-render lat
+          ency and a measured set of limits from a stress test. It covers
+           N6 and N12. The status is planned.
+  ⎿  Updated specs/tech-stack.md (+1 -1)
+       9  - The web framework is FastAPI 0.142.1, with Pydantic 2.13.5.
+      10  - The ASGI server is Uvicorn 0.54.0.
+      11  - The backend sends the stream to the client with Server-Sent E
+          vents. The client sends nothing back, so the project does not u
+          se WebSockets.
+      12 -- The backend runs locally for development and in a Docker imag
+         -e in the cloud.                                                
+      12 +- The backend runs locally for development, both with uv and in
+         + a Docker image in Docker Desktop 4.92.0. The same image runs i
+         +n the cloud.                                                   
+      13  - The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverag
+          e. The goal is 100 percent coverage, and no minimum is enforced
+          .
+      14  - The linters are ruff 0.16.9 and mypy 2.3.1.
+      15  
+
+⏺ I added the note to feature 4 in specs/roadmap.md. Feature 4 now also adds a
+  Dockerfile for the backend and a Makefile target that runs the stream in
+  Docker Desktop on your laptop. Feature 5 then deploys that same image.
+
+  I also updated specs/tech-stack.md. It now says the backend runs locally with
+  uv and in Docker Desktop 4.92.0, which is the version on your laptop. This
+  does not conflict with the brief or your notes.
+
+  Please confirm the three backend changes so I can add them to N11 in
+  mission.md. The changes are the MAX_VALUE default of 1,024 with a range of 1
+  to 10,000, the CORS_ORIGINS variable, and the batch sequence number in the
+  event id.
+
+✻ Churned for 14s · done 1:02 AM
+
+❯ Yes                                                                           
+
+⏺ Bash(python3 - <<'EOF'
+      p='specs/mission.md'…)
+  ⎿  -- N5. The server sends the stream in batches, and each batch is a JSO
+     N array of random integers drawn from a uniform distribution. The serv
+     er generates one shared stream, and every connected client gets the sa
+     … +18 lines (ctrl+o to expand)
+  ⎿  Updated specs/mission.md (+2 -2)
+      43  - N2. The grid shows row numbers on the left and column numbers
+           along the bottom, as in the brief picture. When N is too large
+           to label every row and column, the labels appear at a fixed in
+          terval.
+      44  - N3. N ranges from 1 to 64, and the default is 32. When the us
+          er changes N, all counts reset to zero.
+      45  - N4. The color position of a cell is (count - 1) / (max - 1). 
+          A count of 1 is full blue, and the max count is full red. When 
+          the max count is 1, every non-empty cell is full blue. The scal
+          e labels run from 1 to the max count.
+      46 -- N5. The server sends the stream in batches, and each batch is
+         - a JSON array of random integers drawn from a uniform distribut
+         -ion. The server generates one shared stream, and every connecte
+         -d client gets the same batches.                                
+      46 +- N5. The server sends the stream in batches, and each batch is
+         + a JSON array of random integers drawn from a uniform distribut
+         +ion. The server generates one shared stream, and every connecte
+         +d client gets the same batches. Each batch carries a sequence n
+         +umber that starts at 0 when the server starts, so a client can 
+         +count the batches it missed.                                   
+      47  - N6. The target latency from generation to render is 100 ms.
+      48  - N7. Delivery is lossy and best effort.
+      49  - N8. The server sends a heartbeat if it sends nothing for 15 s
+          econds.
+      50  - N9. Counts stay on screen while the client reconnects.
+      51  - N10. The client reconnects with backoff and shows one of thre
+          e states, which are Live, Connecting, and Reconnecting.
+      52 -- N11. The server settings are samples per second from 1 to 100
+         -,000, batch interval from 50 ms to 1 s, and a maximum value of 
+         -10,000. The defaults are 100,000 samples per second and a 50 ms
+         - batch interval, so each batch holds 5,000 integers. The server
+         - reads these settings from environment variables at start.     
+      52 +- N11. The server settings are samples per second from 1 to 100
+         +,000, batch interval from 50 ms to 1 s, and a maximum value fro
+         +m 1 to 10,000. The defaults are 100,000 samples per second, a 5
+         +0 ms batch interval, and a maximum value of 1,024, so each batc
+         +h holds 5,000 integers from 0 to 1,023. A fourth setting lists 
+         +the origins that can call the server from a browser, and the de
+         +fault is http://localhost:4200. The server reads these settings
+         + from environment variables at start.                          
+      53  - N12. A stress test measures the limits on clients, samples, a
+          nd payload size, if it is feasible.
+      54  - N13. A Makefile runs the frontend and the backend, runs the t
+          ests, and deploys.
+      55  - N14. Three logs in docs/ record the assumptions, the trade-of
+          fs, and my changes to AI output in each phase. They are assumpt
+          ions.md, trade-offs.md, and ai-changes.md.
+
+⏺ I updated N5 with the sequence number. I updated N11 with the MAX_VALUE range
+  and default and with the origins setting. Your design notes said "a maximum
+  value of 10,000". N11 now treats 10,000 as the upper limit of the range, and
+  that matches what you approved in G2.
+
+  Is there a prompt you repeat that should become a skill? The review sessions
+  look like a candidate. In both features you ran a free-form review between
+  implement and validate.
+
+✻ Baked for 9s · done 1:04 AM

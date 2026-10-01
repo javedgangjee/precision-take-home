@@ -10,7 +10,6 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 1 adds an Angular 21 frontend project in frontend/ that uses SCSS, Vitest, angular-eslint, and Prettier.
 - Feature 1 adds a CDK app in Python in infra/ with one empty stack named `PrecisionStack` that synthesizes without AWS credentials.
 - Feature 1 adds a Makefile with the targets `install`, `backend`, `frontend`, `dev`, `test`, `lint`, `synth`, `deploy`, and `destroy`, and it works with GNU Make 3.81.
-- Feature 1 makes the backend and frontend test runs fail when coverage is below 80 percent.
 - Feature 1 adds a README at the repo root that explains how to install, run, test, and lint the project.
 - Feature 1 adds the three logs in docs/ for assumptions, trade-offs, and changes to AI output.
 - Feature 2 adds a `GET /stream` endpoint that sends batches of random integers as Server-Sent Events, with one compact JSON array in each event.
@@ -33,7 +32,21 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 3 lets the user set the test source with the URL query settings `rate`, `interval`, and `max`, and `rate` goes up to 100,000,000 samples per second.
 - Feature 3 bundles the Red Hat Display, Libre Franklin, and IBM Plex Mono fonts, so the client needs no network for fonts.
 - Feature 3 adds a section to the README that describes the client, the query settings, and a stress test URL.
+- Feature 4 makes the client read the stream from the server over Server-Sent Events by default, at the address in the URL query `server`, which defaults to http://localhost:8000.
+- Feature 4 adds a badge at the top of the side panel that shows the stream state as Connecting, Live, or Reconnecting, each with a matching icon.
+- Feature 4 makes the client reconnect after the stream drops, with a delay that doubles after each failed attempt up to 30 s and has a random factor so clients do not reconnect at the same moment.
+- Feature 4 makes the client treat the stream as dropped and reconnect when no batch arrives for 5 s while the state is Live.
+- Feature 4 keeps the counts on screen while the client reconnects.
+- Feature 4 adds the URL query `source=frontend`, which runs the test source from feature 3 instead of the server and shows a "Test source" badge.
+- Feature 4 adds backend/Dockerfile, which builds an ARM64 image that runs the backend as a user that is not root and stops within 3 s.
+- Feature 4 adds the Makefile targets `docker-build` and `docker`, which build the backend image and run it in Docker on port 8000 with the stream settings from the shell.
+- Feature 4 adds sections to the README that describe the `source` and `server` query settings, the badge states, the reconnect, and `make docker`.
 
 ### Changed
 
 - Feature 2 makes `make backend` stop within 3 seconds of Ctrl+C, even when streams are open.
+- Feature 4 makes the client load the Material Symbols icons from Google Fonts instead of a bundled font, so the icons need the network.
+
+### Removed
+
+- Feature 4 removes `Last-Event-ID` from the headers that the backend CORS rule allows, because the client never sends it.

@@ -113,3 +113,21 @@ These tests use a fake EventSource, fake timers, and a random value of 1.
 2. The expected result is that each file has an entry dated for the stream feature.
 3. Open README.md.
 4. The expected result is that it describes the `source` and `server` query settings, the badge states, the reconnect, and `make docker`.
+
+## Results (2026-09-30)
+
+### Automated checks
+
+- V1 to V6 pass. `make test` passes 100 frontend tests in 19 files. Each case listed above has a matching test.
+- V7 passes. `make lint` exits with code 0.
+- V8 passes. `npx ng build` exits with code 0.
+- V9 passes. `make docker-build` exits with code 0. The image architecture is arm64, and `whoami` prints `app`.
+- V10 passes. `make test` passes 35 backend tests with 100 percent coverage. The old test is gone, and the grep prints nothing. The test `test_ids_go_up_by_1` covers the `id` line.
+
+### Manual checks
+
+- M1 to M6 pass. The user confirmed each one.
+
+### Requirement coverage
+
+Each item from R1 to R9 has at least one passing check.

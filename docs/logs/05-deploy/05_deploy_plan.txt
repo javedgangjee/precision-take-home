@@ -1,0 +1,199 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven plan                                                             
+
+  Read 1 file, listed 1 directory, ran 1 shell command (ctrl+o to expand)
+
+⏺ Feature 5 (Deploy) is the first planned one. Now the existing code and infra.
+
+  Read 1 file, ran 2 shell commands (ctrl+o to expand)
+
+⏺ The branch feature/05-deploy exists. Your AWS session has expired, so I cannot
+  check Route 53 myself. The default region is us-east-1.
+
+⏺ User answered Claude's questions:
+  ⎿  · Where is the DNS for jgangjee.com hosted? The answer decides how the 
+     stack makes the api.precision record and the TLS certificate. → I have it 
+     on cloudflare. route 53 gets handed precision.jgangjee.com. I'm on 
+     us-east-2. zone id is Z069085429G5UY5JHXYU4
+
+⏺ User answered Claude's questions:
+  ⎿  · How should the deploy build and push the backend image? → CDK asset 
+     (Recommended)
+
+⏺ User answered Claude's questions:
+  ⎿  · What network should the stack make? A NAT gateway costs about $32 a month
+     each. → Public subnets only (Recommended)
+
+⏺ User answered Claude's questions:
+  ⎿  · N5 says the server makes one shared stream, so the service runs 1 task. 
+     How should a new deploy replace that task? → Stop old, then start new
+
+⏺ User answered Claude's questions:
+  ⎿  · Feature 4 G2 says this feature changes the client default server to 
+     https://api.precision.jgangjee.com. After that, `make dev` would show the 
+     cloud stream unless the URL has ?server=http://localhost:8000. How should 
+     local runs pick the server? → Cloud default, query for local (Recommended)
+
+⏺ User answered Claude's questions:
+  ⎿  · specs/tech-stack.md names no test tool for infra/. How should the stack 
+     be tested? → 1 but no full test suite, a handful of tests. Add test-infra 
+     to makefile.
+
+⏺ User answered Claude's questions:
+  ⎿  · A feature 2 assumption says this feature decides the client origin for 
+     CORS in the cloud. The client runs only on the reviewer's machine. Which 
+     origins should the cloud server allow? → localhost and 127.0.0.1
+
+⏺ Write(specs/features/05-deploy/requirements.md)
+  ⎿  Wrote 31 lines to specs/features/05-deploy/requirements.md
+       1 # Feature 5 requirements: Deploy
+       3 ## Requirements from the sources
+       4 
+         the stream from it. (B2; mission.md, What the system does)
+         4, behind an Application Load Balancer. (tech-stack.md, Infrastr
+         ucture)
+         -lib 2.271.0. (tech-stack.md, Infrastructure)
+       8 - R4. The public URL of the backend is https://api.precision.jga
+       9 - R5. The cloud runs the same image that runs in Docker Desktop.
+      10 - R6. The service runs one task, because 
+     … +70 lines (ctrl+o to expand)
+
+⏺ Update(specs/features/05-deploy/requirements.md)
+  ⎿  Added 1 line, removed 1 line
+      15  
+      16  ## Items the sources do not cover
+      17  
+      18 -Items G1 to G6 are answers from the user. Items G7 to G12 are m
+         -y proposals, and each is marked **Proposed** until the user agr
+         -ees.                                                           
+      18 +Items G1 to G7 are answers from the user. Items G8 to G12 are m
+         +y proposals, and each is marked **Proposed** until the user agr
+         +ees.                                                           
+      19  
+      20  - G1. **Agreed.** Cloudflare hosts jgangjee.com and delegates p
+          recision.jgangjee.com to a Route 53 hosted zone with the id Z06
+          9085429G5UY5JHXYU4. The stack imports the zone by its id and na
+          me, with no lookup, so `make synth` needs no AWS credentials. T
+          he stack makes an ACM certificate for api.precision.jgangjee.co
+          m that validates by DNS in that zone, and an alias A record tha
+          t points the name at the ALB. The stack deploys to us-east-2.
+      21  - G2. **Agreed.** The stack builds the image from backend/Docke
+          rfile as a CDK asset for linux/arm64. `cdk deploy` builds the i
+          mage with Docker, pushes it to the CDK bootstrap ECR repo, and 
+          points the task at it. Docker must run during `make deploy`.
+
+⏺ Write(specs/features/05-deploy/plan.md)
+  ⎿  Wrote 14 lines to specs/features/05-deploy/plan.md
+      1 # Feature 5 plan: Deploy
+      3 The steps follow the answers to G1 to G12 in requirements.md.
+      4 
+         settings, and update the lock file. This step changes infra/pypr
+      6 2. Write the stack. It imports the hosted zone from G1, makes the
+         certificate, the VPC from G3, the cluster, and the Fargate servi
+        and outputs the service URL. This step changes infra/infra/precis
+        ion_stack.py.
+        he `CDK_DEFAULT_ACCOUNT` variable that the CDK CLI sets. This ste
+      8 4. Write the 
+     … +29 lines (ctrl+o to expand)
+
+⏺ Write(specs/features/05-deploy/validation.md)
+  ⎿  Wrote 90 lines to specs/features/05-deploy/validation.md
+      1 # Feature 5 validation: Deploy
+      2 
+        e brief examples stay covered by the feature 3 tests, which must 
+        still pass.
+      4 
+      6 
+      7 The command for V1 is `make test-infra`. The command for V2 and V
+        5 is `make test`. The command for V3 is `make lint`. The command 
+      8 
+      9 ### V1. The stack has the key settings
+     … +128 lines (ctrl+o to expand)
+
+⏺ Bash(sed -i '' 's/It covers B2 and N13. The status is planned./It covers B2
+      and N13. The status is in progress./' specs/roadmap.md && grep -n "^5\."
+      specs/roadmap.md…)
+  ⎿  9:5. **Deploy.** The goal is the backend running on ECS Fargate behind
+      an ALB at my domain, deployed with CDK from the Makefile. It covers B
+     2 and N13. The status is in progress.
+     … +2 lines (ctrl+o to expand)
+  ⎿  Updated specs/roadmap.md (+1 -1)
+       6  2. **Backend.** The goal is a FastAPI server that generates ran
+          dom integers and sends them in batches over Server-Sent Events.
+           The backend allows cross-origin calls with CORSMiddleware. It 
+          reads the allowed origins from an environment variable, and the
+           default is http://localhost:4200. It covers B2, N5, N7, N8, an
+          d N11. The status is done.
+       7  3. **Frontend.** The goal is an Angular client that bins values
+          , keeps counts, and draws the grid, the axis labels, the color 
+          scale, and the side panel. It covers B1, B3, B4, B5, B6, N1, N2
+          , N3, N4, D2, and D3. The status is done.
+       8  4. **Stream.** The goal is a client that shows the stream state
+          , reconnects with backoff, and keeps counts on screen during a 
+          reconnect. The feature also adds a Dockerfile for the backend a
+          nd a Makefile target that runs the stream in Docker Desktop on 
+          my laptop, so the client can connect to the same image that fea
+          ture 5 deploys. It covers N9, N10, and D1. The status is done.
+       9 -5. **Deploy.** The goal is the backend running on ECS Fargate b
+         -ehind an ALB at my domain, deployed with CDK from the Makefile.
+         - It covers B2 and N13. The status is planned.                  
+       9 +5. **Deploy.** The goal is the backend running on ECS Fargate b
+         +ehind an ALB at my domain, deployed with CDK from the Makefile.
+         + It covers B2 and N13. The status is in progress.              
+      10  6. **Admin Page.** The goal is a backend page that changes the 
+          stream settings while the server runs, so that a test of a new 
+          sample rate needs no restart. When a client connects, the serve
+          r sends it an init packet with the samples per second, the batc
+          h interval, and the maximum value. When a setting changes, the 
+          server sends every client an update packet with the same three 
+          settings. The side panel shows the three settings and updates t
+          hem when an update packet arrives. The client reads the batch s
+          equence number from each event id and counts the batches it mis
+          sed, both inside one connection and across a reconnect. When an
+           id skips ahead, the client adds the size of the gap to the mis
+          sed batch count. When an id is lower than the last one, the ser
+          ver has restarted, and the client resets the missed batch count
+           to 0. The side panel shows the missed batch count. It covers N
+          5 for the missed batch count and no other required item. The st
+          atus is planned.
+      11  7. **Testing.** The goal is a measured generation-to-render lat
+          ency and a measured set of limits from a stress test. The featu
+          re writes docs/results.md, which breaks down the findings. It c
+          overs N6 and N12. The status is planned.
+
+⏺ The plan for feature 5 (Deploy) is ready on the branch feature/05-deploy. It
+  has three files in specs/features/05-deploy/:
+
+  - requirements.md lists what the feature must do and records your answers as
+    G1 to G7.
+  - plan.md has 10 steps, and each step names the files it changes.
+  - validation.md has 5 automated checks and 8 manual checks. The manual checks
+    need a live AWS session.
+
+  In specs/roadmap.md, feature 5 is now in progress.
+
+  Items G8 to G12 are my own proposals, and each is marked Proposed:
+
+  - G8: The stack uses the standard ECS pattern that puts a Fargate service
+    behind a load balancer. The task gets 0.25 vCPU and 512 MiB of memory, which
+    is the smallest memory Fargate allows at that CPU size.
+  - G9: The load balancer serves HTTPS on port 443 and redirects port 80 to
+    HTTPS. The idle timeout stays at 60 s.
+  - G10: The health check calls /health. The deregistration delay is 5 s, so a
+    deploy does not wait 5 minutes for open streams to close.
+  - G11: The logs go to CloudWatch and are kept for one week.
+  - G12: The README gives the one-time cdk bootstrap command for us-east-2, and
+    the Makefile gets no target for it.
+
+  Your AWS session has expired. Run aws login before the manual checks.
+
+  Tell me which of G8 to G12 to change, or approve the plan. Then clear the
+  session before you run implement.
+
+✻ Cooked for 2m 28s · done 10:22 PM

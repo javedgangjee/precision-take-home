@@ -1,11 +1,13 @@
 import { Component, computed, inject } from '@angular/core';
 import { HeatMapStore, MAX_N, MIN_N } from '../heatmap/heat-map-store';
+import { StreamBadge } from './stream-badge';
 
 const numberFormat = new Intl.NumberFormat('en-US');
 
-/** Shows the N control and the readouts, and forwards N changes to the store. */
+/** Shows the stream badge, the N control, and the readouts, and forwards N changes to the store. */
 @Component({
   selector: 'app-side-panel',
+  imports: [StreamBadge],
   templateUrl: './side-panel.html',
   styleUrl: './side-panel.scss',
 })

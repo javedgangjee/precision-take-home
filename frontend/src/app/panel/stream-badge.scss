@@ -1,0 +1,49 @@
+/* The badge styles follow the md-badge classes and the #stream-status rules in the HTML design. */
+.stream-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.md-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  width: 80%;
+  height: 32px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-full);
+  border: 1px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(16, 18, 24, 0.18);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.md-badge .md-icon {
+  font-size: 14px;
+}
+
+.md-badge-neutral {
+  background: var(--surface-card);
+  color: var(--ink-secondary);
+}
+.md-badge-success {
+  background: var(--success-text);
+  color: var(--surface-card);
+}
+.md-badge-warning {
+  background: var(--warning-text);
+  color: var(--surface-card);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

@@ -39,6 +39,15 @@ describe('SidePanel', () => {
     expect(field().value).toBe('32 × 32');
   });
 
+  it('shows the stream badge above the grid size control', () => {
+    const badge = element.querySelector('app-stream-badge');
+    const control = element.querySelector('.control');
+    expect(badge).not.toBeNull();
+    expect(
+      badge!.compareDocumentPosition(control!) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('shows "33 × 33" and resets the samples received after a click on plus', async () => {
     store.applyBatch([1, 2, 3]);
     store.frame(0);

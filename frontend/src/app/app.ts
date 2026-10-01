@@ -1,6 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, DOCUMENT, inject } from '@angular/core';
 import { HeatMap } from './heatmap/heat-map';
 import { SidePanel } from './panel/side-panel';
+import { ServerSource } from './source/server-source';
+import { readSourceSettings } from './source/source-settings';
 import { TestSource } from './source/test-source';
 
 @Component({
@@ -11,7 +13,12 @@ import { TestSource } from './source/test-source';
 })
 export class App {
   constructor() {
-    // Feature 4 decides how the user picks the test source or the server.
-    inject(TestSource).start();
+    // The URL query picks the source. Only one source runs at a time.
+    const settings = readSourceSettings(inject(DOCUMENT).location.search);
+    if (settings.source === 'frontend') {
+      inject(TestSource).start();
+    } else {
+      inject(ServerSource).start(settings.streamUrl);
+    }
   }
 }

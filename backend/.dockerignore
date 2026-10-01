@@ -1,0 +1,10 @@
+# Keep local files out of the build context.
+.venv/
+tests/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/

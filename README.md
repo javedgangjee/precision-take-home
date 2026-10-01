@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, and the heat map client are in place. The client does not connect to the server yet, and feature 4 adds that. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, and the client connection to the server are in place. The backend also runs in Docker. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -20,6 +20,8 @@ Install these tools before you start. The versions are the ones I use.
 - You need the AWS CDK CLI 2.1143.0 for `make synth`. Install it with `npm install -g aws-cdk@2.1143.0`.
 - You need AWS CLI 2.37.4 with credentials for `make deploy` and `make destroy`. The AWS account must be bootstrapped for CDK.
 - You need GNU Make 3.81 or later. macOS ships with 3.81.
+- You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make docker-build` and `make docker`.
+- The client loads its icons from Google Fonts, so the browser needs the network.
 
 ## Install
 
@@ -30,6 +32,8 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 - `make backend` runs the server at http://localhost:8000 with reload on file changes. It stops within 3 seconds of Ctrl+C, even with open streams. The health check is at http://localhost:8000/health.
 - `make frontend` runs the client at http://localhost:4200.
 - `make dev` runs the backend and the frontend together. Press Ctrl+C once to stop both.
+- `make docker-build` builds the backend image for linux/arm64 with the tag `precision-backend`.
+- `make docker` builds the image and runs it at http://localhost:8000, the same port as `make backend`. It passes `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` into the container when they are set in the shell. Press Ctrl+C to stop the container, which stops within 3 seconds.
 - `make test` runs the backend and frontend tests and reports coverage. The goal is 100 percent, and no minimum is enforced.
 - `make lint` runs ruff and mypy on backend/ and infra/, and ESLint and Prettier on frontend/.
 - `make synth` synthesizes the CDK app into infra/cdk.out/. It needs no AWS credentials.
@@ -55,22 +59,36 @@ The server reads these environment variables at start. When a value is out of ra
 | `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. The server strips a trailing slash from each origin. | These origins can call the server from a browser. |
 
-For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends one batch of 20 integers each second.
+For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends one batch of 20 integers each second. The same variables work with `make docker`.
 
 ## Client
 
-Run `make frontend` and open http://localhost:4200. The page shows the heat map, a color scale, and a side panel.
+Run `make dev` and open http://localhost:4200. The page shows the heat map, a color scale, and a side panel. The client reads the stream from the server and applies each batch to the counts.
+
+The client reads these settings from the URL query. When a value is bad, the client logs a warning to the console and uses the default.
+
+| Setting | Default | Meaning |
+| --- | --- | --- |
+| `source` | `server` | The value `server` reads the stream from the server. The value `frontend` runs the test source in the browser instead. Only one source runs at a time. |
+| `server` | `http://localhost:8000` | This is the server address, which must be an http or https URL. The client strips a trailing slash and connects to the address plus `/stream`. |
+
+For example, http://localhost:4200/?server=https://api.precision.jgangjee.com connects to the cloud server after feature 5 deploys it.
 
 - The grid has N by N cells, and N is 32 at start. Row 0 is at the bottom, and column 0 is at the left. Row numbers run up the left side and column numbers run along the bottom. When N is above 16, every 2nd row and column has a label, and when N is above 32, every 4th one has a label.
 - Each value v goes to cell index (v - 1) mod N². The row is the index divided by N, and the column is the index mod N. On a 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and 0 goes to cell <3,3>.
 - A cell with no hits is white. A cell with hits gets a color from blue (#1E00FF) at a count of 1 through cyan, green, and yellow to red (#FF0033) at the max count.
 - The color scale shows the max count at the top, the midpoint in the middle, and 1 at the bottom.
 - The minus and plus buttons change N from 1 to 64. The up and down arrow keys in the N field change N by 1, and by 10 with Shift. A change to N resets all counts to zero.
+- A badge at the top of the side panel shows the stream state. Connecting is a white badge, and it shows from the start until the stream opens. Live is a green badge, and it shows while batches arrive. Reconnecting is an amber badge, and it shows after a live stream drops until the stream opens again. Test source is a white badge with no icon, and it shows while the test source runs.
 - The side panel shows the samples received, the max count, and the frame rate. A red line shows below the frame rate when it falls below 90 percent of the target of 60 fps. Run the client in Chrome with Energy Saver off, because Energy Saver caps the frame rate at 30 fps.
+
+### Reconnect
+
+When the stream drops, the client closes it and tries again after a delay. The first delay is 1 second, and each failed attempt doubles it up to 30 seconds. A random factor from 0.5 to 1 spreads out the clients after a server restart. The delay goes back to 1 second after the stream opens. The browser hides the `: ping` heartbeat from the client, so the client also counts a live stream as dropped when no batch arrives for 5 seconds. The counts stay on screen during a reconnect. Only a change to N resets them. Batches that the server sends during the drop are lost.
 
 ### Test source
 
-Until feature 4 connects the server, a test source in a Web Worker makes the data in the browser. It makes uniform random integers as the server does, and it posts each batch as a JSON string. It has the same queue of 2 batches as the server. When the main thread falls behind, the worker drops the oldest waiting batch. The client reads the settings from the URL query. When a value is out of range or not a whole number, the client logs a warning to the console and uses the default.
+With `source=frontend` in the URL query, a test source in a Web Worker makes the data in the browser in place of the server. It makes uniform random integers as the server does, and it posts each batch as a JSON string. It has the same queue of 2 batches as the server. When the main thread falls behind, the worker drops the oldest waiting batch. The client reads the settings from the URL query. When a value is out of range or not a whole number, the client logs a warning to the console and uses the default.
 
 | Setting | Default | Range | Meaning |
 | --- | --- | --- | --- |
@@ -78,7 +96,7 @@ Until feature 4 connects the server, a test source in a Web Worker makes the dat
 | `interval` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
 | `max` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 
-A change to the query needs a reload, which also resets the counts. For a stress test, open http://localhost:4200/?rate=1000000&interval=50&max=1024, set N to 64, and watch the frame rate.
+A change to the query needs a reload, which also resets the counts. For a stress test, run `make frontend`, open http://localhost:4200/?source=frontend&rate=1000000&interval=50&max=1024, set N to 64, and watch the frame rate.
 
 ## Specs and logs
 

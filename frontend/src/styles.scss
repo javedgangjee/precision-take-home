@@ -1,4 +1,5 @@
-/* The tokens, fonts, and page styles come from the HTML design in context/. The client uses the light theme only. */
+/* The tokens, fonts, and page styles come from the HTML design in context/. The client uses the light theme only.
+   The text fonts are bundled. The Material Symbols icons load from Google Fonts in index.html. */
 
 @font-face {
   font-family: 'Red Hat Display';
@@ -42,14 +43,6 @@
   font-style: normal;
   font-display: swap;
 }
-/* A subset of Material Symbols Outlined (opsz 20, wght 300) with only the add and remove glyphs. */
-@font-face {
-  font-family: 'Material Symbols Outlined';
-  src: url('/fonts/material-symbols-outlined.woff2') format('woff2');
-  font-weight: 300;
-  font-style: normal;
-  font-display: block;
-}
 
 :root {
   --blue-400: #2e63e6;
@@ -74,6 +67,8 @@
   --focus: var(--blue-500);
   --link: var(--blue-500);
   --danger-text: #b33a3a;
+  --success-text: #157a42;
+  --warning-text: #95560f;
   --shadow-rest: 0 1px 2px rgba(16, 18, 24, 0.05);
   --shadow-focus: 0 0 0 2px #ffffff, 0 0 0 4px #1a4fcc;
   --gradient-brand: linear-gradient(140deg, #2e63e6 0%, #1a4fcc 60%, #143fa8 100%);

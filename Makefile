@@ -3,11 +3,12 @@
 
 BACKEND_PORT := 8000
 FRONTEND_PORT := 4200
+IMAGE := precision-backend
 
 # Stop the Angular CLI from asking about usage data on the first run.
 export NG_CLI_ANALYTICS := false
 
-.PHONY: install backend frontend dev test test-backend test-frontend lint lint-backend lint-frontend lint-infra synth deploy destroy
+.PHONY: install backend frontend dev docker-build docker test test-backend test-frontend lint lint-backend lint-frontend lint-infra synth deploy destroy
 
 install:
 	cd backend && uv sync
@@ -22,6 +23,16 @@ frontend:
 
 dev:
 	$(MAKE) -j2 backend frontend
+
+docker-build:
+	docker build --platform linux/arm64 -t $(IMAGE) backend
+
+# Each -e NAME with no value passes the variable from the shell only when it is set.
+# docker run sends Ctrl+C to Uvicorn, which stops within 3 s.
+docker: docker-build
+	docker run --rm -p $(BACKEND_PORT):8000 \
+		-e SAMPLES_PER_SECOND -e BATCH_INTERVAL_MS -e MAX_VALUE -e CORS_ORIGINS \
+		$(IMAGE)
 
 test: test-backend test-frontend
 

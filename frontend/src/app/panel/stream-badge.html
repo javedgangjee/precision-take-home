@@ -1,0 +1,9 @@
+<div class="stream-status" role="status" aria-live="polite">
+  <span class="sr-only">Stream status: </span>
+  <span [class]="'md-badge md-badge-' + look().tone">
+    @if (look().icon; as icon) {
+      <span class="material-symbols-outlined md-icon" aria-hidden="true">{{ icon }}</span>
+    }
+    {{ look().label }}
+  </span>
+</div>

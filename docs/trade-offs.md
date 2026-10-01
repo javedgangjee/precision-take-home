@@ -95,3 +95,10 @@ Each entry gives the date, the phase, the choice, and what it costs.
 
 - The hotspot mode is removed from the roadmap. The project ends with the testing feature. The cost is that the heat map stays nearly flat under the uniform generator.
 - Feature 7 writes its findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.
+
+## 2026-09-30, implement feature 4, stream
+
+- The Material Symbols icons load from Google Fonts, and the local subset is gone. One font serves all five icons, and a new icon needs only a change to the link. The cost is that the client needs the network for the icons, and the icons are blank until the font loads.
+- The client closes the EventSource on each drop and makes a new one after a backoff delay of 1 s that doubles up to 30 s, with a random factor from 0.5 to 1. The built-in EventSource retry has a fixed delay. The cost is more code to own, and a reconnect takes up to 1 s longer than the built-in retry after a short drop.
+- The watchdog drops a live stream after 5 s with no batch. It catches a connection that hangs with no error. The cost is a false drop if the server pauses for more than 5 s, which happens only when the server stalls.
+- The Docker image is built for linux/arm64 only. It runs native on my laptop and matches Fargate ARM64. The cost is that an Intel machine runs it under emulation.

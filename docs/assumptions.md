@@ -39,7 +39,7 @@ Each entry gives the date, the phase, and the assumption.
 ## 2026-09-30, review feature 2, backend
 
 - The backend will be served at https://api.precision.jgangjee.com in feature 5. That address is the backend's own origin, so it does not go in `CORS_ORIGINS`. The frontend's public origin goes there, and feature 5 decides it.
-- Some browsers may send a preflight request when EventSource reconnects with the `Last-Event-ID` header. The CORS rule allows that header, so the reconnect works in either case. Feature 4 checks it in real browsers.
+- The client never sends the `Last-Event-ID` header. Feature 4 makes a new EventSource for each reconnect, and a new EventSource has no last event id. So the CORS rule allows no extra headers, and a reconnect needs no preflight.
 
 ## 2026-09-30, plan for feature 3, frontend
 
@@ -67,3 +67,10 @@ Each entry gives the date, the phase, and the assumption.
 - The client runs in Chrome with Energy Saver off. Energy Saver caps the frame rate at 30 fps, which would show the red error line on an idle page.
 - The target frame rate is 60 fps. The red error line shows when the reading is below 90 percent of 60, which is 54 fps. The line hides for the first second, before the meter has a reading.
 - The test source rate goes up to 100,000,000 samples per second, so the stress test can push the browser past 10,000,000.
+
+## 2026-09-30, implement feature 4, stream
+
+- A batch arrives at least once each second at the lowest server settings. So a live stream with no batch for 5 s counts as dropped, even when the connection does not report an error.
+- The query `source=server` picks the server with no warning, as no `source` value does. Only other values log a warning.
+- The badge copies the stream status rules of the HTML design. Every tone has a white border and a soft shadow, so the Connecting badge shows its edge by the shadow and not by a grey outline.
+- The Docker image runs Uvicorn as process 1. Uvicorn handles the stop signal from `docker stop` and from Ctrl+C on `make docker`, so the image needs no init process.

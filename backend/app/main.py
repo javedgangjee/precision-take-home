@@ -23,12 +23,10 @@ def create_app(settings: Settings) -> FastAPI:
         await broadcaster.stop()
 
     app = FastAPI(title="Bin There Done That", lifespan=lifespan)
-    # EventSource sends Last-Event-ID when it reconnects, which some browsers may preflight.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_methods=["GET"],
-        allow_headers=["Last-Event-ID"],
     )
 
     @app.get("/health")
@@ -37,7 +35,6 @@ def create_app(settings: Settings) -> FastAPI:
 
     @app.get("/stream", response_class=EventSourceResponse)
     async def stream(request: Request) -> AsyncIterator[ServerSentEvent]:
-        # The server ignores Last-Event-ID, because delivery is lossy.
         broadcaster: Broadcaster = request.app.state.broadcaster
         queue = broadcaster.subscribe()
         try:

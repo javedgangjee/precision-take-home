@@ -8,7 +8,7 @@ from app.settings import load_settings
 def test_defaults_with_no_environment() -> None:
     settings = load_settings({})
 
-    assert settings.samples_per_second == 100_000
+    assert settings.samples_per_second == 5_000
     assert settings.batch_interval_ms == 50
     assert settings.max_value == 1_024
     assert settings.cors_origins == ["http://localhost:4200"]
@@ -33,13 +33,13 @@ def test_splits_cors_origins() -> None:
 @pytest.mark.parametrize(
     ("name", "value", "field", "default"),
     [
-        ("SAMPLES_PER_SECOND", "0", "samples_per_second", 100_000),
-        ("SAMPLES_PER_SECOND", "100001", "samples_per_second", 100_000),
+        ("SAMPLES_PER_SECOND", "0", "samples_per_second", 5_000),
+        ("SAMPLES_PER_SECOND", "100001", "samples_per_second", 5_000),
         ("BATCH_INTERVAL_MS", "49", "batch_interval_ms", 50),
         ("BATCH_INTERVAL_MS", "1001", "batch_interval_ms", 50),
         ("MAX_VALUE", "0", "max_value", 1_024),
         ("MAX_VALUE", "10001", "max_value", 1_024),
-        ("SAMPLES_PER_SECOND", "abc", "samples_per_second", 100_000),
+        ("SAMPLES_PER_SECOND", "abc", "samples_per_second", 5_000),
     ],
 )
 def test_bad_value_warns_and_uses_default(

@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Settings(BaseModel):
-    samples_per_second: int = Field(default=100_000, ge=1, le=100_000)
+    samples_per_second: int = Field(default=5_000, ge=1, le=100_000)
     batch_interval_ms: int = Field(default=50, ge=50, le=1_000)
     max_value: int = Field(default=1_024, ge=1, le=10_000)
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4200"])

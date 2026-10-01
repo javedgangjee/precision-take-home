@@ -70,3 +70,9 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 - The AI left the public URL of the backend open in the tech stack and used precision.jgangjee.com in a test. I set the URL to https://api.precision.jgangjee.com, and the AI updated the tech stack, G2, and V1.
 - The AI planned a manual check of the stream in Safari and Firefox. I removed it. Chrome is the only browser that a manual check covers now.
 - The AI found that the client never sends `Last-Event-ID`, because each reconnect makes a new EventSource. It planned only to update the feature 2 assumption about the preflight. I had the AI add G10, which removes the header from the backend CORS rule, the two comments about it, and the preflight test. The AI added V10 to check that removal.
+
+## 2026-09-30, implement feature 5, deploy
+
+- The plan had the stack take the account from `CDK_DEFAULT_ACCOUNT`. During implement, the AI found that an account and a region make the VPC look up the availability zones in AWS, so a synth with credentials would write cdk.context.json. I chose to set only the region, so synth never makes a lookup.
+- The AI then set the region to us-east-2. During review, I asked to remove it so the deploy uses the region in my AWS profile at the time. The AI removed the account and the region from the stack, and removed us-east-2 from the README, the specs, the assumptions, and the trade-offs.
+- I asked the AI to lower the default rate to 5,000 samples per second to keep the cloud cost low during development. The AI first changed only the code and the tests, and marked each place as temporary. I asked for the change everywhere. The AI then updated the README, the mission, the specs for features 2 to 5, and the logs, and removed the temporary markers.

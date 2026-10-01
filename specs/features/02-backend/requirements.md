@@ -7,7 +7,7 @@
 - R3. The server generates one shared stream, and every connected client gets the same batches. (N5)
 - R4. Delivery is lossy and best effort. The server does not buffer or replay batches for a slow or disconnected client. (N7; trade-offs.md, constitution)
 - R5. The server sends a heartbeat when it has sent nothing for 15 seconds. (N8)
-- R6. The server reads samples per second, the batch interval, and the maximum value from environment variables at start. Samples per second range from 1 to 100,000, the batch interval ranges from 50 ms to 1 s, and the maximum value is at most 10,000. The defaults are 100,000 samples per second and a 50 ms batch interval, so each default batch holds 5,000 integers. (N11)
+- R6. The server reads samples per second, the batch interval, and the maximum value from environment variables at start. Samples per second range from 1 to 100,000, the batch interval ranges from 50 ms to 1 s, and the maximum value is at most 10,000. The defaults are 5,000 samples per second and a 50 ms batch interval, so each default batch holds 250 integers. (N11)
 - R7. The server allows cross-origin calls with CORSMiddleware. It reads the allowed origins from an environment variable, and the default is http://localhost:4200. (roadmap feature 2)
 - R8. The `GET /health` endpoint still returns `{"status": "ok"}`. (feature 1, G2)
 - R9. The README and the three logs in docs/ record this feature. (roadmap, S3, S7, N14; CLAUDE.md)

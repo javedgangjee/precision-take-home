@@ -4,11 +4,13 @@
 BACKEND_PORT := 8000
 FRONTEND_PORT := 4200
 IMAGE := precision-backend
+# The client uses the cloud server by default. This URL points it at the local server.
+LOCAL_CLIENT := http://localhost:$(FRONTEND_PORT)/?server=http://localhost:$(BACKEND_PORT)
 
 # Stop the Angular CLI from asking about usage data on the first run.
 export NG_CLI_ANALYTICS := false
 
-.PHONY: install backend frontend dev docker-build docker test test-backend test-frontend lint lint-backend lint-frontend lint-infra synth deploy destroy
+.PHONY: install backend frontend dev docker-build docker test test-backend test-frontend test-infra lint lint-backend lint-frontend lint-infra synth deploy destroy
 
 install:
 	cd backend && uv sync
@@ -22,6 +24,7 @@ frontend:
 	cd frontend && npx ng serve --port $(FRONTEND_PORT)
 
 dev:
+	@echo "Open $(LOCAL_CLIENT) to use the local server."
 	$(MAKE) -j2 backend frontend
 
 docker-build:
@@ -30,17 +33,21 @@ docker-build:
 # Each -e NAME with no value passes the variable from the shell only when it is set.
 # docker run sends Ctrl+C to Uvicorn, which stops within 3 s.
 docker: docker-build
+	@echo "Open $(LOCAL_CLIENT) to use the local server."
 	docker run --rm -p $(BACKEND_PORT):8000 \
 		-e SAMPLES_PER_SECOND -e BATCH_INTERVAL_MS -e MAX_VALUE -e CORS_ORIGINS \
 		$(IMAGE)
 
-test: test-backend test-frontend
+test: test-backend test-frontend test-infra
 
 test-backend:
 	cd backend && uv run pytest
 
 test-frontend:
 	cd frontend && npx ng test --no-watch --coverage
+
+test-infra:
+	cd infra && uv run pytest
 
 lint: lint-backend lint-frontend lint-infra
 
@@ -51,7 +58,7 @@ lint-frontend:
 	cd frontend && npx ng lint && npx prettier --check .
 
 lint-infra:
-	cd infra && uv run ruff check . && uv run ruff format --check . && uv run mypy app.py infra
+	cd infra && uv run ruff check . && uv run ruff format --check . && uv run mypy app.py infra tests
 
 synth:
 	cd infra && cdk synth --quiet

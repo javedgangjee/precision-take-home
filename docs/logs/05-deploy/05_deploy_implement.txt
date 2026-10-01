@@ -1,0 +1,897 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven implement                                                        
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ User answered Claude's questions:
+  ⎿  · Is the feature 5 plan approved for implement? → Approved
+
+  Searched for 1 pattern, listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(sed -n 40,60p frontend/src/app/app.spec.ts; grep -n "pytest" -A6
+      backend/pyproject.toml; cd infra && uv add --dev pytest==9.1.1 2>&1 | tail
+      -3)
+  ⎿    it('shows "Bin There, Done That" in the page header', async () => {
+         const fixture = TestBed.createComponent(App);
+         await fixture.whenStable();
+     … +32 lines (ctrl+o to expand)
+  ⎿  Updated infra/pyproject.toml (+1 -0)
+      10  [dependency-groups]
+      11  dev = [
+      12      "mypy==2.3.1",
+      13 +    "pytest==9.1.1",                                           
+      14      "ruff==0.16.9",
+      15  ]
+      16  
+  ⎿  Updated infra/uv.lock (+63 -0)
+      148      { url = "https://files.pythonhosted.org/packages/e8/cf/227
+           94a399d99480486120e26e879ef008e21f5e85274c2ed591d568bb326/catt
+           rs-26.2.1-py3-none-any.whl", hash = "sha256:a12aaa3453dc8f633a
+           815293179f08b7421ed18d2575c459c3c736f840beac24", size = 74843,
+            upload-time = "2026-09-26T20:53:19.767Z" },
+      149  ]
+      150  
+      151 +[[package]]                                                   
+      152 +name = "colorama"                                             
+      153 +version = "0.4.6"                                             
+      154 +source = { registry = "https://pypi.org/simple" }             
+      155 +sdist = { url = "https://files.pythonhosted.org/packages/d8/53
+          +/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/
+          +colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a2057
+          +2697297273c47b8cae5a63ffc6d6ed5c201be6e44", size = 27697, uplo
+          +ad-time = "2022-10-25T02:36:22.414Z" }                        
+      156 +wheels = [                                                    
+      157 +    { url = "https://files.pythonhosted.org/packages/d1/d6/396
+          +5ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colo
+          +rama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc
+          +0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6", size = 2
+          +5335, upload-time = "2022-10-25T02:36:20.889Z" },             
+      158 +]                                                             
+      159 +                                                              
+      160  [[package]]
+      161  name = "constructs"
+      162  version = "10.8.1"
+     ...
+      182  [package.dev-dependencies]
+      183  dev = [
+      184      { name = "mypy" },
+      185 +    { name = "pytest" },                                      
+      186      { name = "ruff" },
+      187  ]
+      188  
+     ...
+      195  [package.metadata.requires-dev]
+      196  dev = [
+      197      { name = "mypy", specifier = "==2.3.1" },
+      198 +    { name = "pytest", specifier = "==9.1.1" },               
+      199      { name = "ruff", specifier = "==0.16.9" },
+      200  ]
+      201  
+      202 +[[package]]                                                   
+      203 +name = "iniconfig"                                            
+      204 +version = "2.3.0"                                             
+      205 +source = { registry = "https://pypi.org/simple" }             
+      206 +sdist = { url = "https://files.pythonhosted.org/packages/72/34
+          +/14ca021ce8e5dfedc35312d08ba8bf51fdd999c576889fc2c24cb97f4f10/
+          +iniconfig-2.3.0.tar.gz", hash = "sha256:c76315c77db068650d49c5
+          +b56314774a7804df16fee4402c1f19d6d15d8c4730", size = 20503, upl
+          +oad-time = "2025-10-18T21:55:43.219Z" }                       
+      207 +wheels = [                                                    
+      208 +    { url = "https://files.pythonhosted.org/packages/cb/b1/384
+          +6dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/inic
+          +onfig-2.3.0-py3-none-any.whl", hash = "sha256:f631c04d2c48c52b
+          +84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12", size = 7484
+          +, upload-time = "2025-10-18T21:55:41.639Z" },                 
+      209 +]                                                             
+      210 +                                                              
+      211  [[package]]
+      212  name = "jsii"
+     … 62 more lines (ctrl+o to expand)
+
+⏺ Bash(cat pyproject.toml && cat >> pyproject.toml <<'EOF'…)
+  ⎿  [project]
+     name = "infra"
+     version = "0.1.0"
+     … +87 lines (ctrl+o to expand)
+  ⎿  Updated infra/pyproject.toml (+3 -0)
+      24  [tool.mypy]
+      25  strict = true
+      26  python_version = "3.13"
+      27 +                                                               
+      28 +[tool.pytest.ini_options]                                      
+      29 +testpaths = ["tests"]                                          
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Steps 1 is done. I am now writing the stack.
+
+⏺ Write(infra/infra/precision_stack.py)
+  ⎿  Added 94 lines, removed 4 lines
+       1 -from aws_cdk import Stack                                      
+       1 +from pathlib import Path                                       
+       2 +                                                               
+       3 +from aws_cdk import CfnOutput, Duration, Environment, RemovalPo
+         +licy, Stack                                                    
+       4 +from aws_cdk import aws_certificatemanager as acm              
+       5 +from aws_cdk import aws_ec2 as ec2                             
+       6 +from aws_cdk import aws_ecs as ecs                             
+       7 +from aws_cdk import aws_ecs_patterns as ecs_patterns           
+       8 +from aws_cdk import aws_logs as logs                           
+       9 +from aws_cdk import aws_route53 as route53                     
+      10 +from aws_cdk.aws_ecr_assets import Platform                    
+      11  from constructs import Construct
+      12  
+      13 +# Cloudflare delegates this zone to Route 53. The stack imports
+         + it by id, so synth needs no lookup.                           
+      14 +HOSTED_ZONE_ID = "Z069085429G5UY5JHXYU4"                       
+      15 +ZONE_NAME = "precision.jgangjee.com"                           
+      16 +DOMAIN_NAME = f"api.{ZONE_NAME}"                               
+      17 +BACKEND_DIR = Path(__file__).resolve().parents[2] / "backend"  
+      18 +CONTAINER_PORT = 8000                                          
+      19 +# The local client runs on port 4200, and a browser can open it
+         + by name or by address.                                        
+      20 +CORS_ORIGINS = "http://localhost:4200,http://127.0.0.1:4200"   
+      21  
+      22 +                                                               
+      23  class PrecisionStack(Stack):
+       6 -    """The stack for the stream server. Feature 5 adds the reso
+         -urces."""                                                      
+      24 +    """The stream server on ECS Fargate behind an ALB at https:
+         +//api.precision.jgangjee.com."""                               
+      25  
+       8 -    def __init__(self, scope: Construct, construct_id: str) -> 
+         -None:                                                          
+       9 -        super().__init__(scope, construct_id)                  
+      26 +    def __init__(                                              
+      27 +        self, scope: Construct, construct_id: str, *, env: Envi
+         +ronment | None = None                                          
+      28 +    ) -> None:                                                 
+      29 +        super().__init__(scope, construct_id, env=env)         
+      30 +                                                               
+      31 +        zone = route53.HostedZone.from_hosted_zone_attributes( 
+      32 +            self, "Zone", hosted_zone_id=HOSTED_ZONE_ID, zone_n
+         +ame=ZONE_NAME                                                  
+      33 +        )                                                      
+      34 +        certificate = acm.Certificate(                         
+      35 +            self,                                              
+      36 +            "Certificate",                                     
+      37 +            domain_name=DOMAIN_NAME,                           
+      38 +            validation=acm.CertificateValidation.from_dns(zone)
+         +,                                                              
+      39 +        )                                                      
+      40 +                                                               
+      41 +        # Public subnets only, with no NAT gateway. The task ge
+         +ts a public IP to pull the image.                              
+      42 +        vpc = ec2.Vpc(                                         
+      43 +            self,                                              
+      44 +            "Vpc",                                             
+      45 +            max_azs=2,                                         
+      46 +            nat_gateways=0,                                    
+      47 +            subnet_configuration=[                             
+      48 +                ec2.SubnetConfiguration(name="Public", subnet_t
+         +ype=ec2.SubnetType.PUBLIC)                                     
+      49 +            ],                                                 
+      50 +        )                                                      
+      51 +        cluster = ecs.Cluster(self, "Cluster", vpc=vpc)        
+      52 +                                                               
+      53 +        log_group = logs.LogGroup(                             
+      54 +            self,                                              
+      55 +            "Logs",                                            
+      56 +            retention=logs.RetentionDays.ONE_WEEK,             
+      57 +            removal_policy=RemovalPolicy.DESTROY,              
+      58 +        )                                                      
+      59 +                                                               
+      60 +        # One task, because the server makes one shared stream 
+         +for every client.                                              
+      61 +        # A deploy stops the old task before it starts the new 
+         +one.                                                           
+      62 +        fargate = ecs_patterns.ApplicationLoadBalancedFargateSe
+         +rvice(                                                         
+      63 +            self,                                              
+      64 +            "Service",                                         
+      65 +            cluster=cluster,                                   
+      66 +            cpu=256,                                           
+      67 +            memory_limit_mib=512,                              
+      68 +            runtime_platform=ecs.RuntimePlatform(              
+      69 +                cpu_architecture=ecs.CpuArchitecture.ARM64,    
+      70 +                operating_system_family=ecs.OperatingSystemFami
+         +ly.LINUX,                                                      
+      71 +            ),                                                 
+      72 +            desired_count=1,                                   
+      73 +            min_healthy_percent=0,                             
+      74 +            max_healthy_percent=100,                           
+      75 +            circuit_breaker=ecs.DeploymentCircuitBreaker(rollba
+         +ck=True),                                                      
+      76 +            assign_public_ip=True,                             
+      77 +            task_subnets=ec2.SubnetSelection(subnet_type=ec2.Su
+         +bnetType.PUBLIC),                                              
+      78 +            public_load_balancer=True,                         
+      79 +            certificate=certificate,                           
+      80 +            domain_name=DOMAIN_NAME,                           
+      81 +            domain_zone=zone,                                  
+      82 +            redirect_http=True,                                
+      83 +            task_image_options=ecs_patterns.ApplicationLoadBala
+         +ncedTaskImageOptions(                                          
+      84 +                image=ecs.ContainerImage.from_asset(           
+      85 +                    str(BACKEND_DIR), platform=Platform.LINUX_A
+         +RM64                                                           
+      86 +                ),                                             
+      87 +                container_port=CONTAINER_PORT,                 
+      88 +                environment={"CORS_ORIGINS": CORS_ORIGINS},    
+      89 +                log_driver=ecs.LogDrivers.aws_logs(stream_prefi
+         +x="backend", log_group=log_group),                             
+      90 +            ),                                                 
+      91 +        )                                                      
+      92 +                                                               
+      93 +        fargate.target_group.configure_health_check(path="/heal
+         +th")                                                           
+      94 +        # Open streams never end on their own, so a short delay
+         + keeps a deploy from waiting 5 min.                            
+      95 +        fargate.target_group.set_attribute("deregistration_dela
+         +y.timeout_seconds", "5")                                       
+      96 +                                                               
+      97 +        # The pattern already outputs the service URL. These na
+         +mes help with update-service.                                  
+      98 +        CfnOutput(self, "ClusterName", value=cluster.cluster_na
+         +me)                                                            
+      99 +        CfnOutput(self, "ServiceName", value=fargate.service.se
+         +rvice_name)                                                    
+
+⏺ Write(infra/app.py)
+  ⎿  Added 8 lines, removed 1 line
+       1 +import os                                                      
+       2 +                                                               
+       3  import aws_cdk as cdk
+       4  
+       5  from infra.precision_stack import PrecisionStack
+       6  
+       7  app = cdk.App()
+       6 -PrecisionStack(app, "PrecisionStack")                          
+       8 +# The CDK CLI sets CDK_DEFAULT_ACCOUNT from the credentials. It
+         + is unset when there are none.                                 
+       9 +PrecisionStack(                                                
+      10 +    app,                                                       
+      11 +    "PrecisionStack",                                          
+      12 +    env=cdk.Environment(account=os.environ.get("CDK_DEFAULT_ACC
+         +OUNT"), region="us-east-2"),                                   
+      13 +)                                                              
+      14  app.synth()
+
+⏺ Now the infra tests from V1.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      infra && mkdir -p tests && : > tests/__init__.py && cat >
+      tests/test_stack.py <<'EOF'
+      i…)
+  ⎿  warning: `VIRTUAL_ENV=/Users/javedgangjee/Documents/Projects/_precisio
+     n/precision-take-home/backend/.venv` does not match the project enviro
+     nment path `.venv` and will be ignored; use `--active` to target the a
+     … +16 lines (ctrl+o to expand)
+  ⎿  Created infra/tests/__init__.py (+0 -0)
+  ⎿  Created infra/tests/test_stack.py (+107 -0)
+        1 +import aws_cdk as cdk                                         
+        2 +import pytest                                                 
+        3 +from aws_cdk.assertions import Match, Template                
+        4 +                                                              
+        5 +from infra.precision_stack import PrecisionStack              
+        6 +                                                              
+        7 +                                                              
+        8 +@pytest.fixture(scope="module")                               
+        9 +def template() -> Template:                                   
+       10 +    app = cdk.App()                                           
+       11 +    stack = PrecisionStack(app, "TestStack", env=cdk.Environme
+          +nt(region="us-east-2"))                                       
+       12 +    return Template.from_stack(stack)                         
+       13 +                                                              
+       14 +                                                              
+       15 +def test_task_runs_the_server_on_arm64_with_the_cors_origins(t
+          +emplate: Template) -> None:                                   
+       16 +    template.has_resource_properties(                         
+       17 +        "AWS::ECS::TaskDefinition",                           
+       18 +        {                                                     
+       19 +            "Cpu": "256",                                     
+       20 +            "Memory": "512",                                  
+       21 +            "RuntimePlatform": {"CpuArchitecture": "ARM64", "O
+          +peratingSystemFamily": "LINUX"},                              
+       22 +            "ContainerDefinitions": [                         
+       23 +                Match.object_like(                            
+       24 +                    {                                         
+       25 +                        "PortMappings": [Match.object_like({"C
+          +ontainerPort": 8000})],                                       
+       26 +                        "Environment": Match.array_with(      
+       27 +                            [                                 
+       28 +                                {                             
+       29 +                                    "Name": "CORS_ORIGINS",   
+       30 +                                    "Value": "http://localhost
+          +:4200,http://127.0.0.1:4200",                                 
+       31 +                                }                             
+       32 +                            ]                                 
+       33 +                        ),                                    
+       34 +                    }                                         
+       35 +                )                                             
+       36 +            ],                                                
+       37 +        },                                                    
+       38 +    )                                                         
+       39 +                                                              
+       40 +                                                              
+     … 67 more lines (ctrl+o to expand)
+
+⏺ Tests pass. Now the Makefile.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home
+      && python3 - <<'EOF'
+      p='Makefile'…)
+  ⎿  diff --git a/Makefile b/Makefile
+     index b3e6063..6bb5c7a 100644
+     --- a/Makefile
+     … +55 lines (ctrl+o to expand)
+  ⎿  Updated Makefile (+11 -3)
+       8  # Stop the Angular CLI from asking about usage data on the firs
+          t run.
+       9  export NG_CLI_ANALYTICS := false
+      10  
+      11 -.PHONY: install backend frontend dev docker-build docker test t
+         -est-backend test-frontend lint lint-backend lint-frontend lint-
+         -infra synth deploy destroy                                     
+      11 +.PHONY: install backend frontend dev docker-build docker test t
+         +est-backend test-frontend test-infra lint lint-backend lint-fro
+         +ntend lint-infra synth deploy destroy                          
+      12  
+      13  install:
+      14          cd backend && uv sync
+     ...
+      21  frontend:
+      22          cd frontend && npx ng serve --port $(FRONTEND_PORT)
+      23  
+      24 +LOCAL_CLIENT := http://localhost:$(FRONTEND_PORT)/?server=http:
+         +//localhost:$(BACKEND_PORT)                                    
+      25 +                                                               
+      26 +# The client uses the cloud server by default, so the local ser
+         +ver needs the server query.                                    
+      27  dev:
+      28 +        @echo "Open $(LOCAL_CLIENT) to use the local server."  
+      29          $(MAKE) -j2 backend frontend
+      30  
+      31  docker-build:
+     ...
+      34  # Each -e NAME with no value passes the variable from the shell
+           only when it is set.
+      35  # docker run sends Ctrl+C to Uvicorn, which stops within 3 s.
+      36  docker: docker-build
+      37 +        @echo "Open $(LOCAL_CLIENT) to use the local server."  
+      38          docker run --rm -p $(BACKEND_PORT):8000 \
+      39                  -e SAMPLES_PER_SECOND -e BATCH_INTERVAL_MS -e M
+          AX_VALUE -e CORS_ORIGINS \
+      40                  $(IMAGE)
+      41  
+      37 -test: test-backend test-frontend                               
+      42 +test: test-backend test-frontend test-infra                    
+      43  
+      44  test-backend:
+      45          cd backend && uv run pytest
+     ...
+      47  test-frontend:
+      48          cd frontend && npx ng test --no-watch --coverage
+      49  
+      50 +test-infra:                                                    
+      51 +        cd infra && uv run pytest                              
+      52 +                                                               
+      53  lint: lint-backend lint-frontend lint-infra
+      54  
+     … 9 more lines (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='Makefile'…)
+  ⎿  # Common tasks for the backend, the frontend, and the CDK app.
+     # The recipes use plain shell so they run on GNU Make 3.81, which ship
+     s with macOS.
+     … +27 lines (ctrl+o to expand)
+  ⎿  Updated Makefile (+2 -3)
+       4  BACKEND_PORT := 8000
+       5  FRONTEND_PORT := 4200
+       6  IMAGE := precision-backend
+       7 +# The client uses the cloud server by default. This URL points 
+         +it at the local server.                                        
+       8 +LOCAL_CLIENT := http://localhost:$(FRONTEND_PORT)/?server=http:
+         +//localhost:$(BACKEND_PORT)                                    
+       9  
+      10  # Stop the Angular CLI from asking about usage data on the firs
+          t run.
+      11  export NG_CLI_ANALYTICS := false
+     ...
+      23  frontend:
+      24          cd frontend && npx ng serve --port $(FRONTEND_PORT)
+      25  
+      24 -LOCAL_CLIENT := http://localhost:$(FRONTEND_PORT)/?server=http:
+         -//localhost:$(BACKEND_PORT)                                    
+      25 -                                                               
+      26 -# The client uses the cloud server by default, so the local ser
+         -ver needs the server query.                                    
+      26  dev:
+      27          @echo "Open $(LOCAL_CLIENT) to use the local server."
+      28          $(MAKE) -j2 backend frontend
+
+⏺ Now the client default and its tests.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend && python3 - <<'EOF'
+      p='src/app/source/source-settings.ts'…)
+  ⎿  src/app/app.spec.ts 62ms (unchanged)
+     src/app/source/source-settings.spec.ts 10ms (unchanged)
+     src/app/source/source-settings.ts 9ms (unchanged)
+     … +10 lines (ctrl+o to expand)
+  ⎿  Updated frontend/src/app/app.spec.ts (+3 -1)
+      50    it('starts the server source and makes no worker with no quer
+          y', async () => {
+      51      const fixture = TestBed.createComponent(App);
+      52      await fixture.whenStable();
+      53 -    expect(createEventSource).toHaveBeenCalledExactlyOnceWith('
+         -http://localhost:8000/stream');                                
+      53 +    expect(createEventSource).toHaveBeenCalledExactlyOnceWith( 
+      54 +      'https://api.precision.jgangjee.com/stream',             
+      55 +    );                                                         
+      56      expect(createWorker).not.toHaveBeenCalled();
+      57    });
+      58  
+  ⎿  Updated frontend/src/app/source/source-settings.spec.ts (+7 -5)
+      15      expect(warn).toHaveBeenCalledWith(expect.stringContaining(`
+          \`${name}\``));
+      16    }
+      17  
+      18 -  it('uses the server at http://localhost:8000/stream with no q
+         -uery', () => {                                                 
+      18 +  it('uses the server at https://api.precision.jgangjee.com/str
+         +eam with no query', () => {                                    
+      19      expect(readSourceSettings('')).toEqual({
+      20        source: 'server',
+      21 -      streamUrl: 'http://localhost:8000/stream',               
+      21 +      streamUrl: 'https://api.precision.jgangjee.com/stream',  
+      22      });
+      23      expect(warn).not.toHaveBeenCalled();
+      24    });
+     ...
+      33    });
+      34  
+      35    it('reads the server address', () => {
+      36 -    expect(readSourceSettings('?server=https://api.precision.jg
+         -angjee.com').streamUrl).toBe(                                  
+      37 -      'https://api.precision.jgangjee.com/stream',             
+      36 +    expect(readSourceSettings('?server=http://localhost:8000').
+         +streamUrl).toBe(                                               
+      37 +      'http://localhost:8000/stream',                          
+      38      );
+      39    });
+      40  
+     ...
+      47    it.each(['abc', 'ftp://example.com'])(
+      48      'uses the default server and warns for server=%s',
+      49      (value) => {
+      50 -      expect(readSourceSettings(`?server=${value}`).streamUrl).
+         -toBe('http://localhost:8000/stream');                          
+      50 +      expect(readSourceSettings(`?server=${value}`).streamUrl).
+         +toBe(                                                          
+      51 +        'https://api.precision.jgangjee.com/stream',           
+      52 +      );                                                       
+      53        expectWarningFor('server');
+      54      },
+      55    );
+  ⎿  Updated frontend/src/app/source/source-settings.ts (+2 -2)
+       7    streamUrl: string;
+       8  }
+       9  
+      10 -/** Feature 5 changes the default to the cloud URL. */         
+      11 -export const DEFAULT_SERVER = 'http://localhost:8000';         
+      10 +/** The cloud server. Use `?server=http://localhost:8000` for t
+         +he local server. */                                            
+      11 +export const DEFAULT_SERVER = 'https://api.precision.jgangjee.c
+         +om';                                                           
+      12  
+      13  /**
+      14   * Reads `source` and `server` from a URL query such as `?sourc
+          e=frontend`.
+
+⏺ Now the docs. I will read the README, tech stack, and logs.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Now I run synth, lint, and tests before the docs.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      infra && uv run ruff check --fix . 2>/dev/null | tail -1; uv run ruff
+      format . 2>/dev/n…)
+  ⎿  Found 1 error (1 fixed, 0 remaining).
+     5 files left unchanged
+     lint exit=0
+     … +15 lines (ctrl+o to expand)
+  ⎿  Updated infra/infra/precision_stack.py (+1 -1)
+      1  from pathlib import Path
+      2  
+      3 -from aws_cdk import CfnOutput, Duration, Environment, RemovalPol
+        -icy, Stack                                                      
+      3 +from aws_cdk import CfnOutput, Environment, RemovalPolicy, Stack
+      4  from aws_cdk import aws_certificatemanager as acm
+      5  from aws_cdk import aws_ec2 as ec2
+      6  from aws_cdk import aws_ecs as ecs
+  ⎿  (timeout 6m 40s)
+
+  Ran 1 shell command (ctrl+o to expand)
+  ⎿  Loaded ../../../../.claude/rules/python.md
+
+⏺ All checks pass. Now the tech stack, README, and logs.
+
+⏺ Bash(python3 - <<'EOF'
+      p='specs/tech-stack.md'…)  ⎿   Makefile                                        | 13 +++-
+      README.md                                       | 49 ++++++++++---
+      frontend/src/app/app.spec.ts                    |  4 +-
+     … +9 lines (ctrl+o to expand)
+  ⎿  Updated README.md (+39 -10)
+      2  
+      3  This repo is my take-home project for the Precision Neuroscience
+          full-stack role. A cloud server streams nonnegative integers to
+          a web client. The client bins each number into an N by N grid a
+         nd paints each cell on a blue-to-red heat map in real time.
+      4  
+      5 -The project is in progress. The scaffold, the backend stream, th
+        -e heat map client, and the client connection to the server are i
+        -n place. The backend also runs in Docker. specs/roadmap.md shows
+        - the status of each feature.                                    
+      5 +The project is in progress. The scaffold, the backend stream, th
+        +e heat map client, the client connection to the server, and the 
+        +cloud deploy are in place. specs/roadmap.md shows the status of 
+        +each feature.                                                   
+      6  
+      7  ## Repo layout
+      8  
+     ...
+      18  - You need uv 0.11.24. uv installs Python 3.13.15 for you if it
+           is missing.
+      19  - You need Node.js 22.22.1 and npm 11.20.0.
+      20  - You need the AWS CDK CLI 2.1143.0 for `make synth`. Install i
+          t with `npm install -g aws-cdk@2.1143.0`.
+      21 -- You need AWS CLI 2.37.4 with credentials for `make deploy` an
+         -d `make destroy`. The AWS account must be bootstrapped for CDK.
+      21 +- You need AWS CLI 2.37.4 with credentials for `make deploy` an
+         +d `make destroy`. The AWS account must be bootstrapped for CDK 
+         +in us-east-2. The Deploy section gives the command.            
+      22  - You need GNU Make 3.81 or later. macOS ships with 3.81.
+      23 -- You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make d
+         -ocker-build` and `make docker`.                                
+      23 +- You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make d
+         +ocker-build`, `make docker`, and `make deploy`.                
+      24  - The client loads its icons from Google Fonts, so the browser 
+          needs the network.
+      25  
+      26  ## Install
+     ...
+      31  
+      32  - `make backend` runs the server at http://localhost:8000 with 
+          reload on file changes. It stops within 3 seconds of Ctrl+C, ev
+          en with open streams. The health check is at http://localhost:8
+          000/health.
+      33  - `make frontend` runs the client at http://localhost:4200.
+      34 -- `make dev` runs the backend and the frontend together. Press 
+         -Ctrl+C once to stop both.                                      
+      34 +- `make dev` runs the backend and the frontend together. Press 
+         +Ctrl+C once to stop both. It prints the URL that points the cli
+         +ent at the local server.                                       
+      35  - `make docker-build` builds the backend image for linux/arm64 
+          with the tag `precision-backend`.
+      36 -- `make docker` builds the image and runs it at http://localhos
+         -t:8000, the same port as `make backend`. It passes `SAMPLES_PER
+         -_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` 
+         -into the container when they are set in the shell. Press Ctrl+C
+         - to stop the container, which stops within 3 seconds.          
+      37 -- `make test` runs the backend and frontend tests and reports c
+         -overage. The goal is 100 percent, and no minimum is enforced.  
+      36 +- `make docker` builds the image and runs it at http://localhos
+         +t:8000, the same port as `make backend`. It prints the URL that
+         + points the client at the local server. It passes `SAMPLES_PER_
+         +SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` i
+         +nto the container when they are set in the shell. Press Ctrl+C 
+         +to stop the container, which stops within 3 seconds.           
+      37 +- `make test` runs the backend, frontend, and infra tests. It r
+         +eports coverage for the backend and the frontend. The goal is 1
+         +00 percent, and no minimum is enforced.                        
+      38 +- `make test-infra` runs only the infra tests. They synthesize 
+         +the stack and check the key settings.                          
+      39  - `make lint` runs ruff and mypy on backend/ and infra/, and ES
+          Lint and Prettier on frontend/.
+      40  - `make synth` synthesizes the CDK app into infra/cdk.out/. It 
+          needs no AWS credentials.
+      40 -- `make deploy` deploys the CDK stack to AWS. The stack is empt
+         -y until feature 5.                                             
+      41 +- `make deploy` builds the backend image and deploys the CDK st
+         +ack to AWS. The Deploy section has the details.                
+      42  - `make destroy` removes the CDK stack from AWS.
+      43  
+      44  ## Backend stream
+     ...
+      64  
+      65  ## Client
+      66  
+     … 50 more lines (ctrl+o to expand)
+  ⎿  Updated specs/tech-stack.md (+2 -1)
+      26  
+      27  ## Infrastructure
+      28  
+      29 -- The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, 
+         -behind an Application Load Balancer.                           
+      29 +- The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, 
+         +behind an Application Load Balancer, in the us-east-2 region.  
+      30  - AWS CDK in Python defines the infrastructure. The CDK CLI is 
+          2.1143.0, and the library is aws-cdk-lib 2.271.0.
+      31 +- The infra tests use pytest 9.1.1. They synthesize the stack a
+         +nd check the key settings in the template.                     
+      32  - Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles cr
+          edentials.
+      33  - The public URL of the backend is https://api.precision.jgangj
+          ee.com.
+      34  - A Makefile holds the common tasks, such as running the backen
+          d, running the frontend, running the tests, and deploying. It m
+          ust work with GNU Make 3.81, which ships with macOS.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ User answered Claude's questions:
+  ⎿  · Plan step 3 sets the account from CDK_DEFAULT_ACCOUNT. With an account 
+     and a region, the VPC looks up the availability zones in AWS. So `make 
+     synth` and `make deploy` with credentials write infra/cdk.context.json, 
+     which breaks the feature 1 assumption of no lookup. No resource in the 
+     stack needs the account. Which way do you want? → Region only (Recommended)
+
+⏺ Write(infra/app.py)
+  ⎿  Added 3 lines, removed 8 lines
+       1 -import os                                                      
+       2 -                                                               
+       1  import aws_cdk as cdk
+       2  
+       3  from infra.precision_stack import PrecisionStack
+       4  
+       5  app = cdk.App()
+       8 -# The CDK CLI sets CDK_DEFAULT_ACCOUNT from the credentials. It
+         - is unset when there are none.                                 
+       9 -PrecisionStack(                                                
+      10 -    app,                                                       
+      11 -    "PrecisionStack",                                          
+      12 -    env=cdk.Environment(account=os.environ.get("CDK_DEFAULT_ACC
+         -OUNT"), region="us-east-2"),                                   
+      13 -)                                                              
+       6 +# The stack sets only the region. With an account too, the VPC 
+         +would look up the availability                                 
+       7 +# zones in AWS and write cdk.context.json. With the region only
+         +, the template picks 2 zones.                                  
+       8 +PrecisionStack(app, "PrecisionStack", env=cdk.Environment(regio
+         +n="us-east-2"))                                                
+       9  app.synth()
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Now the three logs.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home
+      && python3 - <<'EOF'
+      p='docs/assumptions.md'…)
+  ⎿  74:## 2026-09-30, plan for feature 5, deploy
+     78:## 2026-09-30, implement feature 5, deploy
+  ⎿  Updated docs/ai-changes.md (+8 -0)
+      70  - The AI left the public URL of the backend open in the tech st
+          ack and used precision.jgangjee.com in a test. I set the URL to
+           https://api.precision.jgangjee.com, and the AI updated the tec
+          h stack, G2, and V1.
+      71  - The AI planned a manual check of the stream in Safari and Fir
+          efox. I removed it. Chrome is the only browser that a manual ch
+          eck covers now.
+      72  - The AI found that the client never sends `Last-Event-ID`, bec
+          ause each reconnect makes a new EventSource. It planned only to
+           update the feature 2 assumption about the preflight. I had the
+           AI add G10, which removes the header from the backend CORS rul
+          e, the two comments about it, and the preflight test. The AI ad
+          ded V10 to check that removal.
+      73 +                                                               
+      74 +## 2026-09-30, plan for feature 5, deploy                      
+      75 +                                                               
+      76 +- The AI proposed a full infra test suite. I cut it to a few te
+         +sts that synthesize the stack and check the key settings, with 
+         +a `test-infra` target that `make test` runs.                   
+      77 +                                                               
+      78 +## 2026-09-30, implement feature 5, deploy                     
+      79 +                                                               
+      80 +- The plan had the stack take the account from `CDK_DEFAULT_ACC
+         +OUNT`. During implement, the AI found that an account and a reg
+         +ion make the VPC look up the availability zones in AWS, so a sy
+         +nth with credentials would write cdk.context.json. I chose to s
+         +et only the region, so synth never makes a lookup.             
+  ⎿  Updated docs/assumptions.md (+8 -1)
+      38  
+      39  ## 2026-09-30, review feature 2, backend
+      40  
+      41 -- The backend will be served at https://api.precision.jgangjee.
+         -com in feature 5. That address is the backend's own origin, so 
+         -it does not go in `CORS_ORIGINS`. The frontend's public origin 
+         -goes there, and feature 5 decides it.                          
+      41 +- The backend is served at https://api.precision.jgangjee.com. 
+         +That address is the backend's own origin, so it does not go in 
+         +`CORS_ORIGINS`. The client runs only on the local machine, so f
+         +eature 5 sets `CORS_ORIGINS` to `http://localhost:4200,http://1
+         +27.0.0.1:4200` (changed in feature 5).                         
+      42  - The client never sends the `Last-Event-ID` header. Feature 4 
+          makes a new EventSource for each reconnect, and a new EventSour
+          ce has no last event id. So the CORS rule allows no extra heade
+          rs, and a reconnect needs no preflight.
+      43  
+      44  ## 2026-09-30, plan for feature 3, frontend
+     ...
+      74  - The query `source=server` picks the server with no warning, a
+          s no `source` value does. Only other values log a warning.
+      75  - The badge copies the stream status rules of the HTML design. 
+          Every tone has a white border and a soft shadow, so the Connect
+          ing badge shows its edge by the shadow and not by a grey outlin
+          e.
+      76  - The Docker image runs Uvicorn as process 1. Uvicorn handles t
+          he stop signal from `docker stop` and from Ctrl+C on `make dock
+          er`, so the image needs no init process.
+      77 +                                                               
+      78 +## 2026-09-30, implement feature 5, deploy                     
+      79 +                                                               
+      80 +- The stack deploys to us-east-2. The account comes from the AW
+         +S credentials at deploy time, and the stack does not name it.  
+      81 +- The hosted zone for precision.jgangjee.com already exists in 
+         +Route 53, and Cloudflare delegates the name to it. The stack im
+         +ports the zone by its id and does not make or delete it.       
+      82 +- The task needs a public IP in a public subnet to pull the ima
+         +ge from ECR and to send logs to CloudWatch, because the VPC has
+         + no NAT gateway.                                               
+      83 +- The ALB idle timeout stays at 60 s. The server sends a batch 
+         +at least once each second, so an open stream is never idle that
+         + long.                                                         
+  ⎿  Updated docs/trade-offs.md (+11 -0)
+      102  - The client closes the EventSource on each drop and makes a n
+           ew one after a backoff delay of 1 s that doubles up to 30 s, w
+           ith a random factor from 0.5 to 1. The built-in EventSource re
+           try has a fixed delay. The cost is more code to own, and a rec
+           onnect takes up to 1 s longer than the built-in retry after a 
+           short drop.
+      103  - The watchdog drops a live stream after 5 s with no batch. It
+            catches a connection that hangs with no error. The cost is a 
+           false drop if the server pauses for more than 5 s, which happe
+           ns only when the server stalls.
+      104  - The Docker image is built for linux/arm64 only. It runs nati
+           ve on my laptop and matches Fargate ARM64. The cost is that an
+            Intel machine runs it under emulation.
+      105 +                                                              
+      106 +## 2026-09-30, implement feature 5, deploy                    
+      107 +                                                              
+      108 +- The VPC has public subnets only and no NAT gateway, and the 
+          +task gets a public IP. A NAT gateway costs about $32 a month i
+          +n each zone. The cost is that the task sits in a public subnet
+          +. Its security group lets in traffic only from the ALB, so the
+          + task cannot be reached from the internet.                    
+      109 +- The service runs one task, and a deploy stops the old task b
+          +efore it starts the new one. Two streams never run at once, so
+          + every client sees one sequence of batch ids. The cost is that
+          + the stream is down for about a minute on each deploy, and the
+          + client shows Reconnecting.                                   
+      110 +- The target group drains a task in 5 s instead of the default
+          + 300 s. An SSE stream never ends on its own, so the default wo
+          +uld make each deploy wait 5 minutes. The cost is that open str
+          +eams are cut at once when a task stops.                       
+      111 +- The stack runs all the time. At the list prices I know, the 
+          +ALB costs about $16 a month, the task about $7, the three publ
+          +ic IPv4 addresses about $11, and the hosted zone $0.50. The to
+          +tal is about $35 a month before data transfer. I have not chec
+          +ked these prices against the AWS bill. `make destroy` removes 
+          +all of it except the hosted zone.                             
+      112 +- The stack sets only the region and not the account. The VPC 
+          +then picks 2 availability zones in the template, and synth mak
+          +es no AWS lookup and writes no cdk.context.json. The cost is t
+          +hat CDK cannot check at synth time that the zones exist, and t
+          +he zones are the first 2 that AWS returns at deploy time.     
+      113 +- The stack builds the image as a CDK asset during `make deplo
+          +y`. The cloud runs the same Dockerfile as `make docker`, and t
+          +here is no separate push step. The cost is that Docker must ru
+          +n during the deploy, and the image lives in the CDK bootstrap 
+          +ECR repo.                                                     
+      114 +- The cdk.json file still has no feature flags. Feature 1 plan
+          +ned to add them with the resources, but the plan for feature 5
+          + did not name the file. The cost is the notice about unset fea
+          +ture flags on each synth.                                     
+      115 +- The infra tests check only the key settings in the template,
+          + and there is no full test suite for the stack. The cost is th
+          +at a change to a setting the tests do not check can pass `make
+          + test`.                                                       
+
+⏺ Bash(python3 - <<'EOF'
+      p='docs/ai-changes.md'…)
+  ⎿  lint=0
+     test=0
+     test-infra=0
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated docs/ai-changes.md (+0 -4)
+      71  - The AI planned a manual check of the stream in Safari and Fir
+          efox. I removed it. Chrome is the only browser that a manual ch
+          eck covers now.
+      72  - The AI found that the client never sends `Last-Event-ID`, bec
+          ause each reconnect makes a new EventSource. It planned only to
+           update the feature 2 assumption about the preflight. I had the
+           AI add G10, which removes the header from the backend CORS rul
+          e, the two comments about it, and the preflight test. The AI ad
+          ded V10 to check that removal.
+      73  
+      74 -## 2026-09-30, plan for feature 5, deploy                      
+      75 -                                                               
+      76 -- The AI proposed a full infra test suite. I cut it to a few te
+         -sts that synthesize the stack and check the key settings, with 
+         -a `test-infra` target that `make test` runs.                   
+      77 -                                                               
+      74  ## 2026-09-30, implement feature 5, deploy
+      75  
+      76  - The plan had the stack take the account from `CDK_DEFAULT_ACC
+          OUNT`. During implement, the AI found that an account and a reg
+          ion make the VPC look up the availability zones in AWS, so a sy
+          nth with credentials would write cdk.context.json. I chose to s
+          et only the region, so synth never makes a lookup.
+  ⎿  (timeout 10m)
+
+⏺ I finished all 10 plan steps. I did not commit anything.
+
+  Steps
+  1. I added pytest 9.1.1 and the pytest settings to infra/pyproject.toml and
+     updated the lock file.
+  2. I wrote the stack in infra/infra/precision_stack.py, with each setting from
+     G1 to G11. It uses the ApplicationLoadBalancedFargateService construct,
+     which outputs the service URL.
+  3. infra/app.py sets the region to us-east-2. The account changed from the
+     plan, as the list at the end explains.
+  4. I wrote the 6 tests from V1 in infra/tests/test_stack.py.
+  5. The Makefile has a new test-infra target, and make test runs it. lint-infra
+     now runs mypy on the tests. make dev and make docker print the URL for the
+     local server.
+  6. The client default server is now https://api.precision.jgangjee.com. I
+     updated source-settings.spec.ts and app.spec.ts to match the three cases in
+     V2.
+  7. specs/tech-stack.md now lists pytest for infra and the us-east-2 region.
+  8. The README has a new Deploy section and the new client default, and it says
+     how to use the local server.
+  9. Each of the three logs has a feature 5 entry. I replaced the feature 2
+     assumption about the client origin.
+  10. All the automated checks pass.
+
+  Results
+  - make test exits with code 0. The backend has 35 tests at 100 percent
+    coverage, the frontend has 100, and infra has 6.
+  - make lint exits with code 0.
+  - AWS_PROFILE=none make synth exits with code 0, and it does not make
+    infra/cdk.context.json.
+
+  Where the work differs from the plan
+  - The account: The plan took the account from CDK_DEFAULT_ACCOUNT. I tested a
+    synth with a fake account, and it showed that an account makes CDK look up
+    the availability zones in AWS. You chose to set only the region, so a synth
+    never does a lookup. I left plan.md as it is, and ai-changes.md records the
+    change.
+  - Two extra outputs: The stack outputs ClusterName and ServiceName. The plan
+    did not list them, but you need them for the update-service command in M5.
+  - Feature flags: cdk.json still has no feature flags, so each synth shows a
+    notice that 83 flags are not set. A trade-off from feature 1 said that
+    feature 5 would add them, but the plan does not name cdk.json. I recorded
+    this as a trade-off and did not change the file.
+  - Cost: The cost entry in trade-offs.md gives about $35 a month. I estimated
+    it from list prices that I remember, and I did not check it against current
+    AWS pricing. Check the figure before you rely on it.
+  - Plan session entry: ai-changes.md has no entry for the plan session. G6 says
+    you agreed "with a change", but I do not know what you changed, so I did
+    not write the entry. Add it if you want it there.
+
+  Clear the session before you run /spec-driven validate.
+
+✻ Churned for 4m 7s · done 10:31 PM
+
+※ recap: Feature 5 puts the backend on ECS Fargate at api.precision.jgangjee.com, and I finished implementing it with all the tests, the linters, and synth passing. Next, review the changes, clear the session, and run validate.

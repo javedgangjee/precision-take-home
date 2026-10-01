@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, and the client connection to the server are in place. The backend also runs in Docker. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, and the cloud deploy are in place. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -18,9 +18,9 @@ Install these tools before you start. The versions are the ones I use.
 - You need uv 0.11.24. uv installs Python 3.13.15 for you if it is missing.
 - You need Node.js 22.22.1 and npm 11.20.0.
 - You need the AWS CDK CLI 2.1143.0 for `make synth`. Install it with `npm install -g aws-cdk@2.1143.0`.
-- You need AWS CLI 2.37.4 with credentials for `make deploy` and `make destroy`. The AWS account must be bootstrapped for CDK.
+- You need AWS CLI 2.37.4 with credentials for `make deploy` and `make destroy`. The AWS account must be bootstrapped for CDK in the region of your AWS profile. The Deploy section gives the command.
 - You need GNU Make 3.81 or later. macOS ships with 3.81.
-- You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make docker-build` and `make docker`.
+- You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make docker-build`, `make docker`, and `make deploy`.
 - The client loads its icons from Google Fonts, so the browser needs the network.
 
 ## Install
@@ -31,13 +31,14 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 
 - `make backend` runs the server at http://localhost:8000 with reload on file changes. It stops within 3 seconds of Ctrl+C, even with open streams. The health check is at http://localhost:8000/health.
 - `make frontend` runs the client at http://localhost:4200.
-- `make dev` runs the backend and the frontend together. Press Ctrl+C once to stop both.
+- `make dev` runs the backend and the frontend together. Press Ctrl+C once to stop both. It prints the URL that points the client at the local server.
 - `make docker-build` builds the backend image for linux/arm64 with the tag `precision-backend`.
-- `make docker` builds the image and runs it at http://localhost:8000, the same port as `make backend`. It passes `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` into the container when they are set in the shell. Press Ctrl+C to stop the container, which stops within 3 seconds.
-- `make test` runs the backend and frontend tests and reports coverage. The goal is 100 percent, and no minimum is enforced.
+- `make docker` builds the image and runs it at http://localhost:8000, the same port as `make backend`. It prints the URL that points the client at the local server. It passes `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` into the container when they are set in the shell. Press Ctrl+C to stop the container, which stops within 3 seconds.
+- `make test` runs the backend, frontend, and infra tests. It reports coverage for the backend and the frontend. The goal is 100 percent, and no minimum is enforced.
+- `make test-infra` runs only the infra tests. They synthesize the stack and check the key settings.
 - `make lint` runs ruff and mypy on backend/ and infra/, and ESLint and Prettier on frontend/.
 - `make synth` synthesizes the CDK app into infra/cdk.out/. It needs no AWS credentials.
-- `make deploy` deploys the CDK stack to AWS. The stack is empty until feature 5.
+- `make deploy` builds the backend image and deploys the CDK stack to AWS. The Deploy section has the details.
 - `make destroy` removes the CDK stack from AWS.
 
 ## Backend stream
@@ -54,7 +55,7 @@ The server reads these environment variables at start. When a value is out of ra
 
 | Variable | Default | Range | Meaning |
 | --- | --- | --- | --- |
-| `SAMPLES_PER_SECOND` | 100000 | 1 to 100000 | This sets how many integers the server makes each second. |
+| `SAMPLES_PER_SECOND` | 5000 | 1 to 100000 | This sets how many integers the server makes each second. |
 | `BATCH_INTERVAL_MS` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
 | `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. The server strips a trailing slash from each origin. | These origins can call the server from a browser. |
@@ -63,16 +64,18 @@ For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends o
 
 ## Client
 
-Run `make dev` and open http://localhost:4200. The page shows the heat map, a color scale, and a side panel. The client reads the stream from the server and applies each batch to the counts.
+Run `make frontend` and open http://localhost:4200. The page shows the heat map, a color scale, and a side panel. The client reads the stream from the cloud server at https://api.precision.jgangjee.com and applies each batch to the counts.
+
+To use the local server, run `make dev` or `make docker`, and open http://localhost:4200/?server=http://localhost:8000. With `make docker`, also run `make frontend` in another terminal.
 
 The client reads these settings from the URL query. When a value is bad, the client logs a warning to the console and uses the default.
 
 | Setting | Default | Meaning |
 | --- | --- | --- |
 | `source` | `server` | The value `server` reads the stream from the server. The value `frontend` runs the test source in the browser instead. Only one source runs at a time. |
-| `server` | `http://localhost:8000` | This is the server address, which must be an http or https URL. The client strips a trailing slash and connects to the address plus `/stream`. |
+| `server` | `https://api.precision.jgangjee.com` | This is the server address, which must be an http or https URL. The client strips a trailing slash and connects to the address plus `/stream`. |
 
-For example, http://localhost:4200/?server=https://api.precision.jgangjee.com connects to the cloud server after feature 5 deploys it.
+For example, http://localhost:4200/?server=http://localhost:8000 connects to the local server.
 
 - The grid has N by N cells, and N is 32 at start. Row 0 is at the bottom, and column 0 is at the left. Row numbers run up the left side and column numbers run along the bottom. When N is above 16, every 2nd row and column has a label, and when N is above 32, every 4th one has a label.
 - Each value v goes to cell index (v - 1) mod N². The row is the index divided by N, and the column is the index mod N. On a 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and 0 goes to cell <3,3>.
@@ -97,6 +100,32 @@ With `source=frontend` in the URL query, a test source in a Web Worker makes the
 | `max` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 
 A change to the query needs a reload, which also resets the counts. For a stress test, run `make frontend`, open http://localhost:4200/?source=frontend&rate=1000000&interval=50&max=1024, set N to 64, and watch the frame rate.
+
+## Deploy
+
+The backend runs on AWS ECS Fargate at https://api.precision.jgangjee.com. The CDK app in infra/ defines the stack. The stack names no account or region, so a deploy uses the ones in your AWS profile at the time.
+
+The stack makes these resources.
+
+- It imports the Route 53 hosted zone for precision.jgangjee.com by its id. Cloudflare hosts jgangjee.com and delegates that zone to Route 53.
+- It makes an ACM certificate for api.precision.jgangjee.com that validates by DNS, and an A record that points the name at the load balancer.
+- It makes a VPC with public subnets in 2 availability zones and no NAT gateway.
+- It runs one Fargate task with 0.25 vCPU and 512 MiB on ARM64. The task runs the image that backend/Dockerfile builds, the same image as `make docker`.
+- It puts an Application Load Balancer in front of the task. The load balancer serves HTTPS on port 443 and redirects port 80 to HTTPS. It checks `GET /health`.
+- It sends the container logs to a CloudWatch log group that keeps them for one week.
+
+The task sets `CORS_ORIGINS` to `http://localhost:4200,http://127.0.0.1:4200`, so the local client can read the cloud stream.
+
+A deploy stops the old task before it starts the new one, so two streams never run at once. The stream is down for about a minute, and the client shows Reconnecting until the new task is live.
+
+To deploy, follow these steps.
+
+1. Run `aws login`, or set up AWS credentials another way.
+2. Bootstrap the account for CDK in the region of your profile once. Run `cdk bootstrap` from infra/.
+3. Start Docker Desktop. CDK builds the image with Docker and pushes it to the bootstrap ECR repo.
+4. Run `make deploy` and approve the security changes in the terminal. The outputs give the service URL, the cluster name, and the service name.
+
+Run `make destroy` to remove the stack. The hosted zone stays, because the stack only imports it.
 
 ## Specs and logs
 

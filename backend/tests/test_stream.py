@@ -34,7 +34,7 @@ def test_stream_returns_event_stream(live_server: LiveServer) -> None:
         assert response.headers["content-type"].startswith("text/event-stream")
 
 
-def test_first_event_is_a_batch_of_5000_integers(live_server: LiveServer) -> None:
+def test_first_event_is_a_batch_of_250_integers(live_server: LiveServer) -> None:
     url = live_server(Settings())
     started = time.monotonic()
 
@@ -43,7 +43,7 @@ def test_first_event_is_a_batch_of_5000_integers(live_server: LiveServer) -> Non
 
     assert time.monotonic() - started < 1
     values = json.loads(event["data"])
-    assert len(values) == 5_000
+    assert len(values) == 250
     assert all(isinstance(value, int) and 0 <= value <= 1_023 for value in values)
     assert int(event["id"]) >= 0
 

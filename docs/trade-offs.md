@@ -120,3 +120,10 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The admin page and the settings display are two features instead of one. Each feature stays small enough to review in one pass. The cost is that feature 6 ships live settings that the client cannot show until feature 7.
 - Pause lives entirely in feature 6, with its own pause event, apart from the init and update packets of feature 7. A pause then never makes the clients reconnect, even before feature 7. The cost is a second kind of control event that feature 7 does not fold into its packets.
 - The badge gets a fourth state, Paused, in place of a note in the side panel. The user sees the pause where the stream state already shows. The cost is a change to N10, which named three states from my design notes.
+
+## 2026-10-01, roadmap change to feature 6, admin API
+
+- Feature 6 is a set of HTTP endpoints with no admin web page. I change the settings and pause the stream with curl. The cost is that a reviewer needs a terminal to try the live settings.
+- The pause event and the Paused badge move to feature 7, with the init and update packets. Feature 6 then changes only the backend. The cost is that between feature 6 and feature 7 a pause makes each client reconnect every 5 s, because the client watchdog sees no batches.
+- Feature 8 adds a tuning step that sets the default rate to the highest rate that meets the 100 ms target and 54 fps. This replaces the plan to raise the default before submission by hand. The cost is that the default depends on one set of measurements on my laptop and one Fargate task size.
+- Feature 9 is a checklist that compares the repo with the brief and the project overview before I submit. The check catches a missing document before a reviewer does. The cost is one more feature, and the check reads only the files, so it cannot judge the quality of the write-ups.

@@ -82,3 +82,9 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 - I asked to add a pause to the admin feature. The AI proposed to show the pause in the side panel and keep the three badge states from N10. I asked for Paused in the badge, and the AI changed N10 to four states.
 - I asked to split the admin feature into an admin page and a settings display. The AI put the paused flag in the init and update packets of the settings display, which left the pause without a client signal in feature 6. I asked to move the pause entirely into feature 6, and the AI gave it a separate pause event there.
 - The split moved the testing feature from feature 7 to feature 8. The older entries in these logs still call it feature 7.
+
+## 2026-10-01, roadmap change to feature 6, admin API
+
+- The roadmap had feature 6 as an admin web page that also sent a pause event to the client. I asked to drop the web page and use plain HTTP requests for the settings and for pause and resume. I also asked to move the client display of the pause state to feature 7. The AI moved the server pause event to feature 7 as well, so feature 6 changes only the backend.
+- I asked to add a tuning step to feature 8. The AI asked what the tuning aims for. I chose two goals, which are the highest rate that meets the latency and frame rate targets, and the batch interval with the lowest latency at the default rate.
+- I asked for a last feature in which I add the documents and the AI checks the repo against the brief and the overview. The AI added feature 9, which writes docs/submission-checklist.md and does not write the missing documents.

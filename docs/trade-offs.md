@@ -114,3 +114,9 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The cdk.json file still has no feature flags. Feature 1 planned to add them with the resources, but the plan for feature 5 did not name the file. The cost is the notice about unset feature flags on each synth.
 - The infra tests check only the key settings in the template, and there is no full test suite for the stack. The cost is that a change to a setting the tests do not check can pass `make test`.
 - The default rate is 5,000 samples per second instead of 100,000, so each batch holds 250 integers. A lower rate keeps the data transfer cost low while I develop against the cloud stack. The cost is a lighter load than the brief limit, and I plan to raise the default before submission.
+
+## 2026-09-30, replan after feature 5, deploy
+
+- The admin page and the settings display are two features instead of one. Each feature stays small enough to review in one pass. The cost is that feature 6 ships live settings that the client cannot show until feature 7.
+- Pause lives entirely in feature 6, with its own pause event, apart from the init and update packets of feature 7. A pause then never makes the clients reconnect, even before feature 7. The cost is a second kind of control event that feature 7 does not fold into its packets.
+- The badge gets a fourth state, Paused, in place of a note in the side panel. The user sees the pause where the stream state already shows. The cost is a change to N10, which named three states from my design notes.

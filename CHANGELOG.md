@@ -41,11 +41,20 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 4 adds backend/Dockerfile, which builds an ARM64 image that runs the backend as a user that is not root and stops within 3 s.
 - Feature 4 adds the Makefile targets `docker-build` and `docker`, which build the backend image and run it in Docker on port 8000 with the stream settings from the shell.
 - Feature 4 adds sections to the README that describe the `source` and `server` query settings, the badge states, the reconnect, and `make docker`.
+- Feature 5 adds a CDK stack that runs the backend image on AWS ECS Fargate with one ARM64 task behind an Application Load Balancer at https://api.precision.jgangjee.com.
+- Feature 5 makes the load balancer serve HTTPS with an ACM certificate, redirect HTTP to HTTPS, and check `GET /health`.
+- Feature 5 makes the stack deploy to the account and region in the current AWS profile, so `make synth` needs no AWS credentials.
+- Feature 5 makes a deploy stop the old task before it starts the new one, so two streams never run at once and the client shows Reconnecting for about a minute.
+- Feature 5 sends the container logs to CloudWatch with a retention of one week.
+- Feature 5 adds infra tests in infra/tests/ and the Makefile target `test-infra`, and `make test` now runs them.
+- Feature 5 adds a Deploy section to the README, with the one-time `cdk bootstrap` command.
 
 ### Changed
 
 - Feature 2 makes `make backend` stop within 3 seconds of Ctrl+C, even when streams are open.
 - Feature 4 makes the client load the Material Symbols icons from Google Fonts instead of a bundled font, so the icons need the network.
+- Feature 5 makes the client read from https://api.precision.jgangjee.com by default, and `make dev` and `make docker` print the URL that points the client at the local server.
+- Feature 5 lowers the default rate on the server and in the test source from 100,000 to 5,000 samples per second, so each batch holds 250 integers, to keep cloud cost low during development.
 
 ### Removed
 

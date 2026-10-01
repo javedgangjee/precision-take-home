@@ -76,3 +76,9 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 - The plan had the stack take the account from `CDK_DEFAULT_ACCOUNT`. During implement, the AI found that an account and a region make the VPC look up the availability zones in AWS, so a synth with credentials would write cdk.context.json. I chose to set only the region, so synth never makes a lookup.
 - The AI then set the region to us-east-2. During review, I asked to remove it so the deploy uses the region in my AWS profile at the time. The AI removed the account and the region from the stack, and removed us-east-2 from the README, the specs, the assumptions, and the trade-offs.
 - I asked the AI to lower the default rate to 5,000 samples per second to keep the cloud cost low during development. The AI first changed only the code and the tests, and marked each place as temporary. I asked for the change everywhere. The AI then updated the README, the mission, the specs for features 2 to 5, and the logs, and removed the temporary markers.
+
+## 2026-09-30, replan after feature 5, deploy
+
+- I asked to add a pause to the admin feature. The AI proposed to show the pause in the side panel and keep the three badge states from N10. I asked for Paused in the badge, and the AI changed N10 to four states.
+- I asked to split the admin feature into an admin page and a settings display. The AI put the paused flag in the init and update packets of the settings display, which left the pause without a client signal in feature 6. I asked to move the pause entirely into feature 6, and the AI gave it a separate pause event there.
+- The split moved the testing feature from feature 7 to feature 8. The older entries in these logs still call it feature 7.

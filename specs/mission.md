@@ -48,7 +48,7 @@ The brief is the main source of truth. Where my notes or the HTML design disagre
 - N7. Delivery is lossy and best effort.
 - N8. The server sends a heartbeat if it sends nothing for 15 seconds.
 - N9. Counts stay on screen while the client reconnects.
-- N10. The client reconnects with backoff and shows one of three states, which are Live, Connecting, and Reconnecting.
+- N10. The client reconnects with backoff and shows one of four states, which are Live, Connecting, Reconnecting, and Paused. Feature 6 adds the Paused state.
 - N11. The server settings are samples per second from 1 to 100,000, batch interval from 50 ms to 1 s, and a maximum value from 1 to 10,000. The defaults are 5,000 samples per second, a 50 ms batch interval, and a maximum value of 1,024, so each batch holds 250 integers from 0 to 1,023. A fourth setting lists the origins that can call the server from a browser, and the default is http://localhost:4200. The server reads these settings from environment variables at start.
 - N12. A stress test measures the limits on clients, samples, and payload size, if it is feasible.
 - N13. A Makefile runs the frontend and the backend, runs the tests, and deploys.

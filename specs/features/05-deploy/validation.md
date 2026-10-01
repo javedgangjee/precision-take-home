@@ -88,3 +88,23 @@ These checks need AWS credentials. Run `aws login` first.
 2. The expected result is that each file has an entry dated for the deploy feature.
 3. Open README.md.
 4. The expected result is that it has a Deploy section with the bootstrap command, `make deploy`, `make destroy`, and the URL, and that it says how to use the local server.
+
+## Results, 2026-09-30
+
+Every check passes.
+
+- V1 passes. `make test-infra` runs 6 tests, and all 6 pass.
+- V2 passes. The client tests for no query, `?server=http://localhost:8000`, and `?server=abc` pass in the frontend run.
+- V3 passes. `make lint` exits with 0. ruff and mypy pass on backend/ and infra/, including infra/tests/, and ESLint and Prettier pass on frontend/.
+- V4 passes. `AWS_PROFILE=none make synth` exits with 0, and infra/cdk.context.json does not exist after the run.
+- V5 passes. `make test` exits with 0. The backend runs 35 tests, the frontend runs 100 tests, and infra runs 6 tests, and all of them pass.
+- M1 passes. The user deployed the stack, and the output holds https://api.precision.jgangjee.com.
+- M2 passes. The health check, the stream, and the redirect from HTTP to HTTPS answer as expected. The stream shows `id:` and `data:` lines.
+- M3 passes. The server allows the two local origins and sends no CORS header for http://example.com.
+- M4 passes. The local client goes live with the cloud server on localhost and on 127.0.0.1.
+- M5 passes. A forced deploy shows Reconnecting, then Live, and the service never runs two tasks.
+- M6 passes. The container logs reach CloudWatch with a retention of one week.
+- M7 passes. `make dev` prints the local server URL, and the client goes live with the local server.
+- M8 passes. The three logs have entries for this feature, and the README has the Deploy section and the local server steps.
+
+Each item in requirements.md has at least one passing check. R1 has M2 and M4. R2 has V1 and M1. R3 has V3 and V4. R4 has V1 and M2. R5 has M1 and M2. R6 has V1 and M5. R7 has M1. R8 has V2 and M4. R9 has V1 and M3. R10 has M8. G1 has V1 and V4. G2 has M1. G3 has V1. G4 has V1 and M5. G5 has V1 and M3. G6 has V1 and V5. G7 has V2 and M7. G8 has V1. G9 has V1 and M2. G10 has V1. G11 has M6. G12 has M8.

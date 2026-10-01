@@ -14,6 +14,7 @@ The command for V1 to V6 is `make test`. The command for V7 is `make lint`.
 - `{"batch_interval_ms": 49}` is not valid.
 - `{"max_value": 10001}` is not valid.
 - `{"samples_per_second": "abc"}` is not valid.
+- `{"max_value": null}` is not valid.
 - `{"cors_origins": ["http://a.test"]}` is not valid.
 - With `ADMIN_TOKEN=abc`, the loaded settings have the token `abc`. With no `ADMIN_TOKEN`, the token is unset.
 

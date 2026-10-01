@@ -6,6 +6,8 @@ FRONTEND_PORT := 4200
 IMAGE := precision-backend
 # The client uses the cloud server by default. This URL points it at the local server.
 LOCAL_CLIENT := http://localhost:$(FRONTEND_PORT)/?server=http://localhost:$(BACKEND_PORT)
+# The local server uses this fixed token for the admin API. The cloud server uses a secret.
+LOCAL_ADMIN_TOKEN := local-admin-token
 
 # Stop the Angular CLI from asking about usage data on the first run.
 export NG_CLI_ANALYTICS := false
@@ -18,7 +20,7 @@ install:
 	cd infra && uv sync
 
 backend:
-	cd backend && uv run uvicorn app.main:app --reload --port $(BACKEND_PORT) --timeout-graceful-shutdown 3
+	cd backend && ADMIN_TOKEN=$(LOCAL_ADMIN_TOKEN) uv run uvicorn app.main:app --reload --port $(BACKEND_PORT) --timeout-graceful-shutdown 3
 
 frontend:
 	cd frontend && npx ng serve --port $(FRONTEND_PORT)
@@ -36,6 +38,7 @@ docker: docker-build
 	@echo "Open $(LOCAL_CLIENT) to use the local server."
 	docker run --rm -p $(BACKEND_PORT):8000 \
 		-e SAMPLES_PER_SECOND -e BATCH_INTERVAL_MS -e MAX_VALUE -e CORS_ORIGINS \
+		-e ADMIN_TOKEN=$(LOCAL_ADMIN_TOKEN) \
 		$(IMAGE)
 
 test: test-backend test-frontend test-infra

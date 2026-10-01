@@ -11,11 +11,15 @@ class BatchGenerator:
     """
 
     def __init__(self, settings: Settings, rng: random.Random) -> None:
+        self._rng = rng
+        self.update(settings)
+
+    def update(self, settings: Settings) -> None:
+        """Use new settings from the next batch, and drop the carried fraction."""
         self._population = range(settings.max_value)
         # Samples per batch, in thousandths of a sample, so the carry stays exact.
         self._per_batch_milli = settings.samples_per_second * settings.batch_interval_ms
         self._carry_milli = 0
-        self._rng = rng
 
     def next_batch(self) -> list[int]:
         count, self._carry_milli = divmod(self._carry_milli + self._per_batch_milli, 1_000)

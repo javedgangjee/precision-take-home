@@ -48,3 +48,32 @@ def test_max_value_1_gives_only_0() -> None:
 
 def test_fixed_seed_gives_same_batch() -> None:
     assert make(seed=42).next_batch() == make(seed=42).next_batch()
+
+
+def test_update_to_1000_per_second_at_1000_ms_gives_1000_integers() -> None:
+    generator = make()
+
+    generator.update(Settings(samples_per_second=1_000, batch_interval_ms=1_000))
+
+    assert len(generator.next_batch()) == 1_000
+
+
+def test_update_to_max_value_3_gives_values_from_0_to_2() -> None:
+    generator = make(samples_per_second=10_000, batch_interval_ms=1_000)
+
+    generator.update(Settings(samples_per_second=10_000, batch_interval_ms=1_000, max_value=3))
+
+    values = generator.next_batch()
+    assert len(values) == 10_000
+    assert set(values) <= {0, 1, 2}
+
+
+def test_update_drops_the_carried_fraction() -> None:
+    generator = make(samples_per_second=1, batch_interval_ms=50)
+    # 10 calls carry half a sample.
+    assert sum(len(generator.next_batch()) for _ in range(10)) == 0
+
+    generator.update(Settings(samples_per_second=1, batch_interval_ms=50))
+
+    sizes = [len(generator.next_batch()) for _ in range(20)]
+    assert sizes == [0] * 19 + [1]

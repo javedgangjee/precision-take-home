@@ -127,3 +127,11 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The pause event and the Paused badge move to feature 7, with the init and update packets. Feature 6 then changes only the backend. The cost is that between feature 6 and feature 7 a pause makes each client reconnect every 5 s, because the client watchdog sees no batches.
 - Feature 8 adds a tuning step that sets the default rate to the highest rate that meets the 100 ms target and 54 fps. This replaces the plan to raise the default before submission by hand. The cost is that the default depends on one set of measurements on my laptop and one Fargate task size.
 - Feature 9 is a checklist that compares the repo with the brief and the project overview before I submit. The check catches a missing document before a reviewer does. The cost is one more feature, and the check reads only the files, so it cannot judge the quality of the write-ups.
+
+## 2026-10-01, implement feature 6, admin API
+
+- The admin API uses one shared bearer token on the public URL. It needs no new port, no IAM signing, and no change to the load balancer. The cost is that anyone with the token can change the stream, and the token does not rotate.
+- The cloud token lives in Secrets Manager with a random value. No token sits in the repo or in the task environment in the template. The cost is about $0.40 a month, and a reader needs two AWS CLI calls to get the token.
+- The local token is the fixed string `local-admin-token` in the Makefile. The curl examples work with no setup. The cost is that the token is public, so a local server is open to anyone who can reach port 8000.
+- The admin handlers are async, so they run on the event loop with the broadcaster. The broadcaster wakes its loop with an `asyncio.Event`, which is not safe to set from a worker thread. The cost is that a slow handler would block the stream, and each handler only sets a few fields.
+- main.py sets up the root logger at the info level, because Uvicorn sets up only its own loggers. Each admin change then shows in the terminal and in CloudWatch. The cost is that info logs from other libraries also show.

@@ -1,18 +1,46 @@
 import logging
 import os
 from collections.abc import Mapping
-from typing import Any
+from typing import Annotated, Any, Self
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
 logger = logging.getLogger(__name__)
 
 
+SamplesPerSecond = Annotated[int, Field(ge=1, le=100_000)]
+BatchIntervalMs = Annotated[int, Field(ge=50, le=1_000)]
+MaxValue = Annotated[int, Field(ge=1, le=10_000)]
+
+
 class Settings(BaseModel):
-    samples_per_second: int = Field(default=5_000, ge=1, le=100_000)
-    batch_interval_ms: int = Field(default=50, ge=50, le=1_000)
-    max_value: int = Field(default=1_024, ge=1, le=10_000)
+    samples_per_second: SamplesPerSecond = 5_000
+    batch_interval_ms: BatchIntervalMs = 50
+    max_value: MaxValue = 1_024
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4200"])
+    # With no token, the server has no admin API.
+    admin_token: str | None = None
+
+
+class SettingsUpdate(BaseModel):
+    """A change to the stream settings. A field that is not set keeps its value.
+
+    Strict mode rejects a value that is not an integer, such as "20" or 20.5.
+    """
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    samples_per_second: SamplesPerSecond | None = None
+    batch_interval_ms: BatchIntervalMs | None = None
+    max_value: MaxValue | None = None
+
+    @model_validator(mode="after")
+    def reject_null(self) -> Self:
+        # None is the default for a field that is not set. A null in the request is not valid.
+        for name in self.model_fields_set:
+            if getattr(self, name) is None:
+                raise ValueError(f"{name} must be an integer")
+        return self
 
 
 # Each setting reads the environment variable with the upper-case name of its field.

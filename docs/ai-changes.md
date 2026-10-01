@@ -88,3 +88,7 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 - The roadmap had feature 6 as an admin web page that also sent a pause event to the client. I asked to drop the web page and use plain HTTP requests for the settings and for pause and resume. I also asked to move the client display of the pause state to feature 7. The AI moved the server pause event to feature 7 as well, so feature 6 changes only the backend.
 - I asked to add a tuning step to feature 8. The AI asked what the tuning aims for. I chose two goals, which are the highest rate that meets the latency and frame rate targets, and the batch interval with the lowest latency at the default rate.
 - I asked for a last feature in which I add the documents and the AI checks the repo against the brief and the overview. The AI added feature 9, which writes docs/submission-checklist.md and does not write the missing documents.
+
+## 2026-10-01, implement feature 6, admin API
+
+- I made no change to the AI output during implement. Changes from my review go here.

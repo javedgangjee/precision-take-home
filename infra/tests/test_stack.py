@@ -38,6 +38,27 @@ def test_task_runs_the_server_on_arm64_with_the_cors_origins(template: Template)
     )
 
 
+def test_task_gets_the_admin_token_from_a_random_secret(template: Template) -> None:
+    secrets = template.find_resources("AWS::SecretsManager::Secret")
+    assert len(secrets) == 1
+    [(secret_id, secret)] = secrets.items()
+    assert secret["Properties"]["GenerateSecretString"] == {
+        "ExcludePunctuation": True,
+        "PasswordLength": 32,
+    }
+
+    template.has_resource_properties(
+        "AWS::ECS::TaskDefinition",
+        {
+            "ContainerDefinitions": [
+                Match.object_like(
+                    {"Secrets": [{"Name": "ADMIN_TOKEN", "ValueFrom": {"Ref": secret_id}}]}
+                )
+            ],
+        },
+    )
+
+
 def test_service_runs_one_task_and_stops_it_before_a_new_one(template: Template) -> None:
     template.has_resource_properties(
         "AWS::ECS::Service",

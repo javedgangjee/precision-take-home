@@ -7,6 +7,7 @@ from aws_cdk import aws_ecs as ecs
 from aws_cdk import aws_ecs_patterns as ecs_patterns
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_route53 as route53
+from aws_cdk import aws_secretsmanager as secretsmanager
 from aws_cdk.aws_ecr_assets import Platform
 from constructs import Construct
 
@@ -55,6 +56,16 @@ class PrecisionStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
         )
 
+        # The admin API needs this token in each request. The README shows how to read it.
+        admin_token = secretsmanager.Secret(
+            self,
+            "AdminToken",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                password_length=32, exclude_punctuation=True
+            ),
+            removal_policy=RemovalPolicy.DESTROY,
+        )
+
         # One task, because the server makes one shared stream for every client.
         # A deploy stops the old task before it starts the new one.
         fargate = ecs_patterns.ApplicationLoadBalancedFargateService(
@@ -84,6 +95,7 @@ class PrecisionStack(Stack):
                 ),
                 container_port=CONTAINER_PORT,
                 environment={"CORS_ORIGINS": CORS_ORIGINS},
+                secrets={"ADMIN_TOKEN": ecs.Secret.from_secrets_manager(admin_token)},
                 log_driver=ecs.LogDrivers.aws_logs(stream_prefix="backend", log_group=log_group),
             ),
         )
@@ -95,3 +107,4 @@ class PrecisionStack(Stack):
         # The pattern already outputs the service URL. These names help with update-service.
         CfnOutput(self, "ClusterName", value=cluster.cluster_name)
         CfnOutput(self, "ServiceName", value=fargate.service.service_name)
+        CfnOutput(self, "AdminTokenSecretArn", value=admin_token.secret_arn)

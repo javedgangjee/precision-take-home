@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, and the cloud deploy are in place. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, and the admin API are in place. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -29,11 +29,11 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 
 ## Makefile targets
 
-- `make backend` runs the server at http://localhost:8000 with reload on file changes. It stops within 3 seconds of Ctrl+C, even with open streams. The health check is at http://localhost:8000/health.
+- `make backend` runs the server at http://localhost:8000 with reload on file changes. It sets the admin token to `local-admin-token`. It stops within 3 seconds of Ctrl+C, even with open streams. The health check is at http://localhost:8000/health.
 - `make frontend` runs the client at http://localhost:4200.
 - `make dev` runs the backend and the frontend together. Press Ctrl+C once to stop both. It prints the URL that points the client at the local server.
 - `make docker-build` builds the backend image for linux/arm64 with the tag `precision-backend`.
-- `make docker` builds the image and runs it at http://localhost:8000, the same port as `make backend`. It prints the URL that points the client at the local server. It passes `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` into the container when they are set in the shell. Press Ctrl+C to stop the container, which stops within 3 seconds.
+- `make docker` builds the image and runs it at http://localhost:8000, the same port as `make backend`. It prints the URL that points the client at the local server. It passes `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` into the container when they are set in the shell. It sets the admin token to `local-admin-token`. Press Ctrl+C to stop the container, which stops within 3 seconds.
 - `make test` runs the backend, frontend, and infra tests. It reports coverage for the backend and the frontend. The goal is 100 percent, and no minimum is enforced.
 - `make test-infra` runs only the infra tests. They synthesize the stack and check the key settings.
 - `make lint` runs ruff and mypy on backend/ and infra/, and ESLint and Prettier on frontend/.
@@ -59,8 +59,43 @@ The server reads these environment variables at start. When a value is out of ra
 | `BATCH_INTERVAL_MS` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
 | `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. The server strips a trailing slash from each origin. | These origins can call the server from a browser. |
+| `ADMIN_TOKEN` | It has no default. | It takes any string. | This is the token for the admin API. With no token, the server has no admin API. |
 
 For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends one batch of 20 integers each second. The same variables work with `make docker`.
+
+## Admin API
+
+The admin API changes the stream settings and pauses the stream while the server runs, so a test of a new rate needs no restart. Every client gets the change at once, because the server keeps one shared stream. The changes live in memory only. A restart or a deploy sets the settings back to the environment values and ends the pause.
+
+Each admin request must send the header `Authorization: Bearer <token>`. A request with a missing or wrong token gets status 401. When `ADMIN_TOKEN` is not set, every admin path returns status 404. The local token from `make backend`, `make dev`, and `make docker` is `local-admin-token`. The Deploy section shows how to read the cloud token.
+
+| Request | Body | Effect |
+| --- | --- | --- |
+| `GET /admin/settings` | It takes no body. | This returns the settings and the pause state. |
+| `PATCH /admin/settings` | It takes a JSON object with any of `samples_per_second`, `batch_interval_ms`, and `max_value`. | This changes the settings from the next batch. |
+| `POST /admin/pause` | It takes no body. | This stops the batches. |
+| `POST /admin/resume` | It takes no body. | This starts the batches again. |
+
+Each request returns the settings and the pause state as one JSON object, such as `{"samples_per_second": 5000, "batch_interval_ms": 50, "max_value": 1024, "paused": false}`.
+
+- A PATCH value must be an integer in the range in the Backend stream table. A value out of range, a value that is not an integer, or an unknown field gets status 422, and no setting changes. The PATCH cannot change `CORS_ORIGINS`.
+- A change to the batch interval starts the schedule again from the time of the change, so the server sends no burst of batches. The batch id keeps going up.
+- While paused, the server sends no batches, and the batch id does not advance. The `: ping` heartbeat keeps each connection open. A resume starts the schedule again and does not send the batches that the pause skipped. A settings change during a pause applies when the stream resumes.
+- A pause while paused and a resume while running return status 200 and change nothing.
+- The server logs each change.
+
+The client has no Paused state yet. During a pause, the client sees no batches for 5 seconds and shows Reconnecting until the stream resumes.
+
+Run `make backend`, and then run these commands in another terminal.
+
+```sh
+TOKEN=local-admin-token
+curl localhost:8000/admin/settings -H "Authorization: Bearer $TOKEN"
+curl -X PATCH localhost:8000/admin/settings -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" -d '{"samples_per_second": 20, "batch_interval_ms": 1000}'
+curl -X POST localhost:8000/admin/pause -H "Authorization: Bearer $TOKEN"
+curl -X POST localhost:8000/admin/resume -H "Authorization: Bearer $TOKEN"
+```
 
 ## Client
 
@@ -113,6 +148,7 @@ The stack makes these resources.
 - It runs one Fargate task with 0.25 vCPU and 512 MiB on ARM64. The task runs the image that backend/Dockerfile builds, the same image as `make docker`.
 - It puts an Application Load Balancer in front of the task. The load balancer serves HTTPS on port 443 and redirects port 80 to HTTPS. It checks `GET /health`.
 - It sends the container logs to a CloudWatch log group that keeps them for one week.
+- It makes a Secrets Manager secret with a random 32-character value, and passes it to the task as `ADMIN_TOKEN`.
 
 The task sets `CORS_ORIGINS` to `http://localhost:4200,http://127.0.0.1:4200`, so the local client can read the cloud stream.
 
@@ -123,7 +159,16 @@ To deploy, follow these steps.
 1. Run `aws login`, or set up AWS credentials another way.
 2. Bootstrap the account for CDK in the region of your profile once. Run `cdk bootstrap` from infra/.
 3. Start Docker Desktop. CDK builds the image with Docker and pushes it to the bootstrap ECR repo.
-4. Run `make deploy` and approve the security changes in the terminal. The outputs give the service URL, the cluster name, and the service name.
+4. Run `make deploy` and approve the security changes in the terminal. The outputs give the service URL, the cluster name, the service name, and the ARN of the admin token secret.
+
+To call the cloud admin API, read the token from the secret. The stack output `AdminTokenSecretArn` names the secret. Run these commands with the same AWS profile as the deploy.
+
+```sh
+ARN=$(aws cloudformation describe-stacks --stack-name PrecisionStack \
+  --query "Stacks[0].Outputs[?OutputKey=='AdminTokenSecretArn'].OutputValue" --output text)
+TOKEN=$(aws secretsmanager get-secret-value --secret-id "$ARN" --query SecretString --output text)
+curl https://api.precision.jgangjee.com/admin/settings -H "Authorization: Bearer $TOKEN"
+```
 
 Run `make destroy` to remove the stack. The hosted zone stays, because the stack only imports it.
 

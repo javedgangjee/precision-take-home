@@ -5,6 +5,7 @@ import time
 from typing import NamedTuple
 
 from app.generator import BatchGenerator
+from app.settings import Settings
 
 QUEUE_SIZE = 2
 
@@ -35,6 +36,9 @@ class Broadcaster:
         self._interval_s = interval_s
         self._queues: set[asyncio.Queue[Batch]] = set()
         self._task: asyncio.Task[None] | None = None
+        # Set on each change to the settings or the pause state, to wake the run loop.
+        self._changed = asyncio.Event()
+        self.paused = False
         self.next_seq = 0
 
     @property
@@ -59,13 +63,46 @@ class Broadcaster:
                 queue.get_nowait()
             queue.put_nowait(batch)
 
+    def update(self, settings: Settings) -> None:
+        """Use new settings from the next batch. The schedule starts again from now."""
+        self._generator.update(settings)
+        self._interval_s = settings.batch_interval_ms / 1_000
+        self._changed.set()
+
+    def pause(self) -> None:
+        if not self.paused:
+            self.paused = True
+            self._changed.set()
+
+    def resume(self) -> None:
+        """Start the schedule again from now, so the batches that the pause skipped are not sent."""
+        if self.paused:
+            self.paused = False
+            self._changed.set()
+
     async def run(self) -> None:
+        while True:
+            self._changed.clear()
+            if self.paused:
+                # No batch is made, so the sequence number does not advance.
+                await self._changed.wait()
+            else:
+                await self._run_schedule()
+
+    async def _run_schedule(self) -> None:
+        """Publish batches on a fixed schedule until a setting or the pause state changes."""
         # Schedule each tick from a fixed start, so the batches do not drift.
         start = time.monotonic()
         tick = 0
         while True:
             tick = next_tick(tick, time.monotonic() - start, self._interval_s)
-            await asyncio.sleep(max(0.0, start + tick * self._interval_s - time.monotonic()))
+            delay = max(0.0, start + tick * self._interval_s - time.monotonic())
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(self._changed.wait(), delay)
+            # A change can arrive after the timeout fires and before this task runs again.
+            # The check stops a batch from going out after a pause.
+            if self._changed.is_set():
+                return
             values = self._generator.next_batch()
             if values:
                 self.publish(values)

@@ -81,3 +81,11 @@ Each entry gives the date, the phase, and the assumption.
 - The hosted zone for precision.jgangjee.com already exists in Route 53, and Cloudflare delegates the name to it. The stack imports the zone by its id and does not make or delete it.
 - The task needs a public IP in a public subnet to pull the image from ECR and to send logs to CloudWatch, because the VPC has no NAT gateway.
 - The ALB idle timeout stays at 60 s. The server sends a batch at least once each second, so an open stream is never idle that long.
+
+## 2026-10-01, implement feature 6, admin API
+
+- An empty `ADMIN_TOKEN` counts as no token, so the server has no admin API.
+- A PATCH value must be a JSON integer. The server rejects a string such as "20", a number such as 20.5, and null with status 422.
+- A 401 response sends the header `WWW-Authenticate: Bearer`.
+- Up to 3 batches made before a change can still reach a client after the change. Two wait in the client queue, and one is in the send. The live tests skip these batches.
+- A batch whose timer fires at the same moment as a pause is not sent. The server checks for a change again before each batch.

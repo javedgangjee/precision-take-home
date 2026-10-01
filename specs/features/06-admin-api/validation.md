@@ -100,3 +100,28 @@ The tests run the app in Uvicorn on a free local port with `admin_token="test-to
 2. The expected result is that each file has an entry dated for the admin API feature.
 3. Open README.md.
 4. The expected result is that it lists the four admin endpoints, the token, and a curl command for each endpoint.
+
+## Results, 2026-10-01
+
+Every check passes.
+
+- V1 passes. The update model tests and the two admin token tests pass in the backend run.
+- V2 passes. The three generator update tests pass.
+- V3 passes. The four broadcaster tests for pause, resume, update, and no burst pass.
+- V4 passes. The admin endpoint tests with the token pass.
+- V5 passes. The 401 tests, the 404 tests, and the health test with no token pass.
+- V6 passes. The five live stream tests pass in Uvicorn on a local port.
+- V7 passes. `make lint` exits with 0. ruff and mypy pass on backend/ and infra/, and ESLint and Prettier pass on frontend/.
+- `make test` exits with 0. The backend runs 78 tests with 100 percent coverage, the frontend runs 100 tests, and infra runs 7 tests, and all of them pass. The infra run includes the test that the task gets `ADMIN_TOKEN` from a random secret.
+- M1 passes. The user changed the rate and the interval, paused, and resumed with curl, and the stream followed each request.
+- M2 passes. The badge shows Reconnecting during the pause, the counts stay on screen, and the badge shows Live after the resume.
+- M3 passes. The user deployed the stack. The cloud admin API returns status 401 with no token and status 200 with the token from the secret.
+- M4 passes. The three logs have entries for this feature, and the README has the four endpoints, the token, and a curl command for each endpoint.
+
+Most items in requirements.md have at least one passing check. R1 has V4, V6, and M1. R2 has V1, V4, and V6. R3 has V3, V4, and M1. R4 has V3 and V6. R5 has V6 and M1. R7 has V6. R8 has V5 and the feature 2 stream tests in the backend run. R9 has M4. G1 has V1, V5, and M3. G2 has V4. G3 has V4. G4 has V1 and V4. G5 has V2, V3, and V6. G6 has V3 and V4.
+
+Three items have no check of their own in this file. I confirmed each one by reading the code and the diff.
+
+- R6 has M2 for the unchanged client only. The branch changes no file in frontend/, and the backend diff adds no page and no new event type.
+- G7 has no check. backend/app/admin.py logs each change at the info level, and the code writes the changes to memory only. No test asserts the log lines or the reset on restart.
+- G8 has no check. backend/app/main.py still sets `allow_methods=["GET"]`.

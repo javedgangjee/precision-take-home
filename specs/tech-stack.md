@@ -9,6 +9,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - The web framework is FastAPI 0.142.1, with Pydantic 2.13.5.
 - The ASGI server is Uvicorn 0.54.0.
 - The backend sends the stream to the client with Server-Sent Events. The client sends nothing back, so the project does not use WebSockets.
+- The backend has an admin API under /admin that changes the stream settings and pauses the stream. Each admin request needs a bearer token, which the backend reads from the `ADMIN_TOKEN` environment variable.
 - The backend runs locally for development, both with uv and in a Docker image in Docker Desktop 4.92.0. The same image runs in the cloud.
 - The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverage. The goal is 100 percent coverage, and no minimum is enforced.
 - The linters are ruff 0.16.9 and mypy 2.3.1.
@@ -28,6 +29,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 
 - The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, behind an Application Load Balancer, in the region of the AWS profile at deploy time.
 - AWS CDK in Python defines the infrastructure. The CDK CLI is 2.1143.0, and the library is aws-cdk-lib 2.271.0.
+- AWS Secrets Manager holds the admin token for the cloud server. The stack generates a random value and passes it to the task as `ADMIN_TOKEN`.
 - The infra tests use pytest 9.1.1. They synthesize the stack and check the key settings in the template.
 - Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles credentials.
 - The public URL of the backend is https://api.precision.jgangjee.com.

@@ -48,6 +48,16 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 5 sends the container logs to CloudWatch with a retention of one week.
 - Feature 5 adds infra tests in infra/tests/ and the Makefile target `test-infra`, and `make test` now runs them.
 - Feature 5 adds a Deploy section to the README, with the one-time `cdk bootstrap` command.
+- Feature 6 adds the admin endpoints `GET /admin/settings`, `PATCH /admin/settings`, `POST /admin/pause`, and `POST /admin/resume`, which change the stream settings and pause the stream while the server runs.
+- Feature 6 makes a PATCH set the samples per second, the batch interval, and the maximum value from the next batch, and every client gets the change at once.
+- Feature 6 makes a PATCH with a value out of range, a value that is not an integer, or an unknown field return status 422 and change no setting.
+- Feature 6 makes a pause stop the batches and hold the batch sequence number, while the `: ping` heartbeat keeps each connection open.
+- Feature 6 makes a resume and a change to the batch interval start the schedule again from that moment, so the server sends no burst of batches.
+- Feature 6 adds the environment variable `ADMIN_TOKEN`, which each admin request must send as a bearer token or get status 401, and a server with no token returns status 404 for every admin path.
+- Feature 6 makes `make backend`, `make dev`, and `make docker` set the local token `local-admin-token`.
+- Feature 6 makes the CDK stack create a Secrets Manager secret with a random 32-character value, pass it to the task as `ADMIN_TOKEN`, and output its ARN as `AdminTokenSecretArn`.
+- Feature 6 makes the server log each admin change at the info level, and the changes live in memory only, so a restart or a deploy sets the settings back to the environment values.
+- Feature 6 adds an Admin API section to the README, with a curl command for each endpoint and the AWS CLI commands that read the cloud token.
 
 ### Changed
 

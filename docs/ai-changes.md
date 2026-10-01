@@ -92,3 +92,12 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 ## 2026-10-01, implement feature 6, admin API
 
 - I made no change to the AI output during implement. Changes from my review go here.
+
+## 2026-10-01, plan for feature 7, settings display
+
+- The roadmap gave feature 7 three messages, which were an init packet, an update packet, and a pause event. I asked for one packet type that holds the three settings and the pause state. The AI rewrote the roadmap entry and the plan around one settings packet.
+- The roadmap did not say how the settings packet relates to the missed batch count. I asked the AI to make that clear. The roadmap now says that the packet carries no sequence number, that it never adds to the missed batch count, and that the slow-client queue does not drop it.
+- The AI named the SSE event `settings`. I changed the name to `update`.
+- The AI proposed that a change to N keeps the missed batch count. I chose that a change to N resets the count to 0, as it does for the samples received.
+- The AI proposed the blue info tone for the Paused badge. I chose the neutral white badge with the `pause` icon.
+- The AI proposed a compact group of three small rows for the settings. I chose four full readouts in the style of the other readouts.

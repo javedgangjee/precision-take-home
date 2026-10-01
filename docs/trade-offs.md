@@ -135,3 +135,12 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The local token is the fixed string `local-admin-token` in the Makefile. The curl examples work with no setup. The cost is that the token is public, so a local server is open to anyone who can reach port 8000.
 - The admin handlers are async, so they run on the event loop with the broadcaster. The broadcaster wakes its loop with an `asyncio.Event`, which is not safe to set from a worker thread. The cost is that a slow handler would block the stream, and each handler only sets a few fields.
 - main.py sets up the root logger at the info level, because Uvicorn sets up only its own loggers. Each admin change then shows in the terminal and in CloudWatch. The cost is that info logs from other libraries also show.
+
+## 2026-10-01, plan for feature 7, settings display
+
+- One packet type carries the three settings and the pause state. The client has one handler, and each packet holds the full state. The cost is that a pause sends the three settings again, which adds about 85 bytes to that packet.
+- The settings packet has no id and takes no sequence number, so the batch ids stay 1 apart and the missed batch count reads only batches. The cost is that a client cannot detect a lost settings packet from the ids. The server never drops one from a queue, and each new connection gets one first.
+- When two changes happen before a client reads the first one, the client gets one packet with the newest values. The client always ends at the current state. The cost is that it does not see the state between the two changes.
+- The badge shows Live when the stream opens and turns to Paused when the first packet says so. The client needs no extra state for a stream that is open with no packet yet. The cost is that a client that connects during a pause shows Live for a moment.
+- The client detects a server restart from a batch id lower than the last one, so the packet needs no server start time. The cost is a false gap in the missed batch count when the new server passes the old id before the client reconnects.
+- The panel shows the missed batches and the three settings as four full readouts. They match the readouts from feature 3. The cost is a panel that is about 240 px taller.

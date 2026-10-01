@@ -38,7 +38,7 @@ Each entry gives the date, the phase, and the assumption.
 
 ## 2026-09-30, review feature 2, backend
 
-- The backend will be served at https://api.precision.jgangjee.com in feature 5. That address is the backend's own origin, so it does not go in `CORS_ORIGINS`. The frontend's public origin goes there, and feature 5 decides it.
+- The backend is served at https://api.precision.jgangjee.com. That address is the backend's own origin, so it does not go in `CORS_ORIGINS`. The client runs only on the local machine, so feature 5 sets `CORS_ORIGINS` to `http://localhost:4200,http://127.0.0.1:4200` (changed in feature 5).
 - The client never sends the `Last-Event-ID` header. Feature 4 makes a new EventSource for each reconnect, and a new EventSource has no last event id. So the CORS rule allows no extra headers, and a reconnect needs no preflight.
 
 ## 2026-09-30, plan for feature 3, frontend
@@ -74,3 +74,10 @@ Each entry gives the date, the phase, and the assumption.
 - The query `source=server` picks the server with no warning, as no `source` value does. Only other values log a warning.
 - The badge copies the stream status rules of the HTML design. Every tone has a white border and a soft shadow, so the Connecting badge shows its edge by the shadow and not by a grey outline.
 - The Docker image runs Uvicorn as process 1. Uvicorn handles the stop signal from `docker stop` and from Ctrl+C on `make docker`, so the image needs no init process.
+
+## 2026-09-30, implement feature 5, deploy
+
+- The stack deploys to us-east-2. The account comes from the AWS credentials at deploy time, and the stack does not name it.
+- The hosted zone for precision.jgangjee.com already exists in Route 53, and Cloudflare delegates the name to it. The stack imports the zone by its id and does not make or delete it.
+- The task needs a public IP in a public subnet to pull the image from ECR and to send logs to CloudWatch, because the VPC has no NAT gateway.
+- The ALB idle timeout stays at 60 s. The server sends a batch at least once each second, so an open stream is never idle that long.

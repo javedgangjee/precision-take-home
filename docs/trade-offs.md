@@ -102,3 +102,14 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The client closes the EventSource on each drop and makes a new one after a backoff delay of 1 s that doubles up to 30 s, with a random factor from 0.5 to 1. The built-in EventSource retry has a fixed delay. The cost is more code to own, and a reconnect takes up to 1 s longer than the built-in retry after a short drop.
 - The watchdog drops a live stream after 5 s with no batch. It catches a connection that hangs with no error. The cost is a false drop if the server pauses for more than 5 s, which happens only when the server stalls.
 - The Docker image is built for linux/arm64 only. It runs native on my laptop and matches Fargate ARM64. The cost is that an Intel machine runs it under emulation.
+
+## 2026-09-30, implement feature 5, deploy
+
+- The VPC has public subnets only and no NAT gateway, and the task gets a public IP. A NAT gateway costs about $32 a month in each zone. The cost is that the task sits in a public subnet. Its security group lets in traffic only from the ALB, so the task cannot be reached from the internet.
+- The service runs one task, and a deploy stops the old task before it starts the new one. Two streams never run at once, so every client sees one sequence of batch ids. The cost is that the stream is down for about a minute on each deploy, and the client shows Reconnecting.
+- The target group drains a task in 5 s instead of the default 300 s. An SSE stream never ends on its own, so the default would make each deploy wait 5 minutes. The cost is that open streams are cut at once when a task stops.
+- The stack runs all the time. At the list prices I know, the ALB costs about $16 a month, the task about $7, the three public IPv4 addresses about $11, and the hosted zone $0.50. The total is about $35 a month before data transfer. I have not checked these prices against the AWS bill. `make destroy` removes all of it except the hosted zone.
+- The stack sets only the region and not the account. The VPC then picks 2 availability zones in the template, and synth makes no AWS lookup and writes no cdk.context.json. The cost is that CDK cannot check at synth time that the zones exist, and the zones are the first 2 that AWS returns at deploy time.
+- The stack builds the image as a CDK asset during `make deploy`. The cloud runs the same Dockerfile as `make docker`, and there is no separate push step. The cost is that Docker must run during the deploy, and the image lives in the CDK bootstrap ECR repo.
+- The cdk.json file still has no feature flags. Feature 1 planned to add them with the resources, but the plan for feature 5 did not name the file. The cost is the notice about unset feature flags on each synth.
+- The infra tests check only the key settings in the template, and there is no full test suite for the stack. The cost is that a change to a setting the tests do not check can pass `make test`.

@@ -50,7 +50,9 @@ describe('App', () => {
   it('starts the server source and makes no worker with no query', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
-    expect(createEventSource).toHaveBeenCalledExactlyOnceWith('http://localhost:8000/stream');
+    expect(createEventSource).toHaveBeenCalledExactlyOnceWith(
+      'https://api.precision.jgangjee.com/stream',
+    );
     expect(createWorker).not.toHaveBeenCalled();
   });
 

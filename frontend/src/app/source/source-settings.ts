@@ -7,8 +7,8 @@ export interface SourceSettings {
   streamUrl: string;
 }
 
-/** Feature 5 changes the default to the cloud URL. */
-export const DEFAULT_SERVER = 'http://localhost:8000';
+/** The cloud server. Use `?server=http://localhost:8000` for the local server. */
+export const DEFAULT_SERVER = 'https://api.precision.jgangjee.com';
 
 /**
  * Reads `source` and `server` from a URL query such as `?source=frontend`.

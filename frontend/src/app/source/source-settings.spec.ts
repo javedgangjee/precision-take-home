@@ -15,10 +15,10 @@ describe('readSourceSettings', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining(`\`${name}\``));
   }
 
-  it('uses the server at http://localhost:8000/stream with no query', () => {
+  it('uses the server at https://api.precision.jgangjee.com/stream with no query', () => {
     expect(readSourceSettings('')).toEqual({
       source: 'server',
-      streamUrl: 'http://localhost:8000/stream',
+      streamUrl: 'https://api.precision.jgangjee.com/stream',
     });
     expect(warn).not.toHaveBeenCalled();
   });
@@ -33,8 +33,8 @@ describe('readSourceSettings', () => {
   });
 
   it('reads the server address', () => {
-    expect(readSourceSettings('?server=https://api.precision.jgangjee.com').streamUrl).toBe(
-      'https://api.precision.jgangjee.com/stream',
+    expect(readSourceSettings('?server=http://localhost:8000').streamUrl).toBe(
+      'http://localhost:8000/stream',
     );
   });
 
@@ -47,7 +47,9 @@ describe('readSourceSettings', () => {
   it.each(['abc', 'ftp://example.com'])(
     'uses the default server and warns for server=%s',
     (value) => {
-      expect(readSourceSettings(`?server=${value}`).streamUrl).toBe('http://localhost:8000/stream');
+      expect(readSourceSettings(`?server=${value}`).streamUrl).toBe(
+        'https://api.precision.jgangjee.com/stream',
+      );
       expectWarningFor('server');
     },
   );

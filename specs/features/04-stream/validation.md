@@ -79,7 +79,7 @@ These tests use a fake EventSource, fake timers, and a random value of 1.
 ### M1. The client goes live with the local server
 
 1. Run `make dev` and open http://localhost:4200 in Chrome.
-2. The expected result is a Connecting badge that turns to a green Live badge within 2 s. Each badge shows its icon, and no icon shows as a word or a blank box. The grid fills, and the samples received readout rises by about 100,000 each second.
+2. The expected result is a Connecting badge that turns to a green Live badge within 2 s. Each badge shows its icon, and no icon shows as a word or a blank box. The grid fills, and the samples received readout rises by about 5,000 each second.
 
 ### M2. The icons load from Google Fonts
 

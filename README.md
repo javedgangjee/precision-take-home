@@ -18,7 +18,7 @@ Install these tools before you start. The versions are the ones I use.
 - You need uv 0.11.24. uv installs Python 3.13.15 for you if it is missing.
 - You need Node.js 22.22.1 and npm 11.20.0.
 - You need the AWS CDK CLI 2.1143.0 for `make synth`. Install it with `npm install -g aws-cdk@2.1143.0`.
-- You need AWS CLI 2.37.4 with credentials for `make deploy` and `make destroy`. The AWS account must be bootstrapped for CDK in us-east-2. The Deploy section gives the command.
+- You need AWS CLI 2.37.4 with credentials for `make deploy` and `make destroy`. The AWS account must be bootstrapped for CDK in the region of your AWS profile. The Deploy section gives the command.
 - You need GNU Make 3.81 or later. macOS ships with 3.81.
 - You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make docker-build`, `make docker`, and `make deploy`.
 - The client loads its icons from Google Fonts, so the browser needs the network.
@@ -55,7 +55,7 @@ The server reads these environment variables at start. When a value is out of ra
 
 | Variable | Default | Range | Meaning |
 | --- | --- | --- | --- |
-| `SAMPLES_PER_SECOND` | 100000 | 1 to 100000 | This sets how many integers the server makes each second. |
+| `SAMPLES_PER_SECOND` | 5000 | 1 to 100000 | This sets how many integers the server makes each second. |
 | `BATCH_INTERVAL_MS` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
 | `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. The server strips a trailing slash from each origin. | These origins can call the server from a browser. |
@@ -103,7 +103,7 @@ A change to the query needs a reload, which also resets the counts. For a stress
 
 ## Deploy
 
-The backend runs on AWS ECS Fargate in us-east-2 at https://api.precision.jgangjee.com. The CDK app in infra/ defines the stack.
+The backend runs on AWS ECS Fargate at https://api.precision.jgangjee.com. The CDK app in infra/ defines the stack. The stack names no account or region, so a deploy uses the ones in your AWS profile at the time.
 
 The stack makes these resources.
 
@@ -121,7 +121,7 @@ A deploy stops the old task before it starts the new one, so two streams never r
 To deploy, follow these steps.
 
 1. Run `aws login`, or set up AWS credentials another way.
-2. Bootstrap the account for CDK in us-east-2 once. Run `cdk bootstrap aws://ACCOUNT/us-east-2` from infra/, with your account id in place of ACCOUNT.
+2. Bootstrap the account for CDK in the region of your profile once. Run `cdk bootstrap` from infra/.
 3. Start Docker Desktop. CDK builds the image with Docker and pushes it to the bootstrap ECR repo.
 4. Run `make deploy` and approve the security changes in the terminal. The outputs give the service URL, the cluster name, and the service name.
 

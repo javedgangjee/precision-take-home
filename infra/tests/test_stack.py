@@ -8,7 +8,7 @@ from infra.precision_stack import PrecisionStack
 @pytest.fixture(scope="module")
 def template() -> Template:
     app = cdk.App()
-    stack = PrecisionStack(app, "TestStack", env=cdk.Environment(region="us-east-2"))
+    stack = PrecisionStack(app, "TestStack")
     return Template.from_stack(stack)
 
 

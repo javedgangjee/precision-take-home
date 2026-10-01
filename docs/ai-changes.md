@@ -74,3 +74,5 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 ## 2026-09-30, implement feature 5, deploy
 
 - The plan had the stack take the account from `CDK_DEFAULT_ACCOUNT`. During implement, the AI found that an account and a region make the VPC look up the availability zones in AWS, so a synth with credentials would write cdk.context.json. I chose to set only the region, so synth never makes a lookup.
+- The AI then set the region to us-east-2. During review, I asked to remove it so the deploy uses the region in my AWS profile at the time. The AI removed the account and the region from the stack, and removed us-east-2 from the README, the specs, the assumptions, and the trade-offs.
+- I asked the AI to lower the default rate to 5,000 samples per second to keep the cloud cost low during development. The AI first changed only the code and the tests, and marked each place as temporary. I asked for the change everywhere. The AI then updated the README, the mission, the specs for features 2 to 5, and the logs, and removed the temporary markers.

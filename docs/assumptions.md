@@ -77,7 +77,7 @@ Each entry gives the date, the phase, and the assumption.
 
 ## 2026-09-30, implement feature 5, deploy
 
-- The stack deploys to us-east-2. The account comes from the AWS credentials at deploy time, and the stack does not name it.
+- The stack names no account or region. A deploy uses the account and the region in the AWS profile at the time.
 - The hosted zone for precision.jgangjee.com already exists in Route 53, and Cloudflare delegates the name to it. The stack imports the zone by its id and does not make or delete it.
 - The task needs a public IP in a public subnet to pull the image from ECR and to send logs to CloudWatch, because the VPC has no NAT gateway.
 - The ALB idle timeout stays at 60 s. The server sends a batch at least once each second, so an open stream is never idle that long.

@@ -42,7 +42,7 @@ These checks need AWS credentials. Run `aws login` first.
 
 ### M1. The stack deploys
 
-1. If the account is not bootstrapped in us-east-2, run `cdk bootstrap aws://ACCOUNT/us-east-2` from infra/.
+1. If the account is not bootstrapped in the region of the AWS profile, run `cdk bootstrap` from infra/.
 2. Start Docker Desktop and run `make deploy`. Approve the security changes.
 3. The expected result is a finished deploy with an output that holds https://api.precision.jgangjee.com.
 
@@ -61,13 +61,13 @@ These checks need AWS credentials. Run `aws login` first.
 ### M4. The local client goes live with the cloud server
 
 1. Run `make frontend` and open http://localhost:4200 in Chrome.
-2. The expected result is a Live badge within 2 s, a filling grid, and a samples received readout that rises by about 100,000 each second.
+2. The expected result is a Live badge within 2 s, a filling grid, and a samples received readout that rises by about 5,000 each second.
 3. In the DevTools network panel, the expected result is a `stream` request to https://api.precision.jgangjee.com/stream.
 4. Open http://127.0.0.1:4200. The expected result is a Live badge.
 
 ### M5. A new deploy stops the old task first
 
-1. With M4 running, run `aws ecs update-service --region us-east-2 --cluster CLUSTER --service SERVICE --force-new-deployment`, with the names from the stack outputs or the ECS console.
+1. With M4 running, run `aws ecs update-service --cluster CLUSTER --service SERVICE --force-new-deployment`, with the names from the stack outputs or the ECS console.
 2. The expected result is a Reconnecting badge while no task runs, and the grid and the readouts keep their values.
 3. The expected result is a Live badge after the new task passes its health check, within about 2 minutes.
 4. In the ECS console, the expected result is that the service never shows two running tasks.

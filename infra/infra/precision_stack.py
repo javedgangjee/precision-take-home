@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from aws_cdk import CfnOutput, Environment, RemovalPolicy, Stack
+from aws_cdk import CfnOutput, RemovalPolicy, Stack
 from aws_cdk import aws_certificatemanager as acm
 from aws_cdk import aws_ec2 as ec2
 from aws_cdk import aws_ecs as ecs
@@ -23,10 +23,8 @@ CORS_ORIGINS = "http://localhost:4200,http://127.0.0.1:4200"
 class PrecisionStack(Stack):
     """The stream server on ECS Fargate behind an ALB at https://api.precision.jgangjee.com."""
 
-    def __init__(
-        self, scope: Construct, construct_id: str, *, env: Environment | None = None
-    ) -> None:
-        super().__init__(scope, construct_id, env=env)
+    def __init__(self, scope: Construct, construct_id: str) -> None:
+        super().__init__(scope, construct_id)
 
         zone = route53.HostedZone.from_hosted_zone_attributes(
             self, "Zone", hosted_zone_id=HOSTED_ZONE_ID, zone_name=ZONE_NAME

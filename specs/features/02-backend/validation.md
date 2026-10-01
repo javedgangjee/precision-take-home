@@ -8,7 +8,7 @@ The command for V1 to V5 is `make test`. The command for V6 is `make lint`.
 
 ### V1. The settings load, and bad values fall back to the defaults
 
-- With no environment variables set, the settings are 100,000 samples per second, a 50 ms interval, a maximum value of 1,024, and the origins `["http://localhost:4200"]`.
+- With no environment variables set, the settings are 5,000 samples per second, a 50 ms interval, a maximum value of 1,024, and the origins `["http://localhost:4200"]`.
 - With `SAMPLES_PER_SECOND=1`, `BATCH_INTERVAL_MS=1000`, and `MAX_VALUE=1`, the settings hold those values.
 - With `CORS_ORIGINS="http://a.test,http://b.test"`, the origins are `["http://a.test", "http://b.test"]`.
 - With `SAMPLES_PER_SECOND=0`, the load logs a warning that names `SAMPLES_PER_SECOND`, and the setting takes its default.
@@ -21,7 +21,7 @@ The command for V1 to V5 is `make test`. The command for V6 is `make lint`.
 
 ### V2. The generator makes batches of the right size and range
 
-- V2.1. With the default settings, one batch holds 5,000 integers.
+- V2.1. With the default settings, one batch holds 250 integers.
 - With 1,000 samples per second and a 1,000 ms interval, one batch holds 1,000 integers.
 - With 1 sample per second and a 50 ms interval, 20 calls in a row give 19 empty results and one batch of 1 integer.
 - With 30 samples per second and a 50 ms interval, 20 calls in a row give 30 integers in total.
@@ -43,7 +43,7 @@ The command for V1 to V5 is `make test`. The command for V6 is `make lint`.
 The tests run the app in Uvicorn on a free local port.
 
 - `GET /stream` returns status 200 and the content type `text/event-stream`.
-- With the default settings, the first event arrives within 1 s, and its data is a JSON array of 5,000 integers from 0 to 1,023. Its `id` field is a nonnegative integer.
+- With the default settings, the first event arrives within 1 s, and its data is a JSON array of 250 integers from 0 to 1,023. Its `id` field is a nonnegative integer.
 - The `id` fields of three events in a row go up by 1 each time.
 - Two clients that connect at the same time get the same data and the same `id` in their next event.
 - With 1 sample per second and `fastapi.routing._PING_INTERVAL` patched to 0.1 s, the stream sends the comment `: ping` before the first batch.
@@ -74,7 +74,7 @@ The tests run the app in Uvicorn on a free local port.
 4. Stop the server and run `SAMPLES_PER_SECOND=0 make backend`.
 5. The expected result is that the server starts and logs a warning that names `SAMPLES_PER_SECOND`.
 6. Run `curl -N localhost:8000/stream | head -c 300` in another terminal.
-7. The expected result is a fast stream of long events, because the server uses the default rate of 100,000 samples per second.
+7. The expected result is a fast stream of long events, because the server uses the default rate of 5,000 samples per second.
 
 ### M3. The README and the logs record this feature
 

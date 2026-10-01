@@ -60,8 +60,8 @@ The command for V1 to V9 is `make test`. The command for V10 is `make lint`. The
 
 ### V7. The test source settings and generator match the server
 
-- V7.1. With the default settings, one batch parses to 5,000 integers.
-- With no query, the settings are a rate of 100,000, an interval of 50 ms, and a max value of 1,024.
+- V7.1. With the default settings, one batch parses to 250 integers.
+- With no query, the settings are a rate of 5,000, an interval of 50 ms, and a max value of 1,024.
 - With `?rate=100000000&interval=1000&max=1`, the settings hold those values.
 - With `rate=0`, `rate=100000001`, or `rate=abc`, the rate takes its default, and the console gets a warning that names `rate`.
 - With `interval=49` or `interval=1001`, the interval takes its default, and the console gets a warning that names `interval`.
@@ -125,7 +125,7 @@ The renderer tests use a fake 2D context that records each fill.
 1. Run `make frontend` and open the page in Chrome with Energy Saver off. Set N to 64 in each step below.
 2. Open http://localhost:4200/?rate=100000 and note the frame rate after 10 s. The expected result is a frame rate within 5 fps of the display refresh rate.
 3. Repeat step 2 with `rate=1000000`, `rate=5000000`, `rate=10000000`, and `rate=100000000`. Note the frame rate for each. The expected result is a number for each rate, which goes into the Results section. When the frame rate falls below 54 fps, the expected result is a red line below the frame rate that reads "Below the expected 60 fps".
-4. Open http://localhost:4200/?rate=abc. The expected result is a console warning that names `rate`, and a stream at 100,000 samples per second.
+4. Open http://localhost:4200/?rate=abc. The expected result is a console warning that names `rate`, and a stream at 5,000 samples per second.
 
 ### M4. The README and the logs record this feature
 

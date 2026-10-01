@@ -26,7 +26,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 
 ## Infrastructure
 
-- The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, behind an Application Load Balancer, in the us-east-2 region.
+- The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, behind an Application Load Balancer, in the region of the AWS profile at deploy time.
 - AWS CDK in Python defines the infrastructure. The CDK CLI is 2.1143.0, and the library is aws-cdk-lib 2.271.0.
 - The infra tests use pytest 9.1.1. They synthesize the stack and check the key settings in the template.
 - Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles credentials.

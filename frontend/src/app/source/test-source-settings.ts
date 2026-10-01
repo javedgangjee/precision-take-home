@@ -10,7 +10,7 @@ export interface TestSourceSettings {
 
 /** The defaults match the server. */
 export const DEFAULT_TEST_SOURCE_SETTINGS: TestSourceSettings = {
-  rate: 100_000,
+  rate: 5_000,
   interval: 50,
   max: 1024,
 };

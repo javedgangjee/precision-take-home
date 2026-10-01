@@ -29,5 +29,5 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, behind an Application Load Balancer.
 - AWS CDK in Python defines the infrastructure. The CDK CLI is 2.1143.0, and the library is aws-cdk-lib 2.271.0.
 - Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles credentials.
-- The public URL is a subdomain of jgangjee.com, such as precision.jgangjee.com. I supply the final URL.
+- The public URL of the backend is https://api.precision.jgangjee.com.
 - A Makefile holds the common tasks, such as running the backend, running the frontend, running the tests, and deploying. It must work with GNU Make 3.81, which ships with macOS.

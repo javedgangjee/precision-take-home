@@ -61,3 +61,12 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 
 - The AI set the test source rate limit to 10,000,000 samples per second. During the stress test, a rate of 100,000,000 fell back to the default of 100,000. I raised the limit to 100,000,000 in the code, and the AI updated the tests and the docs to match.
 - The AI compared the frame rate with the peak reading since the page loaded. I decided the client targets 60 fps in Chrome with Energy Saver off, and asked for a fixed 60 fps target instead of the peak. The AI removed the peak from the meter, kept the 90 percent margin, and hid the line until the first reading.
+
+## 2026-09-30, plan for feature 4, stream
+
+- The AI proposed the URL query `source=test` to run the test source from feature 3. I changed the name to `source=frontend`.
+- The AI proposed a small inline SVG icon for each badge state, because the bundled icon font had only the add and remove glyphs. I asked for Material Symbols icons that match each state. The AI picked `progress_activity` for Connecting, `sensors` for Live, and `sync` for Reconnecting.
+- The AI then planned to add fonttools and build a new local font subset with the five icons. I did not want a new tool. I had the AI load the five icons from a Google Fonts link instead and remove the local icon font and its @font-face rule. The client now needs the network for the icons, and the text fonts stay bundled. The AI added a manual check that the icons load from Google Fonts.
+- The AI left the public URL of the backend open in the tech stack and used precision.jgangjee.com in a test. I set the URL to https://api.precision.jgangjee.com, and the AI updated the tech stack, G2, and V1.
+- The AI planned a manual check of the stream in Safari and Firefox. I removed it. Chrome is the only browser that a manual check covers now.
+- The AI found that the client never sends `Last-Event-ID`, because each reconnect makes a new EventSource. It planned only to update the feature 2 assumption about the preflight. I had the AI add G10, which removes the header from the backend CORS rule, the two comments about it, and the preflight test. The AI added V10 to check that removal.

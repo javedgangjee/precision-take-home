@@ -985,3 +985,607 @@
   When you approve it, clear the session and run /spec-driven implement.
 
 ✻ Baked for 4m 16s · done 6:31 PM
+
+❯ /export 04_stream_plan                                                        
+  ⎿  Conversation exported to: /Users/javedgangjee/Documents/Projects/_precision
+     /precision-take-home/specs/features/04-stream/04_stream_plan.txt
+
+❯ Reviewing plan, do not add fonttools. Make it work with existing material     
+  icons.                                                                        
+
+⏺ User answered Claude's questions:
+  ⎿  · The font file in the repo has only the add and remove icons. Which way 
+     should the badge get its three icons without fonttools? → Google Fonts link
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='requirements.md'; s=open(p).read()…)
+  ⎿  requirements.md:24:- G6. **Agreed with a change.** The badge follows t
+     he `md-badge` style in the HTML design.
+     validation.md:78:### M1b. The icons load from Google Fonts
+     … +4 lines (ctrl+o to expand)
+  ⎿  Updated plan.md (+2 -2)
+       7  3. Write the stream status service. It holds the state as a sig
+          nal with the values connecting, live, reconnecting, and test. T
+          his step creates src/app/source/stream-status.ts.
+       8  4. Write the server source service. It makes the EventSource th
+          rough an injection token, sets the state from G3, parses each m
+          essage and calls `store.applyBatch`, closes and reopens the Eve
+          ntSource with the delay from step 2, and runs the 5 s watchdog 
+          from G5. It closes the EventSource and clears its timers when i
+          t is destroyed. This step creates src/app/source/server-source.
+          ts.
+       9  5. Make the test source set the state to test when it starts. T
+          his step changes src/app/source/test-source.ts.
+      10 -6. Make a new Material Symbols Outlined subset with the add, re
+         -move, progress_activity, sensors, and sync glyphs at opsz 20 an
+         -d wght 300, as G6 says. Update the font comment. This step repl
+         -aces public/fonts/material-symbols-outlined.woff2 and changes s
+         -rc/styles.scss.                                                
+      10 +6. Add the Google Fonts link for Material Symbols Outlined from
+         + G6, with the add, progress_activity, remove, sensors, and sync
+         + icons at opsz 20 and wght 300. Remove the local icon font file
+         + and its @font-face rule. This step changes src/index.html and 
+         +src/styles.scss, and it deletes public/fonts/material-symbols-o
+         +utlined.woff2.                                                 
+      11  7. Write the badge component. It reads the stream status and sh
+          ows the label, the tone class, and the Material Symbols icon fr
+          om G6. Add the `--success-text` and `--warning-text` tokens and
+           the `md-badge` styles from the HTML design. This step creates 
+          src/app/panel/stream-badge.ts, stream-badge.html, and stream-ba
+          dge.scss, and it changes src/styles.scss.
+      12  8. Put the badge at the top of the side panel with an hr line b
+          elow it. This step changes src/app/panel/side-panel.ts and side
+          -panel.html.
+      13  9. Make the app read the source settings at start and start eit
+          her the server source or the test source. This step changes src
+          /app/app.ts and app.spec.ts.
+      14  10. Write the Dockerfile and the ignore file from G8. This step
+           creates backend/Dockerfile and backend/.dockerignore.
+      15  11. Add the `docker-build` and `docker` targets from G9. This s
+          tep changes Makefile.
+      16  12. Update the README. It says how the client picks the source 
+          and the server, what the badge states mean, how the reconnect w
+          orks, and how to run the backend in Docker. It removes the text
+           that says the client does not connect to the server. This step
+           changes README.md at the repo root.
+      17 -13. Add entries for this feature to the three logs. Update the 
+         -feature 2 assumption about the `Last-Event-ID` preflight. This 
+         -step changes docs/assumptions.md, docs/trade-offs.md, and docs/
+         -ai-changes.md.                                                 
+      17 +13. Add entries for this feature to the three logs. Update the 
+         +feature 2 assumption about the `Last-Event-ID` preflight. Recor
+         +d the move of the icon font to Google Fonts as a trade-off and 
+         +as a change to the AI output. This step changes docs/assumption
+         +s.md, docs/trade-offs.md, and docs/ai-changes.md.              
+      18  14. Run every check in validation.md and fix the failures.
+  ⎿  Updated requirements.md (+1 -1)
+      21  - G3. **Agreed.** The state is Connecting from the start until 
+          the first `open` event. It is Live after an `open` event. When 
+          the stream drops after it was Live, the state is Reconnecting u
+          ntil the next `open` event. A failed first attempt keeps the st
+          ate at Connecting. The stream code never resets the counts. Onl
+          y a change to N resets them.
+      22  - G4. **Agreed.** EventSource retries on its own at a fixed del
+          ay, with no backoff. So on each `error` event the client closes
+           the EventSource and makes a new one after a delay. The delay i
+          s min(30 s, 1 s × 2^k) × f, where k is the number of failed att
+          empts since the last `open` event and f is a random factor from
+           0.5 to 1. The random factor stops many clients from reconnecti
+          ng at the same moment after a server restart. A new EventSource
+           sends no `Last-Event-ID` header, so the preflight concern in d
+          ocs/assumptions.md goes away.
+      23  - G5. **Agreed.** EventSource hides SSE comments, so the client
+           cannot see the `: ping` heartbeat. At the lowest server settin
+          gs, a batch arrives at least once each second. So the client tr
+          eats the stream as dropped when no batch arrives for 5 s while 
+          the state is Live, and it reconnects with the backoff from G4. 
+          This catches a connection that hangs without an `error` event.
+      24 -- G6. **Agreed with a change.** The badge follows the `md-badge
+         -` style in the HTML design. It is a pill at the top of the side
+         - panel, with an hr line below it. Connecting uses the neutral t
+         -one, which is outlined. Live uses the success tone, which is a 
+         -#157A42 fill. Reconnecting uses the warning tone, which is a #9
+         -5560F fill. The user asked for Material Symbols icons that matc
+         -h each state. Connecting uses `progress_activity`, Live uses `s
+         -ensors`, and Reconnecting uses `sync`. The bundled font subset 
+         -has only the add and remove glyphs. So the implement step makes
+         - a new subset from the full Material Symbols Outlined font with
+         - fonttools, with the five glyphs at opsz 20 and wght 300, and r
+         -eplaces frontend/public/fonts/material-symbols-outlined.woff2. 
+         -The Test source badge has no icon.                             
+      24 +- G6. **Agreed with a change.** The badge follows the `md-badge
+         +` style in the HTML design. It is a pill at the top of the side
+         + panel, with an hr line below it. Connecting uses the neutral t
+         +one, which is outlined. Live uses the success tone, which is a 
+         +#157A42 fill. Reconnecting uses the warning tone, which is a #9
+         +5560F fill. The user asked for Material Symbols icons that matc
+         +h each state. Connecting uses `progress_activity`, Live uses `s
+         +ensors`, and Reconnecting uses `sync`. The bundled font subset 
+         +has only the add and remove glyphs. The user chose not to add f
+         +onttools and chose a Google Fonts link instead. src/index.html 
+         +loads `https://fonts.googleapis.com/css2?family=Material+Symbol
+         +s+Outlined:opsz,wght@20,300&icon_names=add,progress_activity,re
+         +move,sensors,sync`, which serves only these five icons. The imp
+         +lement step removes frontend/public/fonts/material-symbols-outl
+         +ined.woff2 and its @font-face rule, so one font serves all the 
+         +icons. This changes feature 3 G9 for the icons only, and the cl
+         +ient now needs the network for them. The text fonts stay bundle
+         +d. The Test source badge has no icon.                          
+      25  - G7. **Agreed.** The new client code lives in frontend/src/app
+          /source/ and frontend/src/app/panel/. The file source-settings.
+          ts reads `source` and `server` from the query. The file backoff
+          .ts holds the delay function. The file stream-status.ts is a sm
+          all injectable service that holds the state as one signal. The 
+          source in use writes it, and the badge reads it. The file serve
+          r-source.ts is the service that owns the EventSource, the backo
+          ff timer, and the watchdog. An injection token makes the EventS
+          ource, so the tests use a fake, as the test source does with it
+          s worker. The panel/stream-badge component shows the badge.
+      26  - G8. **Agreed.** The Dockerfile is backend/Dockerfile and has 
+          two stages. The build stage starts from python:3.13.15-slim, co
+          pies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `uv
+           sync --frozen --no-dev`. The run stage starts from python:3.13
+          .15-slim, copies the virtual environment and backend/app/, and 
+          runs as a user that is not root. It runs `uvicorn app.main:app 
+          --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so `
+          docker stop` ends it within 3 s. The image targets linux/arm64,
+           which is native on my laptop and matches Fargate ARM64. A back
+          end/.dockerignore file keeps .venv, tests, and caches out of th
+          e build.
+      27  - G9. **Agreed.** `make docker-build` builds the image with the
+           tag `precision-backend`. `make docker` builds the image and ru
+          ns it with `docker run --rm -p 8000:8000`. It passes `SAMPLES_P
+          ER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS
+          ` into the container when they are set in the shell. Ctrl+C sto
+          ps the container. `make docker` and `make backend` both use por
+          t 8000, so the client needs no change to use either.
+  ⎿  Updated validation.md (+6 -0)
+      75  1. Run `make dev` and open http://localhost:4200 in Chrome.
+      76  2. The expected result is a Connecting badge that turns to a gr
+          een Live badge within 2 s. Each badge shows its icon, and no ic
+          on shows as a word or a blank box. The grid fills, and the samp
+          les received readout rises by about 100,000 each second.
+      77  
+      78 +### M1b. The icons load from Google Fonts                      
+      79 +                                                               
+      80 +1. With M1 running, open the DevTools network panel and reload 
+         +the page.                                                      
+      81 +2. The expected result is one request to fonts.googleapis.com a
+         +nd one font request to fonts.gstatic.com. The minus and plus bu
+         +ttons and the badge show their icons.                          
+      82 +3. The expected result is no request for /fonts/material-symbol
+         +s-outlined.woff2.                                              
+      83 +                                                               
+      84  ### M2. The counts stay during a reconnect
+      85  
+      86  1. With M1 running, press Ctrl+C in the terminal to stop both s
+          ervers, and then run `make backend` in the terminal.
+
+⏺ Bash(python3 - <<'EOF'
+      p='validation.md'; s=open(p).read()…)
+  ⎿  73:### M1. The client goes live with the local server
+     78:### M2. The icons load from Google Fonts
+     80:1. With M1 running, open the DevTools network panel and reload the
+     … +9 lines (ctrl+o to expand)
+  ⎿  Updated validation.md (+7 -7)
+      75  1. Run `make dev` and open http://localhost:4200 in Chrome.
+      76  2. The expected result is a Connecting badge that turns to a gr
+          een Live badge within 2 s. Each badge shows its icon, and no ic
+          on shows as a word or a blank box. The grid fills, and the samp
+          les received readout rises by about 100,000 each second.
+      77  
+      78 -### M1b. The icons load from Google Fonts                      
+      78 +### M2. The icons load from Google Fonts                       
+      79  
+      80  1. With M1 running, open the DevTools network panel and reload 
+          the page.
+      81  2. The expected result is one request to fonts.googleapis.com a
+          nd one font request to fonts.gstatic.com. The minus and plus bu
+          ttons and the badge show their icons.
+      82  3. The expected result is no request for /fonts/material-symbol
+          s-outlined.woff2.
+      83  
+      84 -### M2. The counts stay during a reconnect                     
+      84 +### M3. The counts stay during a reconnect                     
+      85  
+      86  1. With M1 running, press Ctrl+C in the terminal to stop both s
+          ervers, and then run `make backend` in the terminal.
+      87  2. Before the backend starts, the expected result is an amber R
+          econnecting badge. The grid and the readouts keep their values.
+      88  3. In the DevTools network panel, the expected result is `strea
+          m` requests with growing gaps between them.
+      89  4. After the backend starts, the expected result is a Live badg
+          e within 2 s of the next attempt, and the samples received read
+          out goes up from the value it held.
+      90  
+      91 -### M3. The client connects to the Docker image                
+      91 +### M4. The client connects to the Docker image                
+      92  
+      93  1. Run `make docker` in one terminal and `make frontend` in ano
+          ther.
+      94  2. Open http://localhost:4200. The expected result is a Live ba
+          dge and a filling grid.
+     ...
+       96  4. Press Ctrl+C in the `make docker` terminal. The expected re
+           sult is that the container stops within 3 s and the badge show
+           s Reconnecting.
+       97  5. Run `make docker` again. The expected result is a Live badg
+           e and counts that keep their values.
+       98  
+       99 -### M4. The stream works in Safari and Firefox                
+       99 +### M5. The stream works in Safari and Firefox                
+      100  
+      101 -1. Repeat M1 and M2 in Safari and in Firefox.                 
+      101 +1. Repeat M1 and M3 in Safari and in Firefox.                 
+      102  2. The expected result is the same as in Chrome, with no CORS 
+           error in the console.
+      103  
+      104 -### M5. The test source still runs                            
+      104 +### M6. The test source still runs                            
+      105  
+      106  1. Run `make frontend` and open http://localhost:4200/?source=
+           frontend&rate=1000000.
+      107  2. The expected result is a neutral "Test source" badge, a fil
+           ling grid, and no `stream` requests in the DevTools network pa
+           nel.
+      108  
+      109 -### M6. The README and the logs record this feature           
+     … 4 more lines (ctrl+o to expand)
+
+⏺ I updated the plan to load the icons from a Google Fonts link. The plan no
+  longer adds fonttools.
+
+  - G6 in requirements.md: src/index.html loads Material Symbols Outlined from
+    Google Fonts with only five icons. They are add, remove, progress_activity,
+    sensors, and sync, at size 20 and weight 300. The local icon font file and
+    its @font-face rule go, so one font serves all the icons.
+  - Plan step 6: this step adds the link and deletes
+    public/fonts/material-symbols-outlined.woff2. Step 13 now records the move
+    as a trade-off in docs/trade-offs.md and as a change to the AI output in
+    docs/ai-changes.md.
+  - Validation: a new manual check, M2, confirms in DevTools that the icons come
+    from Google Fonts and that the page does not ask for the old local file.
+    The later manual checks moved down one number.
+
+  This goes against feature 3 G9, which said the client needs no network for
+  fonts. Your choice decides it. With this change, the icons need the network
+  and the text fonts stay bundled. With no network, the minus, plus, and badge
+  icons show as blank space.
+
+  The /export command saved the plan log to
+  specs/features/04-stream/04_stream_plan.txt. Your other logs are in
+  docs/logs/NN-slug/, so this one belongs in docs/logs/04-stream/.
+✻ Brewed for 33s · done 8:18 PM
+
+❯ Revise cloud link to api.precision.jgangjee.com                               
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(sed -i '' 's#?server=https://precision.jgangjee.com`, the stream URL is
+      https://precision.jgangjee.com/stream#?server=https://api.precision.jgangj
+      ee.com`, the s…)
+  ⎿  specs/tech-stack.md:32:- The public URL of the backend is https://api.
+     precision.jgangjee.com.
+     specs/features/04-stream/validation.md:14:- With `?server=https://api.
+     … +5 lines (ctrl+o to expand)
+  ⎿  Updated requirements.md (+1 -1)
+      17  Each item below was my proposal. The user answered each one.
+      18  
+      19  - G1. **Agreed with a change.** The client uses the server by d
+          efault. The URL query `source=frontend` runs the test source fr
+          om feature 3 instead, with its `rate`, `interval`, and `max` se
+          ttings. The user chose the name `frontend`. Only one source run
+          s at a time. Any other value of `source` logs a warning and use
+          s the server. With the test source, the badge shows "Test sourc
+          e" in the neutral tone, so a reviewer cannot mistake it for the
+           server.
+      20 -- G2. **Agreed.** The client reads the server address from the 
+         -URL query `server`, and the default is http://localhost:8000. T
+         -he client strips a trailing slash and connects to the address p
+         -lus `/stream`. A value that is not an http or https URL logs a 
+         -warning and uses the default. Feature 5 changes the default to 
+         -the cloud URL.                                                 
+      20 +- G2. **Agreed.** The client reads the server address from the 
+         +URL query `server`, and the default is http://localhost:8000. T
+         +he client strips a trailing slash and connects to the address p
+         +lus `/stream`. A value that is not an http or https URL logs a 
+         +warning and uses the default. Feature 5 changes the default to 
+         +the cloud URL, https://api.precision.jgangjee.com.             
+      21  - G3. **Agreed.** The state is Connecting from the start until 
+          the first `open` event. It is Live after an `open` event. When 
+          the stream drops after it was Live, the state is Reconnecting u
+          ntil the next `open` event. A failed first attempt keeps the st
+          ate at Connecting. The stream code never resets the counts. Onl
+          y a change to N resets them.
+      22  - G4. **Agreed.** EventSource retries on its own at a fixed del
+          ay, with no backoff. So on each `error` event the client closes
+           the EventSource and makes a new one after a delay. The delay i
+          s min(30 s, 1 s × 2^k) × f, where k is the number of failed att
+          empts since the last `open` event and f is a random factor from
+           0.5 to 1. The random factor stops many clients from reconnecti
+          ng at the same moment after a server restart. A new EventSource
+           sends no `Last-Event-ID` header, so the preflight concern in d
+          ocs/assumptions.md goes away.
+      23  - G5. **Agreed.** EventSource hides SSE comments, so the client
+           cannot see the `: ping` heartbeat. At the lowest server settin
+          gs, a batch arrives at least once each second. So the client tr
+          eats the stream as dropped when no batch arrives for 5 s while 
+          the state is Live, and it reconnects with the backoff from G4. 
+          This catches a connection that hangs without an `error` event.
+  ⎿  Updated validation.md (+1 -1)
+      11  - With no query, the source is the server, and the stream URL i
+          s http://localhost:8000/stream.
+      12  - With `?source=frontend`, the source is the test source.
+      13  - With `?source=abc`, the source is the server, and the console
+           gets a warning that names `source`.
+      14 -- With `?server=https://precision.jgangjee.com`, the stream URL
+         - is https://precision.jgangjee.com/stream.                     
+      14 +- With `?server=https://api.precision.jgangjee.com`, the stream
+         + URL is https://api.precision.jgangjee.com/stream.             
+      15  - With `?server=http://localhost:8000/`, the stream URL is http
+          ://localhost:8000/stream, with no double slash.
+      16  - With `?server=abc` or `?server=ftp://example.com`, the stream
+           URL is http://localhost:8000/stream, and the console gets a wa
+          rning that names `server`.
+      17  
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/specs/tech
+     -stack.md (+1 -1)
+      29  - The backend runs on AWS ECS Fargate with 0.25 vCPU on ARM64, 
+          behind an Application Load Balancer.
+      30  - AWS CDK in Python defines the infrastructure. The CDK CLI is 
+          2.1143.0, and the library is aws-cdk-lib 2.271.0.
+      31  - Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles cr
+          edentials.
+      32 -- The public URL is a subdomain of jgangjee.com, such as precis
+         -ion.jgangjee.com. I supply the final URL.                      
+      32 +- The public URL of the backend is https://api.precision.jgangj
+         +ee.com.                                                        
+      33  - A Makefile holds the common tasks, such as running the backen
+          d, running the frontend, running the tests, and deploying. It m
+          ust work with GNU Make 3.81, which ships with macOS.
+
+⏺ The cloud link is now https://api.precision.jgangjee.com in the specs. I
+  changed three files:
+
+  - specs/features/04-stream/validation.md: the V1 test case now uses
+    ?server=https://api.precision.jgangjee.com and expects
+    https://api.precision.jgangjee.com/stream.
+  - specs/features/04-stream/requirements.md: G2 now says that feature 5 changes
+    the default server to https://api.precision.jgangjee.com.
+  - specs/tech-stack.md: the old line gave precision.jgangjee.com only as an
+    example and said you would supply the final URL. It now gives
+    https://api.precision.jgangjee.com as the backend URL.
+
+  docs/assumptions.md already used this address, so it needed no change.
+
+✻ Cooked for 13s · done 8:20 PM
+
+❯ Remove M5                                                                     
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      specs/features/04-stream && python3 - <<'EOF'
+      p='validation.md'; s=open(p).read()…)
+  ⎿  validation.md:73:### M1. The client goes live with the local server
+     validation.md:78:### M2. The icons load from Google Fonts
+     validation.md:84:### M3. The counts stay during a reconnect
+     … +3 lines (ctrl+o to expand)
+  ⎿  Updated validation.md (+2 -7)
+       96  4. Press Ctrl+C in the `make docker` terminal. The expected re
+           sult is that the container stops within 3 s and the badge show
+           s Reconnecting.
+       97  5. Run `make docker` again. The expected result is a Live badg
+           e and counts that keep their values.
+       98  
+       99 -### M5. The stream works in Safari and Firefox                
+      100 -                                                              
+      101 -1. Repeat M1 and M3 in Safari and in Firefox.                 
+      102 -2. The expected result is the same as in Chrome, with no CORS 
+          -error in the console.                                         
+      103 -                                                              
+      104 -### M6. The test source still runs                            
+       99 +### M5. The test source still runs                            
+      100  
+      101  1. Run `make frontend` and open http://localhost:4200/?source=
+           frontend&rate=1000000.
+      102  2. The expected result is a neutral "Test source" badge, a fil
+           ling grid, and no `stream` requests in the DevTools network pa
+           nel.
+      103  
+      109 -### M7. The README and the logs record this feature           
+      104 +### M6. The README and the logs record this feature           
+      105  
+      106  1. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-c
+           hanges.md.
+      107  2. The expected result is that each file has an entry dated fo
+           r the stream feature.
+
+⏺ I removed the Safari and Firefox check from validation.md. The test source
+  check is now M5, and the README and logs check is now M6. The other specs did
+  not refer to Safari or Firefox, so they needed no change.
+
+  Nothing checks the stream in Safari or Firefox now. The only check of a real
+  browser is the Chrome check in M1 and M3.
+
+✻ Cogitated for 6s · done 8:23 PM
+
+❯ if no last-event-id remove it from the backend as well with the test there    
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      specs/features/04-stream && python3 - <<'EOF'
+      import re…)
+  ⎿  5:1. Write the source settings. `readSourceSettings(query)` reads `sou
+     6:2. Write the backoff function. `reconnectDelay(attempt, random)` ret
+     7:3. Write the stream status service. It holds the state as a signal w
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated plan.md (+5 -4)
+      12  8. Put the badge at the top of the side panel with an hr line b
+          elow it. This step changes src/app/panel/side-panel.ts and side
+          -panel.html.
+      13  9. Make the app read the source settings at start and start eit
+          her the server source or the test source. This step changes src
+          /app/app.ts and app.spec.ts.
+      14  10. Write the Dockerfile and the ignore file from G8. This step
+           creates backend/Dockerfile and backend/.dockerignore.
+      15 -11. Add the `docker-build` and `docker` targets from G9. This s
+         -tep changes Makefile.                                          
+      16 -12. Update the README. It says how the client picks the source 
+         -and the server, what the badge states mean, how the reconnect w
+         -orks, and how to run the backend in Docker. It removes the text
+         - that says the client does not connect to the server. This step
+         - changes README.md at the repo root.                           
+      17 -13. Add entries for this feature to the three logs. Update the 
+         -feature 2 assumption about the `Last-Event-ID` preflight. Recor
+         -d the move of the icon font to Google Fonts as a trade-off and 
+         -as a change to the AI output. This step changes docs/assumption
+         -s.md, docs/trade-offs.md, and docs/ai-changes.md.              
+      18 -14. Run every check in validation.md and fix the failures.     
+      15 +11. Remove the `Last-Event-ID` header from the CORS rule and th
+         +e two comments about it, as G10 says. Remove the test for the p
+         +reflight. This step changes backend/app/main.py and backend/tes
+         +ts/test_health.py.                                             
+      16 +12. Add the `docker-build` and `docker` targets from G9. This s
+         +tep changes Makefile.                                          
+      17 +13. Update the README. It says how the client picks the source 
+         +and the server, what the badge states mean, how the reconnect w
+         +orks, and how to run the backend in Docker. It removes the text
+         + that says the client does not connect to the server. This step
+         + changes README.md at the repo root.                           
+      18 +14. Add entries for this feature to the three logs. Replace the
+         + feature 2 assumption about the `Last-Event-ID` preflight with 
+         +the reason from G10. Record the move of the icon font to Google
+         + Fonts as a trade-off and as a change to the AI output. This st
+         +ep changes docs/assumptions.md, docs/trade-offs.md, and docs/ai
+         +-changes.md.                                                   
+      19 +15. Run every check in validation.md and fix the failures.     
+  ⎿  Updated requirements.md (+1 -0)
+      25  - G7. **Agreed.** The new client code lives in frontend/src/app
+          /source/ and frontend/src/app/panel/. The file source-settings.
+          ts reads `source` and `server` from the query. The file backoff
+          .ts holds the delay function. The file stream-status.ts is a sm
+          all injectable service that holds the state as one signal. The 
+          source in use writes it, and the badge reads it. The file serve
+          r-source.ts is the service that owns the EventSource, the backo
+          ff timer, and the watchdog. An injection token makes the EventS
+          ource, so the tests use a fake, as the test source does with it
+          s worker. The panel/stream-badge component shows the badge.
+      26  - G8. **Agreed.** The Dockerfile is backend/Dockerfile and has 
+          two stages. The build stage starts from python:3.13.15-slim, co
+          pies uv 0.11.24 from ghcr.io/astral-sh/uv:0.11.24, and runs `uv
+           sync --frozen --no-dev`. The run stage starts from python:3.13
+          .15-slim, copies the virtual environment and backend/app/, and 
+          runs as a user that is not root. It runs `uvicorn app.main:app 
+          --host 0.0.0.0 --port 8000 --timeout-graceful-shutdown 3`, so `
+          docker stop` ends it within 3 s. The image targets linux/arm64,
+           which is native on my laptop and matches Fargate ARM64. A back
+          end/.dockerignore file keeps .venv, tests, and caches out of th
+          e build.
+      27  - G9. **Agreed.** `make docker-build` builds the image with the
+           tag `precision-backend`. `make docker` builds the image and ru
+          ns it with `docker run --rm -p 8000:8000`. It passes `SAMPLES_P
+          ER_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS
+          ` into the container when they are set in the shell. Ctrl+C sto
+          ps the container. `make docker` and `make backend` both use por
+          t 8000, so the client needs no change to use either.
+      28 +- G10. **Added by the user.** The client never sends `Last-Even
+         +t-ID`, because G4 makes a new EventSource for each reconnect. S
+         +o the backend drops `allow_headers=["Last-Event-ID"]` from its 
+         +CORS rule and the comment above it, and the test `test_cors_pre
+         +flight_allows_last_event_id` goes. The comment in the stream ro
+         +ute that says the server ignores `Last-Event-ID` goes as well. 
+         +The server still sends the sequence number in the `id` field, a
+         +s N5 says.                                                     
+  ⎿  Updated validation.md (+7 -1)
+       4  
+       5  ## Automated checks
+       6  
+       7 -The command for V1 to V6 is `make test`. The command for V7 is 
+         -`make lint`. The command for V8 is `cd frontend && npx ng build
+         -`. The command for V9 is `make docker-build`.                  
+       7 +The command for V1 to V6 and V10 is `make test`. The command fo
+         +r V7 is `make lint`. The command for V8 is `cd frontend && npx 
+         +ng build`. The command for V9 is `make docker-build`.          
+       8  
+       9  ### V1. The source settings pick the source and the server
+      10  
+     ...
+      68  - `docker image inspect precision-backend --format '{{.Architec
+          ture}}'` prints arm64.
+      69  - `docker run --rm precision-backend whoami` does not print roo
+          t.
+      70  
+      71 +### V10. The backend no longer allows `Last-Event-ID`          
+      72 +                                                               
+      73 +- The test `test_cors_preflight_allows_last_event_id` is gone, 
+         +and the other backend tests pass.                              
+      74 +- `grep -rni last-event-id backend/app backend/tests` prints no
+         +thing.                                                         
+      75 +- A `GET /stream` event still has an `id` line with the sequenc
+         +e number.                                                      
+      76 +                                                               
+      77  ## Manual checks
+      78  
+      79  ### M1. The client goes live with the local server
+
+⏺ Bash(python3 - <<'EOF'
+      p='plan.md'; L=open(p).read().split("\n")…)
+  ⎿  10. Write the Dockerfile and the ignore file from G8. This step create
+     s backend/
+     11. Add the `docker-build` and `docker` targets from G9. This step cha
+     … +5 lines (ctrl+o to expand)
+  ⎿  Updated plan.md (+2 -2)
+      12  8. Put the badge at the top of the side panel with an hr line b
+          elow it. This step changes src/app/panel/side-panel.ts and side
+          -panel.html.
+      13  9. Make the app read the source settings at start and start eit
+          her the server source or the test source. This step changes src
+          /app/app.ts and app.spec.ts.
+      14  10. Write the Dockerfile and the ignore file from G8. This step
+           creates backend/Dockerfile and backend/.dockerignore.
+      15 -11. Remove the `Last-Event-ID` header from the CORS rule and th
+         -e two comments about it, as G10 says. Remove the test for the p
+         -reflight. This step changes backend/app/main.py and backend/tes
+         -ts/test_health.py.                                             
+      16 -12. Add the `docker-build` and `docker` targets from G9. This s
+         -tep changes Makefile.                                          
+      15 +11. Add the `docker-build` and `docker` targets from G9. This s
+         +tep changes Makefile.                                          
+      16 +12. Remove the `Last-Event-ID` header from the CORS rule and th
+         +e two comments about it, as G10 says. Remove the test for the p
+         +reflight. This step changes backend/app/main.py and backend/tes
+         +ts/test_health.py.                                             
+      17  13. Update the README. It says how the client picks the source 
+          and the server, what the badge states mean, how the reconnect w
+          orks, and how to run the backend in Docker. It removes the text
+           that says the client does not connect to the server. This step
+           changes README.md at the repo root.
+      18  14. Add entries for this feature to the three logs. Replace the
+           feature 2 assumption about the `Last-Event-ID` preflight with 
+          the reason from G10. Record the move of the icon font to Google
+           Fonts as a trade-off and as a change to the AI output. This st
+          ep changes docs/assumptions.md, docs/trade-offs.md, and docs/ai
+          -changes.md.
+      19  15. Run every check in validation.md and fix the failures.
+
+⏺ I added the removal of Last-Event-ID from the backend to the plan. I changed
+  only the spec files, so the backend code and the test do not change until the
+  implement step.
+
+  - requirements.md: a new item, G10, covers the removal. The client makes a new
+    EventSource for each reconnect, so it never sends Last-Event-ID. The
+    backend therefore drops Last-Event-ID from its CORS rule in
+    backend/app/main.py, with the two comments about the header. The test
+    test_cors_preflight_allows_last_event_id in backend/tests/test_health.py
+    also goes. The server still sends the batch number in the id field, as N5
+    requires.
+  - plan.md: new step 12 does the removal. Step 14 now replaces the old feature
+    2 note about this header in docs/assumptions.md with the reason from G10.
+  - validation.md: a new check, V10, runs with make test. It checks that the
+    test is gone and the other backend tests pass. It also checks that grep
+    finds no Last-Event-ID in the backend, and that each stream event still has
+    its id line.
+
+✻ Brewed for 24s · done 8:25 PM

@@ -4,14 +4,14 @@ The project documents have no worked example for this feature. The brief example
 
 ## Automated checks
 
-The command for V1 to V6 is `make test`. The command for V7 is `make lint`. The command for V8 is `cd frontend && npx ng build`. The command for V9 is `make docker-build`.
+The command for V1 to V6 and V10 is `make test`. The command for V7 is `make lint`. The command for V8 is `cd frontend && npx ng build`. The command for V9 is `make docker-build`.
 
 ### V1. The source settings pick the source and the server
 
 - With no query, the source is the server, and the stream URL is http://localhost:8000/stream.
 - With `?source=frontend`, the source is the test source.
 - With `?source=abc`, the source is the server, and the console gets a warning that names `source`.
-- With `?server=https://precision.jgangjee.com`, the stream URL is https://precision.jgangjee.com/stream.
+- With `?server=https://api.precision.jgangjee.com`, the stream URL is https://api.precision.jgangjee.com/stream.
 - With `?server=http://localhost:8000/`, the stream URL is http://localhost:8000/stream, with no double slash.
 - With `?server=abc` or `?server=ftp://example.com`, the stream URL is http://localhost:8000/stream, and the console gets a warning that names `server`.
 
@@ -68,6 +68,12 @@ These tests use a fake EventSource, fake timers, and a random value of 1.
 - `docker image inspect precision-backend --format '{{.Architecture}}'` prints arm64.
 - `docker run --rm precision-backend whoami` does not print root.
 
+### V10. The backend no longer allows `Last-Event-ID`
+
+- The test `test_cors_preflight_allows_last_event_id` is gone, and the other backend tests pass.
+- `grep -rni last-event-id backend/app backend/tests` prints nothing.
+- A `GET /stream` event still has an `id` line with the sequence number.
+
 ## Manual checks
 
 ### M1. The client goes live with the local server
@@ -75,25 +81,26 @@ These tests use a fake EventSource, fake timers, and a random value of 1.
 1. Run `make dev` and open http://localhost:4200 in Chrome.
 2. The expected result is a Connecting badge that turns to a green Live badge within 2 s. Each badge shows its icon, and no icon shows as a word or a blank box. The grid fills, and the samples received readout rises by about 100,000 each second.
 
-### M2. The counts stay during a reconnect
+### M2. The icons load from Google Fonts
+
+1. With M1 running, open the DevTools network panel and reload the page.
+2. The expected result is one request to fonts.googleapis.com and one font request to fonts.gstatic.com. The minus and plus buttons and the badge show their icons.
+3. The expected result is no request for /fonts/material-symbols-outlined.woff2.
+
+### M3. The counts stay during a reconnect
 
 1. With M1 running, press Ctrl+C in the terminal to stop both servers, and then run `make backend` in the terminal.
 2. Before the backend starts, the expected result is an amber Reconnecting badge. The grid and the readouts keep their values.
 3. In the DevTools network panel, the expected result is `stream` requests with growing gaps between them.
 4. After the backend starts, the expected result is a Live badge within 2 s of the next attempt, and the samples received readout goes up from the value it held.
 
-### M3. The client connects to the Docker image
+### M4. The client connects to the Docker image
 
 1. Run `make docker` in one terminal and `make frontend` in another.
 2. Open http://localhost:4200. The expected result is a Live badge and a filling grid.
 3. Run `curl -N localhost:8000/stream | head -c 300`. The expected result is `id:` and `data:` lines with JSON arrays.
 4. Press Ctrl+C in the `make docker` terminal. The expected result is that the container stops within 3 s and the badge shows Reconnecting.
 5. Run `make docker` again. The expected result is a Live badge and counts that keep their values.
-
-### M4. The stream works in Safari and Firefox
-
-1. Repeat M1 and M2 in Safari and in Firefox.
-2. The expected result is the same as in Chrome, with no CORS error in the console.
 
 ### M5. The test source still runs
 

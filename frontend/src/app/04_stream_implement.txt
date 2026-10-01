@@ -1,0 +1,1327 @@
+ ▐▛███▛█   Claude Code v2.1.285
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/…/Projects/_precision/precision-take-home/frontend/src/app
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven implement                                                        
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Is the feature 4 plan approved?
+
+⏺ User answered Claude's questions:
+  ⎿  · Is the feature 4 stream plan approved for implement? → Approved
+
+  Ran 5 shell commands (ctrl+o to expand)
+
+⏺ Plan approved. I have read the specs and the design. Now I start on the
+  backend change, then the frontend code.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='app/main.py'; s=open(p).read()…)
+  ⎿  def test_cors_blocks_other_origins() -> None:
+         response = client.get("/health", headers={"Origin": "http://evil.t
+     est"})
+     … +12 lines (ctrl+o to expand)
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/backend/ap
+     p/main.py (+0 -3)
+      23          await broadcaster.stop()
+      24  
+      25      app = FastAPI(title="Bin There Done That", lifespan=lifespa
+          n)
+      26 -    # EventSource sends Last-Event-ID when it reconnects, which
+         - some browsers may preflight.                                  
+      26      app.add_middleware(
+      27          CORSMiddleware,
+      28          allow_origins=settings.cors_origins,
+      29          allow_methods=["GET"],
+      31 -        allow_headers=["Last-Event-ID"],                       
+      30      )
+      31  
+      32      @app.get("/health")
+     ...
+      35  
+      36      @app.get("/stream", response_class=EventSourceResponse)
+      37      async def stream(request: Request) -> AsyncIterator[ServerS
+          entEvent]:
+      40 -        # The server ignores Last-Event-ID, because delivery is
+         - lossy.                                                        
+      38          broadcaster: Broadcaster = request.app.state.broadcaste
+          r
+      39          queue = broadcaster.subscribe()
+      40          try:
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/backend/te
+     sts/test_health.py (+0 -14)
+      24  
+      25      assert "access-control-allow-origin" not in response.header
+          s
+      26  
+      27 -                                                               
+      28 -def test_cors_preflight_allows_last_event_id() -> None:        
+      29 -    # EventSource sends Last-Event-ID when it reconnects.      
+      30 -    response = client.options(                                 
+      31 -        "/stream",                                             
+      32 -        headers={                                              
+      33 -            "Origin": "http://localhost:4200",                 
+      34 -            "Access-Control-Request-Method": "GET",            
+      35 -            "Access-Control-Request-Headers": "last-event-id", 
+      36 -        },                                                     
+      37 -    )                                                          
+      38 -                                                               
+      39 -    assert response.status_code == 200                         
+      40 -    assert "last-event-id" in response.headers["access-control-
+         -allow-headers"].lower()                                        
+
+⏺ Now the Dockerfile and ignore file.
+
+⏺ Bash(cat > Dockerfile <<'EOF'
+      # The backend image. It runs in Docker Desktop on the laptop and on ECS
+      Fargate with ARM64.…)
+  ⎿  Created ~/Documents/Projects/_precision/precision-take-home/backend/.d
+     ockerignore (+10 -0)
+       1 +# Keep local files out of the build context.                   
+       2 +.venv/                                                         
+       3 +tests/                                                         
+       4 +__pycache__/                                                   
+       5 +*.py[cod]                                                      
+       6 +.pytest_cache/                                                 
+       7 +.mypy_cache/                                                   
+       8 +.ruff_cache/                                                   
+       9 +.coverage                                                      
+      10 +htmlcov/                                                       
+  ⎿  Created
+     ~/Documents/Projects/_precision/precision-take-home/backend/Dockerfile
+     (+19 -0)
+       1 +# The backend image. It runs in Docker Desktop on the laptop an
+         +d on ECS Fargate with ARM64.                                   
+       2 +                                                               
+       3 +FROM --platform=linux/arm64 python:3.13.15-slim AS build       
+       4 +COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /usr/local/bin/uv 
+       5 +WORKDIR /app                                                   
+       6 +# Copy the venv into the run stage, so the build stage needs no
+         + links back to its own files.                                  
+       7 +ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_PYTHON_DOWNLOADS
+         +=never                                                         
+       8 +COPY pyproject.toml uv.lock .python-version ./                 
+       9 +RUN uv sync --frozen --no-dev                                  
+      10 +                                                               
+      11 +FROM --platform=linux/arm64 python:3.13.15-slim                
+      12 +RUN useradd --system --uid 10001 --no-create-home app          
+      13 +WORKDIR /app                                                   
+      14 +COPY --from=build /app/.venv /app/.venv                        
+      15 +COPY app/ app/                                                 
+      16 +ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1             
+      17 +USER app                                                       
+      18 +EXPOSE 8000                                                    
+      19 +CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", 
+         +"8000", "--timeout-graceful-shutdown", "3"]                    
+
+⏺ Bash(python3 - <<'EOF'
+      p='Dockerfile'; s=open(p).read()…)
+  ⎿  Updated
+     ~/Documents/Projects/_precision/precision-take-home/backend/Dockerfile
+     (+1 -1)
+      3  FROM --platform=linux/arm64 python:3.13.15-slim AS build
+      4  COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /usr/local/bin/uv
+      5  WORKDIR /app
+      6 -# Copy the venv into the run stage, so the build stage needs no 
+        -links back to its own files.                                    
+      6 +# uv copies files into the venv and compiles them to bytecode, a
+        +nd it uses the Python in the image.                             
+      7  ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_PYTHON_DOWNLOADS=
+         never
+      8  COPY pyproject.toml uv.lock .python-version ./
+      9  RUN uv sync --frozen --no-dev
+
+⏺ Now the Makefile targets.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home
+      && python3 - <<'EOF'
+      p='Makefile'; s=open(p).read()…)
+  ⎿  27:docker-build:
+     28-        docker build --platform linux/arm64 -t $(IMAGE) backend
+     29-
+     … +16 lines (ctrl+o to expand)
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/Makefile
+     (+12 -1)
+       3  
+       4  BACKEND_PORT := 8000
+       5  FRONTEND_PORT := 4200
+       6 +IMAGE := precision-backend                                     
+       7  
+       8  # Stop the Angular CLI from asking about usage data on the firs
+          t run.
+       9  export NG_CLI_ANALYTICS := false
+      10  
+      10 -.PHONY: install backend frontend dev test test-backend test-fro
+         -ntend lint lint-backend lint-frontend lint-infra synth deploy d
+         -estroy                                                         
+      11 +.PHONY: install backend frontend dev docker-build docker test t
+         +est-backend test-frontend lint lint-backend lint-frontend lint-
+         +infra synth deploy destroy                                     
+      12  
+      13  install:
+      14          cd backend && uv sync
+     ...
+      24  dev:
+      25          $(MAKE) -j2 backend frontend
+      26  
+      27 +docker-build:                                                  
+      28 +        docker build --platform linux/arm64 -t $(IMAGE) backend
+      29 +                                                               
+      30 +# Each -e NAME with no value passes the variable from the shell
+         + only when it is set.                                          
+      31 +# The -it flags let Ctrl+C stop the container.                 
+      32 +docker: docker-build                                           
+      33 +        docker run --rm -it -p $(BACKEND_PORT):8000 \          
+      34 +                -e SAMPLES_PER_SECOND -e BATCH_INTERVAL_MS -e M
+         +AX_VALUE -e CORS_ORIGINS \                                     
+      35 +                $(IMAGE)                                       
+      36 +                                                               
+      37  test: test-backend test-frontend
+      38  
+      39  test-backend:
+
+⏺ Bash(python3 - <<'EOF'
+      p='Makefile'; s=open(p).read()…)
+  ⎿  README.md:71:### Test source
+     README.md:73:Until feature 4 connects the server, a test source in a W
+     eb Worker makes the data in the browser. It makes uniform random integ
+     … +9 lines (ctrl+o to expand)
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/Makefile
+     (+2 -2)
+      28          docker build --platform linux/arm64 -t $(IMAGE) backend
+      29  
+      30  # Each -e NAME with no value passes the variable from the shell
+           only when it is set.
+      31 -# The -it flags let Ctrl+C stop the container.                 
+      31 +# docker run sends Ctrl+C to Uvicorn, which stops within 3 s.  
+      32  docker: docker-build
+      33 -        docker run --rm -it -p $(BACKEND_PORT):8000 \          
+      33 +        docker run --rm -p $(BACKEND_PORT):8000 \              
+      34                  -e SAMPLES_PER_SECOND -e BATCH_INTERVAL_MS -e M
+          AX_VALUE -e CORS_ORIGINS \
+      35                  $(IMAGE)
+      36  
+
+⏺ Now the frontend source files, steps 1 to 4.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend/src/app/source && cat > source-settings.ts <<'EOF'
+      /** The source that feeds t…)
+  ⎿  Created source/backoff.ts (+14 -0)
+       1 +const BASE_DELAY_MS = 1000;                                    
+       2 +const MAX_DELAY_MS = 30_000;                                   
+       3 +                                                               
+       4 +/**                                                            
+       5 + * Returns the wait in ms before the next connect attempt. The 
+         +wait doubles                                                   
+       6 + * with each failed attempt since the last open, up to 30 s. Th
+         +e random factor                                                
+       7 + * from 0.5 to 1 spreads the clients out after a server restart
+         +.                                                              
+       8 + *                                                             
+       9 + * @param attempt The number of failed attempts since the last 
+         +open, from 0.                                                  
+      10 + * @param random A value from 0 to 1, such as one from Math.ran
+         +dom.                                                           
+      11 + */                                                            
+      12 +export function reconnectDelay(attempt: number, random: number)
+         +: number {                                                     
+      13 +  return Math.min(MAX_DELAY_MS, BASE_DELAY_MS * 2 ** attempt) *
+         + (0.5 + random / 2);                                           
+      14 +}                                                              
+  ⎿  Created source/source-settings.ts (+38 -0)
+       1 +/** The source that feeds the counts. Only one runs at a time. 
+         +*/                                                             
+       2 +export type SourceKind = 'server' | 'frontend';                
+       3 +                                                               
+       4 +export interface SourceSettings {                              
+       5 +  source: SourceKind;                                          
+       6 +  /** The address of the server stream, such as http://localhos
+         +t:8000/stream. */                                              
+       7 +  streamUrl: string;                                           
+       8 +}                                                              
+       9 +                                                               
+      10 +/** Feature 5 changes the default to the cloud URL. */         
+      11 +export const DEFAULT_SERVER = 'http://localhost:8000';         
+      12 +                                                               
+      13 +/**                                                            
+      14 + * Reads `source` and `server` from a URL query such as `?sourc
+         +e=frontend`.                                                   
+      15 + * A bad value falls back to its default, and the console gets 
+         +a warning that                                                 
+      16 + * names the setting.                                          
+      17 + */                                                            
+      18 +export function readSourceSettings(query: string): SourceSettin
+         +gs {                                                           
+      19 +  const params = new URLSearchParams(query);                   
+      20 +  return { source: readSource(params.get('source')), streamUrl:
+         + `${readServer(params.get('server'))}/stream` };               
+      21 +}                                                              
+      22 +                                                               
+      23 +function readSource(raw: string | null): SourceKind {          
+      24 +  if (raw === null || raw === 'server' || raw === 'frontend') r
+         +eturn raw ?? 'server';                                         
+      25 +  console.warn(`Source: \`source\` must be "server" or "fronten
+         +d", but it is "${raw}". Using the server.`);                   
+      26 +  return 'server';                                             
+      27 +}                                                              
+      28 +                                                               
+      29 +function readServer(raw: string | null): string {              
+      30 +  if (raw === null) return DEFAULT_SERVER;                     
+      31 +  if (URL.canParse(raw) && ['http:', 'https:'].includes(new URL
+         +(raw).protocol)) {                                             
+      32 +    return raw.replace(/\/+$/, '');                            
+      33 +  }                                                            
+      34 +  console.warn(                                                
+      35 +    `Source: \`server\` must be an http or https URL, but it is
+         + "${raw}". Using the default ${DEFAULT_SERVER}.`,              
+      36 +  );                                                           
+      37 +  return DEFAULT_SERVER;                                       
+      38 +}                                                              
+  ⎿  Created source/stream-status.ts (+15 -0)
+       1 +import { Injectable, signal } from '@angular/core';            
+       2 +                                                               
+       3 +/** The state of the source in use. The test source has its own
+         + state, so a reviewer cannot mistake it for the server. */     
+       4 +export type StreamState = 'connecting' | 'live' | 'reconnecting
+         +' | 'test';                                                    
+       5 +                                                               
+       6 +/** Holds the stream state. The source in use writes it, and th
+         +e badge reads it. */                                           
+       7 +@Injectable({ providedIn: 'root' })                            
+       8 +export class StreamStatus {                                    
+       9 +  private readonly stateSignal = signal<StreamState>('connectin
+         +g');                                                           
+      10 +  readonly state = this.stateSignal.asReadonly();              
+      11 +                                                               
+      12 +  set(state: StreamState): void {                              
+      13 +    this.stateSignal.set(state);                               
+      14 +  }                                                            
+      15 +}                                                              
+
+⏺ Bash(cat > server-source.ts <<'EOF'
+      import { inject, Injectable, InjectionToken, OnDestroy } from
+      '@angular/core';…)
+  ⎿  /**
+      * Starts the test source worker with the settings from the page URL.
+     Each
+     … +21 lines (ctrl+o to expand)
+  ⎿  Created source/server-source.ts (+84 -0)
+       1 +import { inject, Injectable, InjectionToken, OnDestroy } from '
+         +@angular/core';                                                
+       2 +import { HeatMapStore } from '../heatmap/heat-map-store';      
+       3 +import { reconnectDelay } from './backoff';                    
+       4 +import { StreamStatus } from './stream-status';                
+       5 +                                                               
+       6 +/** Makes the EventSource for a stream URL. Tests replace it wi
+         +th a fake. */                                                  
+       7 +export const STREAM_EVENT_SOURCE = new InjectionToken<(url: str
+         +ing) => EventSource>(                                          
+       8 +  'STREAM_EVENT_SOURCE',                                       
+       9 +  { providedIn: 'root', factory: () => (url) => new EventSource
+         +(url) },                                                       
+      10 +);                                                             
+      11 +                                                               
+      12 +/**                                                            
+      13 + * At the lowest server settings a batch arrives each second. E
+         +ventSource hides                                               
+      14 + * the heartbeat comments, so a live stream with no batch for t
+         +his long counts                                                
+      15 + * as dropped.                                                 
+      16 + */                                                            
+      17 +export const WATCHDOG_MS = 5000;                               
+      18 +                                                               
+      19 +/**                                                            
+      20 + * Reads the server stream and applies each batch to the counts
+         +. EventSource                                                  
+      21 + * retries at a fixed delay, so on each drop the service closes
+         + it and opens a                                                
+      22 + * new one after a backoff delay. The service never resets the 
+         +counts.                                                        
+      23 + */                                                            
+      24 +@Injectable({ providedIn: 'root' })                            
+      25 +export class ServerSource implements OnDestroy {               
+      26 +  private readonly store = inject(HeatMapStore);               
+      27 +  private readonly status = inject(StreamStatus);              
+      28 +  private readonly createEventSource = inject(STREAM_EVENT_SOUR
+         +CE);                                                           
+      29 +  private url: string | null = null;                           
+      30 +  private source: EventSource | null = null;                   
+      31 +  /** The number of failed attempts since the last open event. 
+         +*/                                                             
+      32 +  private failures = 0;                                        
+      33 +  private retryTimer: ReturnType<typeof setTimeout> | undefined
+         +;                                                              
+      34 +  private watchdogTimer: ReturnType<typeof setTimeout> | undefi
+         +ned;                                                           
+      35 +                                                               
+      36 +  start(url: string): void {                                   
+      37 +    if (this.url !== null) return;                             
+      38 +    this.url = url;                                            
+      39 +    this.status.set('connecting');                             
+      40 +    this.connect();                                            
+     … 44 more lines (ctrl+o to expand)
+  ⎿  Updated source/test-source.ts (+5 -2)
+      1  import { DOCUMENT, inject, Injectable, InjectionToken, OnDestroy
+          } from '@angular/core';
+      2  import { HeatMapStore } from '../heatmap/heat-map-store';
+      3  import { ACK } from './batch-queue';
+      4 +import { StreamStatus } from './stream-status';                 
+      5  import { readTestSourceSettings } from './test-source-settings';
+      6  
+      7  /** Makes the worker that runs the batch generator. Tests replac
+         e it with a fake. */
+     ...
+      14  /**
+      15   * Starts the test source worker with the settings from the pag
+          e URL. Each
+      16   * message is a JSON array string, which the service parses and
+           applies to the
+      16 - * counts, as the server stream will in feature 4. The service 
+         -then acks the                                                  
+      17 - * batch, so the worker sends the next one.                    
+      17 + * counts, as the server source does. The service then acks the
+         + batch, so the                                                 
+      18 + * worker sends the next one. It sets the stream state to test.
+      19   */
+      20  @Injectable({ providedIn: 'root' })
+      21  export class TestSource implements OnDestroy {
+      22    private readonly store = inject(HeatMapStore);
+      23 +  private readonly status = inject(StreamStatus);              
+      24    private readonly document = inject(DOCUMENT);
+      25    private readonly createWorker = inject(TEST_SOURCE_WORKER);
+      26    private worker: Worker | null = null;
+      27  
+      28    start(): void {
+      29      if (this.worker) return;
+      30 +    this.status.set('test');                                   
+      31      const settings = readTestSourceSettings(this.document.locat
+          ion.search);
+      32      this.worker = this.createWorker();
+      33      this.worker.onmessage = ({ data }: MessageEvent<string>) =>
+           {
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend && python3 - <<'EOF'
+      p='src/index.html'; s=open(p).read()…)
+  ⎿   M ../Makefile
+      M ../backend/app/main.py
+      M ../backend/tests/test_health.py
+     … +22 lines (ctrl+o to expand)
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/frontend/s
+     rc/index.html (+5 -0)
+       6      <base href="/" />
+       7      <meta name="viewport" content="width=device-width, initial-
+          scale=1" />
+       8      <link rel="icon" type="image/x-icon" href="favicon.ico" />
+       9 +    <!-- Google Fonts serves only the five icons the client use
+         +s. -->                                                         
+      10 +    <link                                                      
+      11 +      rel="stylesheet"                                         
+      12 +      href="https://fonts.googleapis.com/css2?family=Material+S
+         +ymbols+Outlined:opsz,wght@20,300&icon_names=add,progress_activi
+         +ty,remove,sensors,sync"                                        
+      13 +    />                                                         
+      14    </head>
+      15    <body>
+      16      <app-root></app-root>
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/frontend/s
+     rc/styles.scss (+4 -10)
+      1 -/* The tokens, fonts, and page styles come from the HTML design 
+        -in context/. The client uses the light theme only. */           
+      1 +/* The tokens, fonts, and page styles come from the HTML design 
+        +in context/. The client uses the light theme only.              
+      2 +   The text fonts are bundled. The Material Symbols icons load f
+        +rom Google Fonts in index.html. */                              
+      3  
+      4  @font-face {
+      5    font-family: 'Red Hat Display';
+     ...
+      43    font-style: normal;
+      44    font-display: swap;
+      45  }
+      45 -/* A subset of Material Symbols Outlined (opsz 20, wght 300) wi
+         -th only the add and remove glyphs. */                          
+      46 -@font-face {                                                   
+      47 -  font-family: 'Material Symbols Outlined';                    
+      48 -  src: url('/fonts/material-symbols-outlined.woff2') format('wo
+         -ff2');                                                         
+      49 -  font-weight: 300;                                            
+      50 -  font-style: normal;                                          
+      51 -  font-display: block;                                         
+      52 -}                                                              
+      53 -                                                               
+      46  :root {
+      47    --blue-400: #2e63e6;
+      48    --blue-500: #1a4fcc;
+     ...
+      66    --focus: var(--blue-500);
+      67    --link: var(--blue-500);
+      68    --danger-text: #b33a3a;
+      69 +  --success-text: #157a42;                                     
+      70 +  --warning-text: #95560f;                                     
+      71    --shadow-rest: 0 1px 2px rgba(16, 18, 24, 0.05);
+      72    --shadow-focus: 0 0 0 2px #ffffff, 0 0 0 4px #1a4fcc;
+      73    --gradient-brand: linear-gradient(140deg, #2e63e6 0%, #1a4fcc
+           60%, #143fa8 100%);
+  ⎿  … 1 more file changed
+
+⏺ Bash(git reset -q -- public/fonts/material-symbols-outlined.woff2 && sed -i ''
+      's/^:root {/\n:root {/' src/styles.scss && git status --short public)
+  ⎿   D public/fonts/material-symbols-outlined.woff2
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/frontend/s
+     rc/styles.scss (+1 -0)
+      43    font-style: normal;
+      44    font-display: swap;
+      45  }
+      46 +                                                               
+      47  :root {
+      48    --blue-400: #2e63e6;
+      49    --blue-500: #1a4fcc;
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Now the badge component and the side panel.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend/src/app/panel && cat > stream-badge.ts <<'EOF'
+      import { Component, computed, i…)
+  ⎿  Updated panel/side-panel.html (+2 -0)
+      1 +<app-stream-badge />                                            
+      2 +<hr />                                                          
+      3  <div class="control">
+      4    <label for="grid-size" class="control-label">Grid size</label>
+      5    <div class="control-row">
+  ⎿  Updated panel/side-panel.ts (+3 -1)
+       1  import { Component, computed, inject } from '@angular/core';
+       2  import { HeatMapStore, MAX_N, MIN_N } from '../heatmap/heat-map
+          -store';
+       3 +import { StreamBadge } from './stream-badge';                  
+       4  
+       5  const numberFormat = new Intl.NumberFormat('en-US');
+       6  
+       6 -/** Shows the N control and the readouts, and forwards N change
+         -s to the store. */                                             
+       7 +/** Shows the stream badge, the N control, and the readouts, an
+         +d forwards N changes to the store. */                          
+       8  @Component({
+       9    selector: 'app-side-panel',
+      10 +  imports: [StreamBadge],                                      
+      11    templateUrl: './side-panel.html',
+      12    styleUrl: './side-panel.scss',
+      13  })
+  ⎿  Created panel/stream-badge.html (+9 -0)
+      1 +<div class="stream-status" role="status" aria-live="polite">    
+      2 +  <span class="sr-only">Stream status: </span>                  
+      3 +  <span class="md-badge" [class]="'md-badge md-badge-' + look().
+        +tone">                                                          
+      4 +    @if (look().icon; as icon) {                                
+      5 +      <span class="material-symbols-outlined md-icon" aria-hidde
+        +n="true">{{ icon }}</span>                                      
+      6 +    }                                                           
+      7 +    {{ look().label }}                                          
+      8 +  </span>                                                       
+      9 +</div>                                                          
+  ⎿  Created panel/stream-badge.scss (+49 -0)
+       1 +/* The badge styles follow the md-badge classes and the #stream
+         +-status rules in the HTML design. */                           
+       2 +.stream-status {                                               
+       3 +  display: flex;                                               
+       4 +  align-items: center;                                         
+       5 +  justify-content: center;                                     
+       6 +}                                                              
+       7 +                                                               
+       8 +.md-badge {                                                    
+       9 +  display: inline-flex;                                        
+      10 +  align-items: center;                                         
+      11 +  justify-content: center;                                     
+      12 +  gap: 6px;                                                    
+      13 +  box-sizing: border-box;                                      
+      14 +  width: 80%;                                                  
+      15 +  height: 32px;                                                
+      16 +  padding: 0 var(--space-3);                                   
+      17 +  border-radius: var(--radius-full);                           
+      18 +  border: 1px solid #ffffff;                                   
+      19 +  box-shadow: 0 1px 3px rgba(16, 18, 24, 0.18);                
+      20 +  font-size: 12px;                                             
+      21 +  line-height: 16px;                                           
+      22 +  font-weight: 600;                                            
+      23 +  white-space: nowrap;                                         
+      24 +}                                                              
+      25 +.md-badge .md-icon {                                           
+      26 +  font-size: 14px;                                             
+      27 +}                                                              
+      28 +                                                               
+      29 +.md-badge-neutral {                                            
+      30 +  background: var(--surface-card);                             
+      31 +  color: var(--ink-secondary);                                 
+      32 +}                                                              
+      33 +.md-badge-success {                                            
+      34 +  background: var(--success-text);                             
+      35 +  color: var(--surface-card);                                  
+      36 +}                                                              
+      37 +.md-badge-warning {                                            
+      38 +  background: var(--warning-text);                             
+      39 +  color: var(--surface-card);                                  
+      40 +}                                                              
+     … 9 more lines (ctrl+o to expand)
+  ⎿  Created panel/stream-badge.ts (+27 -0)
+       1 +import { Component, computed, inject } from '@angular/core';   
+       2 +import { StreamState, StreamStatus } from '../source/stream-sta
+         +tus';                                                          
+       3 +                                                               
+       4 +interface BadgeLook {                                          
+       5 +  label: string;                                               
+       6 +  tone: 'neutral' | 'success' | 'warning';                     
+       7 +  /** The Material Symbols icon name, or null for no icon. */  
+       8 +  icon: string | null;                                         
+       9 +}                                                              
+      10 +                                                               
+      11 +const LOOKS: Record<StreamState, BadgeLook> = {                
+      12 +  connecting: { label: 'Connecting', tone: 'neutral', icon: 'pr
+         +ogress_activity' },                                            
+      13 +  live: { label: 'Live', tone: 'success', icon: 'sensors' },   
+      14 +  reconnecting: { label: 'Reconnecting', tone: 'warning', icon:
+         + 'sync' },                                                     
+      15 +  test: { label: 'Test source', tone: 'neutral', icon: null }, 
+      16 +};                                                             
+      17 +                                                               
+      18 +/** Shows the stream state as a pill, as the stream status badg
+         +e in the HTML design does. */                                  
+      19 +@Component({                                                   
+      20 +  selector: 'app-stream-badge',                                
+      21 +  templateUrl: './stream-badge.html',                          
+      22 +  styleUrl: './stream-badge.scss',                             
+      23 +})                                                             
+      24 +export class StreamBadge {                                     
+      25 +  private readonly status = inject(StreamStatus);              
+      26 +  protected readonly look = computed(() => LOOKS[this.status.st
+         +ate()]);                                                       
+      27 +}                                                              
+
+⏺ Bash(sed -i '' 's|<span class="md-badge" \[class\]=|<span [class]=|'
+      stream-badge.html && grep -n class= stream-badge.html)
+  ⎿  1:<div class="stream-status" role="status" aria-live="polite">
+     2:  <span class="sr-only">Stream status: </span>
+     5:      <span class="material-symbols-outlined md-icon" aria-hidden="t
+     rue">{{ icon }}</span>
+  ⎿  Updated panel/stream-badge.html (+1 -1)
+      1  <div class="stream-status" role="status" aria-live="polite">
+      2    <span class="sr-only">Stream status: </span>
+      3 -  <span class="md-badge" [class]="'md-badge md-badge-' + look().
+        -tone">                                                          
+      3 +  <span [class]="'md-badge md-badge-' + look().tone">           
+      4      @if (look().icon; as icon) {
+      5        <span class="material-symbols-outlined md-icon" aria-hidde
+         n="true">{{ icon }}</span>
+      6      }
+
+  Ran 1 shell command (ctrl+o to expand)
+⏺ Step 9, the app start.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend/src/app && cat > app.ts <<'EOF'
+      import { Component, DOCUMENT, inject } from '@…)
+  ⎿  Updated app.ts (+10 -3)
+      1 -import { Component, inject } from '@angular/core';              
+      1 +import { Component, DOCUMENT, inject } from '@angular/core';    
+      2  import { HeatMap } from './heatmap/heat-map';
+      3  import { SidePanel } from './panel/side-panel';
+      4 +import { ServerSource } from './source/server-source';          
+      5 +import { readSourceSettings } from './source/source-settings';  
+      6  import { TestSource } from './source/test-source';
+      7  
+      8  @Component({
+     ...
+      13  })
+      14  export class App {
+      15    constructor() {
+      14 -    // Feature 4 decides how the user picks the test source or 
+         -the server.                                                    
+      15 -    inject(TestSource).start();                                
+      16 +    // The URL query picks the source. Only one source runs at 
+         +a time.                                                        
+      17 +    const settings = readSourceSettings(inject(DOCUMENT).locati
+         +on.search);                                                    
+      18 +    if (settings.source === 'frontend') {                      
+      19 +      inject(TestSource).start();                              
+      20 +    } else {                                                   
+      21 +      inject(ServerSource).start(settings.streamUrl);          
+      22 +    }                                                          
+      23    }
+      24  }
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend/src/app/source && cat > source-settings.spec.ts <<'EOF'
+      import { readSourceSet…)
+  ⎿  Created source/backoff.spec.ts (+18 -0)
+       1 +import { reconnectDelay } from './backoff';                    
+       2 +                                                               
+       3 +describe('reconnectDelay', () => {                             
+       4 +  it('doubles from 1,000 ms up to 30,000 ms with a random value
+         + of 1', () => {                                                
+       5 +    expect([0, 1, 2, 3, 4, 5, 6].map((attempt) => reconnectDela
+         +y(attempt, 1))).toEqual([                                      
+       6 +      1000, 2000, 4000, 8000, 16_000, 30_000, 30_000,          
+       7 +    ]);                                                        
+       8 +  });                                                          
+       9 +                                                               
+      10 +  it('halves the delay with a random value of 0', () => {      
+      11 +    expect(reconnectDelay(0, 0)).toBe(500);                    
+      12 +    expect(reconnectDelay(6, 0)).toBe(15_000);                 
+      13 +  });                                                          
+      14 +                                                               
+      15 +  it('gives 3,000 ms for attempt 2 with a random value of 0.5',
+         + () => {                                                       
+      16 +    expect(reconnectDelay(2, 0.5)).toBe(3000);                 
+      17 +  });                                                          
+      18 +});                                                            
+  ⎿  Created source/server-source.spec.ts (+160 -0)
+        1 +import { TestBed } from '@angular/core/testing';              
+        2 +import { HeatMapStore } from '../heatmap/heat-map-store';     
+        3 +import { ServerSource, STREAM_EVENT_SOURCE } from './server-so
+          +urce';                                                        
+        4 +import { StreamStatus } from './stream-status';               
+        5 +                                                              
+        6 +const URL = 'http://localhost:8000/stream';                   
+        7 +                                                              
+        8 +/** Stands in for EventSource, so the test can fire its events
+          +. */                                                          
+        9 +class FakeEventSource {                                       
+       10 +  onopen: (() => void) | null = null;                         
+       11 +  onmessage: ((event: MessageEvent<string>) => void) | null = 
+          +null;                                                         
+       12 +  onerror: (() => void) | null = null;                        
+       13 +  close = vi.fn();                                            
+       14 +  constructor(readonly url: string) {}                        
+       15 +                                                              
+       16 +  open(): void {                                              
+       17 +    this.onopen?.();                                          
+       18 +  }                                                           
+       19 +  message(data: string): void {                               
+       20 +    this.onmessage?.(new MessageEvent('message', { data }));  
+       21 +  }                                                           
+       22 +  fail(): void {                                              
+       23 +    this.onerror?.();                                         
+       24 +  }                                                           
+       25 +}                                                             
+       26 +                                                              
+       27 +describe('ServerSource', () => {                              
+       28 +  let sources: FakeEventSource[];                             
+       29 +  let store: HeatMapStore;                                    
+       30 +  let status: StreamStatus;                                   
+       31 +  let service: ServerSource;                                  
+       32 +                                                              
+       33 +  const latest = () => sources[sources.length - 1];           
+       34 +                                                              
+       35 +  beforeEach(() => {                                          
+       36 +    vi.useFakeTimers();                                       
+       37 +    vi.spyOn(Math, 'random').mockReturnValue(1);              
+       38 +    sources = [];                                             
+       39 +    TestBed.configureTestingModule({                          
+       40 +      providers: [                                            
+     … 120 more lines (ctrl+o to expand)
+  ⎿  Created source/source-settings.spec.ts (+51 -0)
+       1 +import { readSourceSettings } from './source-settings';        
+       2 +                                                               
+       3 +describe('readSourceSettings', () => {                         
+       4 +  let warn: ReturnType<typeof vi.spyOn>;                       
+       5 +                                                               
+       6 +  beforeEach(() => {                                           
+       7 +    warn = vi.spyOn(console, 'warn').mockImplementation(() => u
+         +ndefined);                                                     
+       8 +  });                                                          
+       9 +                                                               
+      10 +  afterEach(() => {                                            
+      11 +    vi.restoreAllMocks();                                      
+      12 +  });                                                          
+      13 +                                                               
+      14 +  function expectWarningFor(name: string): void {              
+      15 +    expect(warn).toHaveBeenCalledWith(expect.stringContaining(`
+         +\`${name}\``));                                                
+      16 +  }                                                            
+      17 +                                                               
+      18 +  it('uses the server at http://localhost:8000/stream with no q
+         +uery', () => {                                                 
+      19 +    expect(readSourceSettings('')).toEqual({                   
+      20 +      source: 'server',                                        
+      21 +      streamUrl: 'http://localhost:8000/stream',               
+      22 +    });                                                        
+      23 +    expect(warn).not.toHaveBeenCalled();                       
+      24 +  });                                                          
+      25 +                                                               
+      26 +  it('uses the test source for source=frontend', () => {       
+      27 +    expect(readSourceSettings('?source=frontend').source).toBe(
+         +'frontend');                                                   
+      28 +  });                                                          
+      29 +                                                               
+      30 +  it('uses the server and warns for source=abc', () => {       
+      31 +    expect(readSourceSettings('?source=abc').source).toBe('serv
+         +er');                                                          
+      32 +    expectWarningFor('source');                                
+      33 +  });                                                          
+      34 +                                                               
+      35 +  it('reads the server address', () => {                       
+      36 +    expect(readSourceSettings('?server=https://api.precision.jg
+         +angjee.com').streamUrl).toBe(                                  
+      37 +      'https://api.precision.jgangjee.com/stream',             
+      38 +    );                                                         
+      39 +  });                                                          
+      40 +                                                               
+     … 11 more lines (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='server-source.spec.ts'; s=open(p).read()…)
+  ⎿      expect(store.counts.at(0, 0)).toBe(1);
+         expect(store.counts.at(1, 3)).toBe(1);
+         expect(worker.postMessage).toHaveBeenLastCalledWith(ACK);
+     … +12 lines (ctrl+o to expand)
+  ⎿  Updated source/server-source.spec.ts (+3 -4)
+      3  import { ServerSource, STREAM_EVENT_SOURCE } from './server-sour
+         ce';
+      4  import { StreamStatus } from './stream-status';
+      5  
+      6 -const URL = 'http://localhost:8000/stream';                     
+      6 +const STREAM_URL = 'http://localhost:8000/stream';              
+      7  
+      8  /** Stands in for EventSource, so the test can fire its events. 
+         */
+      9  class FakeEventSource {
+     ...
+      51      store = TestBed.inject(HeatMapStore);
+      52      status = TestBed.inject(StreamStatus);
+      53      service = TestBed.inject(ServerSource);
+      54 -    service.start(URL);                                        
+      54 +    service.start(STREAM_URL);                                 
+      55    });
+      56  
+      57    afterEach(() => {
+     ...
+      62    it('is connecting at start with one EventSource on the stream
+           URL', () => {
+      63      expect(status.state()).toBe('connecting');
+      64      expect(sources.length).toBe(1);
+      65 -    expect(sources[0].url).toBe(URL);                          
+      65 +    expect(sources[0].url).toBe(STREAM_URL);                   
+      66    });
+      67  
+      68    it('is live after an open event', () => {
+     ...
+      151  
+      152    it('closes the EventSource on destroy and opens no new one l
+           ater', () => {
+      153      sources[0].open();
+      154 -    sources[0].fail();                                        
+      154      TestBed.resetTestingModule();
+      155      expect(sources[0].close).toHaveBeenCalled();
+      156      vi.advanceTimersByTime(60_000);
+  ⎿  Updated source/test-source.spec.ts (+10 -0)
+      1  import { TestBed } from '@angular/core/testing';
+      2  import { HeatMapStore } from '../heatmap/heat-map-store';
+      3  import { ACK } from './batch-queue';
+      4 +import { StreamStatus } from './stream-status';                 
+      5  import { TEST_SOURCE_WORKER, TestSource } from './test-source';
+      6  
+      7  /** Stands in for the worker, so the test can post a message to 
+         the service. */
+     ...
+      27      expect(store.counts.at(1, 3)).toBe(1);
+      28      expect(worker.postMessage).toHaveBeenLastCalledWith(ACK);
+      29    });
+      30 +                                                               
+      31 +  it('sets the stream state to test when it starts', () => {   
+      32 +    TestBed.configureTestingModule({                           
+      33 +      providers: [{ provide: TEST_SOURCE_WORKER, useValue: () =
+         +> new FakeWorker() }],                                         
+      34 +    });                                                        
+      35 +    TestBed.inject(TestSource).start();                        
+      36 +                                                               
+      37 +    expect(TestBed.inject(StreamStatus).state()).toBe('test'); 
+      38 +  });                                                          
+      39  });
+
+⏺ Now the badge, side panel, and app tests.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend/src/app && cat > panel/stream-badge.spec.ts <<'EOF'
+      import { TestBed } from '@…)
+  ⎿  spec-app-source-test-source.js          | spec-app-source-test-source
+              |   1.54 kB |
+     spec-app-heatmap-heat-map-store.js      | spec-app-heatmap-heat-map-st
+     … +58 lines (ctrl+o to expand)
+  ⎿  Updated app.spec.ts (+26 -2)
+       1  import { TestBed } from '@angular/core/testing';
+       2  import { App } from './app';
+       3 +import { STREAM_EVENT_SOURCE } from './source/server-source';  
+       4  import { TEST_SOURCE_WORKER } from './source/test-source';
+       5  
+       6  describe('App', () => {
+       7 +  let createWorker: ReturnType<typeof vi.fn>;                  
+       8 +  let createEventSource: ReturnType<typeof vi.fn>;             
+       9 +                                                               
+      10    beforeEach(() => {
+       7 -    const worker = { postMessage: vi.fn(), terminate: vi.fn() }
+         - as unknown as Worker;                                         
+      11 +    createWorker = vi.fn(() => ({ postMessage: vi.fn(), termina
+         +te: vi.fn() }) as unknown as Worker);                          
+      12 +    createEventSource = vi.fn(() => ({ close: vi.fn() }) as unk
+         +nown as EventSource);                                          
+      13      TestBed.configureTestingModule({
+       9 -      providers: [{ provide: TEST_SOURCE_WORKER, useValue: () =
+         -> worker }],                                                   
+      14 +      providers: [                                             
+      15 +        { provide: TEST_SOURCE_WORKER, useValue: createWorker }
+         +,                                                              
+      16 +        { provide: STREAM_EVENT_SOURCE, useValue: createEventSo
+         +urce },                                                        
+      17 +      ],                                                       
+      18      });
+      19      vi.stubGlobal('requestAnimationFrame', () => 1);
+      20      vi.stubGlobal('cancelAnimationFrame', vi.fn());
+     ...
+      33    });
+      34  
+      35    afterEach(() => {
+      36 +    history.replaceState(null, '', '/');                       
+      37      vi.unstubAllGlobals();
+      38      vi.restoreAllMocks();
+      39    });
+     ...
+      46      expect(element.querySelector('app-heat-map')).not.toBeNull(
+          );
+      47      expect(element.querySelector('app-side-panel')).not.toBeNul
+          l();
+      48    });
+      49 +                                                               
+      50 +  it('starts the server source and makes no worker with no quer
+         +y', async () => {                                              
+      51 +    const fixture = TestBed.createComponent(App);              
+      52 +    await fixture.whenStable();                                
+      53 +    expect(createEventSource).toHaveBeenCalledExactlyOnceWith('
+         +http://localhost:8000/stream');                                
+      54 +    expect(createWorker).not.toHaveBeenCalled();               
+      55 +  });                                                          
+      56 +                                                               
+     … 8 more lines (ctrl+o to expand)
+  ⎿  Updated panel/side-panel.spec.ts (+9 -0)
+      39      expect(field().value).toBe('32 × 32');
+      40    });
+      41  
+      42 +  it('shows the stream badge above the grid size control', () =
+         +> {                                                            
+      43 +    const badge = element.querySelector('app-stream-badge');   
+      44 +    const control = element.querySelector('.control');         
+      45 +    expect(badge).not.toBeNull();                              
+      46 +    expect(                                                    
+      47 +      badge!.compareDocumentPosition(control!) & Node.DOCUMENT_
+         +POSITION_FOLLOWING,                                            
+      48 +    ).toBeTruthy();                                            
+      49 +  });                                                          
+      50 +                                                               
+      51    it('shows "33 × 33" and resets the samples received after a c
+          lick on plus', async () => {
+      52      store.applyBatch([1, 2, 3]);
+      53      store.frame(0);
+  ⎿  Created panel/stream-badge.spec.ts (+36 -0)
+       1 +import { TestBed } from '@angular/core/testing';               
+       2 +import { StreamState, StreamStatus } from '../source/stream-sta
+         +tus';                                                          
+       3 +import { StreamBadge } from './stream-badge';                  
+       4 +                                                               
+       5 +describe('StreamBadge', () => {                                
+       6 +  async function render(state: StreamState): Promise<HTMLElemen
+         +t> {                                                           
+       7 +    TestBed.inject(StreamStatus).set(state);                   
+       8 +    const fixture = TestBed.createComponent(StreamBadge);      
+       9 +    await fixture.whenStable();                                
+      10 +    return fixture.nativeElement.querySelector('.md-badge');   
+      11 +  }                                                            
+      12 +                                                               
+      13 +  const label = (badge: HTMLElement) =>                        
+      14 +    Array.from(badge.childNodes)                               
+      15 +      .filter((node) => node.nodeType === Node.TEXT_NODE)      
+      16 +      .map((node) => node.textContent)                         
+      17 +      .join('')                                                
+      18 +      .trim();                                                 
+      19 +  const icon = (badge: HTMLElement) =>                         
+      20 +    badge.querySelector('.material-symbols-outlined')?.textCont
+         +ent?.trim() ?? null;                                           
+      21 +                                                               
+      22 +  it.each([                                                    
+      23 +    ['connecting', 'Connecting', 'neutral', 'progress_activity'
+         +],                                                             
+      24 +    ['live', 'Live', 'success', 'sensors'],                    
+      25 +    ['reconnecting', 'Reconnecting', 'warning', 'sync'],       
+      26 +    ['test', 'Test source', 'neutral', null],                  
+      27 +  ] as const)(                                                 
+      28 +    'shows %s as "%s" with the %s tone and the %s icon',       
+      29 +    async (state, text, tone, name) => {                       
+      30 +      const badge = await render(state);                       
+      31 +      expect(label(badge)).toBe(text);                         
+      32 +      expect(badge.classList).toContain(`md-badge-${tone}`);   
+      33 +      expect(icon(badge)).toBe(name);                          
+      34 +    },                                                         
+      35 +  );                                                           
+      36 +});                                                            
+  ⎿  Updated source/source-settings.spec.ts (+7 -4)
+      44      );
+      45    });
+      46  
+      47 -  it.each(['abc', 'ftp://example.com'])('uses the default serve
+         -r and warns for server=%s', (value) => {                       
+      48 -    expect(readSourceSettings(`?server=${value}`).streamUrl).to
+         -Be('http://localhost:8000/stream');                            
+      49 -    expectWarningFor('server');                                
+      50 -  });                                                          
+      47 +  it.each(['abc', 'ftp://example.com'])(                       
+      48 +    'uses the default server and warns for server=%s',         
+      49 +    (value) => {                                               
+      50 +      expect(readSourceSettings(`?server=${value}`).streamUrl).
+         +toBe('http://localhost:8000/stream');                          
+      51 +      expectWarningFor('server');                              
+      52 +    },                                                         
+      53 +  );                                                           
+      54  });
+  ⎿  Updated source/source-settings.ts (+7 -2)
+      17   */
+      18  export function readSourceSettings(query: string): SourceSettin
+          gs {
+      19    const params = new URLSearchParams(query);
+      20 -  return { source: readSource(params.get('source')), streamUrl:
+         - `${readServer(params.get('server'))}/stream` };               
+      20 +  return {                                                     
+      21 +    source: readSource(params.get('source')),                  
+      22 +    streamUrl: `${readServer(params.get('server'))}/stream`,   
+      23 +  };                                                           
+      24  }
+      25  
+      26  function readSource(raw: string | null): SourceKind {
+      27    if (raw === null || raw === 'server' || raw === 'frontend') r
+          eturn raw ?? 'server';
+      25 -  console.warn(`Source: \`source\` must be "server" or "fronten
+         -d", but it is "${raw}". Using the server.`);                   
+      28 +  console.warn(                                                
+      29 +    `Source: \`source\` must be "server" or "frontend", but it 
+         +is "${raw}". Using the server.`,                               
+      30 +  );                                                           
+      31    return 'server';
+      32  }
+      33  
+  ⎿  (timeout 5m)
+
+⏺ All 100 frontend tests pass. Now the backend tests, the linters, the build,
+  and the Docker image.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash((cd backend && uv run ruff format tests/test_health.py) && make lint 2>&1
+      | tail -12)
+  ⎿  1 file reformatted
+
+     All files pass linting.
+     … +17 lines (ctrl+o to expand)
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/backend/te
+     sts/test_health.py (+0 -1)
+      23      response = client.get("/health", headers={"Origin": "http:/
+          /evil.test"})
+      24  
+      25      assert "access-control-allow-origin" not in response.header
+          s
+      26 -                                                               
+  ⎿  (timeout 5m)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The build warns about the fixed platform in the FROM lines. The Makefile
+  already passes the platform, so I remove it from the Dockerfile and run the
+  image once.
+
+⏺ Bash(sed -i '' 's/^FROM --platform=linux\/arm64 /FROM /' backend/Dockerfile &&
+      sed -i '' 's|^# The backend image. It runs in Docker Desktop on the
+      laptop and on ECS…)
+  ⎿  # The backend image. It runs in Docker Desktop on the laptop and on EC
+     S Fargate with ARM64.
+     # make docker-build sets the platform to linux/arm64.
+     … +13 lines (ctrl+o to expand)
+  ⎿  Updated
+     ~/Documents/Projects/_precision/precision-take-home/backend/Dockerfile
+     (+3 -2)
+      1  # The backend image. It runs in Docker Desktop on the laptop and
+          on ECS Fargate with ARM64.
+      2 +# make docker-build sets the platform to linux/arm64.           
+      3  
+      3 -FROM --platform=linux/arm64 python:3.13.15-slim AS build        
+      4 +FROM python:3.13.15-slim AS build                               
+      5  COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /usr/local/bin/uv
+      6  WORKDIR /app
+      7  # uv copies files into the venv and compiles them to bytecode, a
+         nd it uses the Python in the image.
+     ...
+       9  COPY pyproject.toml uv.lock .python-version ./
+      10  RUN uv sync --frozen --no-dev
+      11  
+      11 -FROM --platform=linux/arm64 python:3.13.15-slim                
+      12 +FROM python:3.13.15-slim                                       
+      13  RUN useradd --system --uid 10001 --no-create-home app
+      14  WORKDIR /app
+      15  COPY --from=build /app/.venv /app/.venv
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Code is done. Now the README and the logs.
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      p='docs/assumptions.md'; s=open(p).read()…)
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/docs/assum
+     ptions.md (+8 -1)
+      39  ## 2026-09-30, review feature 2, backend
+      40  
+      41  - The backend will be served at https://api.precision.jgangjee.
+          com in feature 5. That address is the backend's own origin, so 
+          it does not go in `CORS_ORIGINS`. The frontend's public origin 
+          goes there, and feature 5 decides it.
+      42 -- Some browsers may send a preflight request when EventSource r
+         -econnects with the `Last-Event-ID` header. The CORS rule allows
+         - that header, so the reconnect works in either case. Feature 4 
+         -checks it in real browsers.                                    
+      42 +- The client never sends the `Last-Event-ID` header. Feature 4 
+         +makes a new EventSource for each reconnect, and a new EventSour
+         +ce has no last event id. So the CORS rule allows no extra heade
+         +rs, and a reconnect needs no preflight.                        
+      43  
+      44  ## 2026-09-30, plan for feature 3, frontend
+      45  
+     ...
+      67  - The client runs in Chrome with Energy Saver off. Energy Saver
+           caps the frame rate at 30 fps, which would show the red error 
+          line on an idle page.
+      68  - The target frame rate is 60 fps. The red error line shows whe
+          n the reading is below 90 percent of 60, which is 54 fps. The l
+          ine hides for the first second, before the meter has a reading.
+      69  - The test source rate goes up to 100,000,000 samples per secon
+          d, so the stress test can push the browser past 10,000,000.
+      70 +                                                               
+      71 +## 2026-09-30, implement feature 4, stream                     
+      72 +                                                               
+      73 +- A batch arrives at least once each second at the lowest serve
+         +r settings. So a live stream with no batch for 5 s counts as dr
+         +opped, even when the connection does not report an error.      
+      74 +- The query `source=server` picks the server with no warning, a
+         +s no `source` value does. Only other values log a warning.     
+      75 +- The badge copies the stream status rules of the HTML design. 
+         +Every tone has a white border and a soft shadow, so the Connect
+         +ing badge shows its edge by the shadow and not by a grey outlin
+         +e.                                                             
+      76 +- The Docker image runs Uvicorn as process 1. Uvicorn handles t
+         +he stop signal from `docker stop` and from Ctrl+C on `make dock
+         +er`, so the image needs no init process.                       
+  ⎿  Updated
+     ~/Documents/Projects/_precision/precision-take-home/docs/trade-offs.md
+     (+7 -0)
+       95  
+       96  - The hotspot mode is removed from the roadmap. The project en
+           ds with the testing feature. The cost is that the heat map sta
+           ys nearly flat under the uniform generator.
+       97  - Feature 7 writes its findings to docs/results.md, next to th
+           e other logs. A reviewer finds the results in one place. The c
+           ost is one more file to keep current.
+       98 +                                                              
+       99 +## 2026-09-30, implement feature 4, stream                    
+      100 +                                                              
+      101 +- The Material Symbols icons load from Google Fonts, and the l
+          +ocal subset is gone. One font serves all five icons, and a new
+          + icon needs only a change to the link. The cost is that the cl
+          +ient needs the network for the icons, and the icons show as wo
+          +rds until the font loads.                                     
+      102 +- The client closes the EventSource on each drop and makes a n
+          +ew one after a backoff delay of 1 s that doubles up to 30 s, w
+          +ith a random factor from 0.5 to 1. The built-in EventSource re
+          +try has a fixed delay. The cost is more code to own, and a rec
+          +onnect takes up to 1 s longer than the built-in retry after a 
+          +short drop.                                                   
+      103 +- The watchdog drops a live stream after 5 s with no batch. It
+          + catches a connection that hangs with no error. The cost is a 
+          +false drop if the server pauses for more than 5 s, which happe
+          +ns only when the server stalls.                               
+      104 +- The Docker image is built for linux/arm64 only. It runs nati
+          +ve on my laptop and matches Fargate ARM64. The cost is that an
+          + Intel machine runs it under emulation.                       
+
+⏺ Bash(python3 - <<'EOF'
+      p='docs/trade-offs.md'; s=open(p).read()…)
+  ⎿  28:Run `make install` from the repo root. It installs the backend, fro
+     ntend, and infra dependencies from their lock files.
+     47:Run `make backend`, and then run this command in another terminal t
+     … +4 lines (ctrl+o to expand)
+  ⎿  Updated ~/Documents/Projects/_precision/precision-take-home/README.md
+     (+23 -5)
+      2  
+      3  This repo is my take-home project for the Precision Neuroscience
+          full-stack role. A cloud server streams nonnegative integers to
+          a web client. The client bins each number into an N by N grid a
+         nd paints each cell on a blue-to-red heat map in real time.
+      4  
+      5 -The project is in progress. The scaffold, the backend stream, an
+        -d the heat map client are in place. The client does not connect 
+        -to the server yet, and feature 4 adds that. specs/roadmap.md sho
+        -ws the status of each feature.                                  
+      5 +The project is in progress. The scaffold, the backend stream, th
+        +e heat map client, and the client connection to the server are i
+        +n place. The backend also runs in Docker. specs/roadmap.md shows
+        + the status of each feature.                                    
+      6  
+      7  ## Repo layout
+      8  
+     ...
+      20  - You need the AWS CDK CLI 2.1143.0 for `make synth`. Install i
+          t with `npm install -g aws-cdk@2.1143.0`.
+      21  - You need AWS CLI 2.37.4 with credentials for `make deploy` an
+          d `make destroy`. The AWS account must be bootstrapped for CDK.
+      22  - You need GNU Make 3.81 or later. macOS ships with 3.81.
+      23 +- You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make d
+         +ocker-build` and `make docker`.                                
+      24 +- The client loads its icons from Google Fonts, so the browser 
+         +needs the network.                                             
+      25  
+      26  ## Install
+      27  
+     ...
+      32  - `make backend` runs the server at http://localhost:8000 with 
+          reload on file changes. It stops within 3 seconds of Ctrl+C, ev
+          en with open streams. The health check is at http://localhost:8
+          000/health.
+      33  - `make frontend` runs the client at http://localhost:4200.
+      34  - `make dev` runs the backend and the frontend together. Press 
+          Ctrl+C once to stop both.
+      35 +- `make docker-build` builds the backend image for linux/arm64 
+         +with the tag `precision-backend`.                              
+      36 +- `make docker` builds the image and runs it at http://localhos
+         +t:8000, the same port as `make backend`. It passes `SAMPLES_PER
+         +_SECOND`, `BATCH_INTERVAL_MS`, `MAX_VALUE`, and `CORS_ORIGINS` 
+         +into the container when they are set in the shell. Press Ctrl+C
+         + to stop the container, which stops within 3 seconds.          
+      37  - `make test` runs the backend and frontend tests and reports c
+          overage. The goal is 100 percent, and no minimum is enforced.
+      38  - `make lint` runs ruff and mypy on backend/ and infra/, and ES
+          Lint and Prettier on frontend/.
+      39  - `make synth` synthesizes the CDK app into infra/cdk.out/. It 
+          needs no AWS credentials.
+     ...
+      59  | `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to t
+          his value minus 1. |
+      60  | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-s
+          eparated list. The server strips a trailing slash from each ori
+          gin. | These origins can call the server from a browser. |
+      61  
+      58 -For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make
+         - backend` sends one batch of 20 integers each second.          
+      62 +For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make
+         + backend` sends one batch of 20 integers each second. The same 
+         +variables work with `make docker`.                             
+      63  
+      64  ## Client
+      65  
+      62 -Run `make frontend` and open http://localhost:4200. The page sh
+         -ows the heat map, a color scale, and a side panel.             
+      66 +Run `make dev` and open http://localhost:4200. The page shows t
+         +he heat map, a color scale, and a side panel. The client reads 
+         +the stream from the server and applies each batch to the counts
+         +.                                                              
+      67 +                                                               
+      68 +The client reads these settings from the URL query. When a valu
+         +e is bad, the client logs a warning to the console and uses the
+         + default.                                                      
+      69 +                                                               
+      70 +| Setting | Default | Meaning |                                
+      71 +| --- | --- | --- |                                            
+      72 +| `source` | `server` | The value `server` reads the stream fro
+         +m the server. The value `frontend` runs the test source in the 
+         +browser instead. Only one source runs at a time. |             
+     … 31 more lines (ctrl+o to expand)
+  ⎿  Updated
+     ~/Documents/Projects/_precision/precision-take-home/docs/trade-offs.md
+     (+1 -1)
+       98  
+       99  ## 2026-09-30, implement feature 4, stream
+      100  
+      101 -- The Material Symbols icons load from Google Fonts, and the l
+          -ocal subset is gone. One font serves all five icons, and a new
+          - icon needs only a change to the link. The cost is that the cl
+          -ient needs the network for the icons, and the icons show as wo
+          -rds until the font loads.                                     
+      101 +- The Material Symbols icons load from Google Fonts, and the l
+          +ocal subset is gone. One font serves all five icons, and a new
+          + icon needs only a change to the link. The cost is that the cl
+          +ient needs the network for the icons, and the icons are blank 
+          +until the font loads.                                         
+      102  - The client closes the EventSource on each drop and makes a n
+           ew one after a backoff delay of 1 s that doubles up to 30 s, w
+           ith a random factor from 0.5 to 1. The built-in EventSource re
+           try has a fixed delay. The cost is more code to own, and a rec
+           onnect takes up to 1 s longer than the built-in retry after a 
+           short drop.
+      103  - The watchdog drops a live stream after 5 s with no batch. It
+            catches a connection that hangs with no error. The cost is a 
+           false drop if the server pauses for more than 5 s, which happe
+           ns only when the server stalls.
+      104  - The Docker image is built for linux/arm64 only. It runs nati
+           ve on my laptop and matches Fargate ARM64. The cost is that an
+            Intel machine runs it under emulation.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I finished plan steps 1 to 15 for feature 4. Nothing is committed.
+
+  Results
+  - make test passes. The backend has 35 tests at 100 percent coverage, and the
+    frontend has 100 tests in 19 files.
+  - make lint passes. I had to run the ruff formatter once on
+    backend/tests/test_health.py after I removed the preflight test.
+  - npx ng build passes.
+  - make docker-build passes. The image is arm64 and runs as the user app.
+  - I ran the container once by hand. It returned /health, sent id: and data:
+    lines on /stream, and docker stop ended it in 0.3 s.
+  - grep -rni last-event-id backend/app backend/tests prints nothing.
+  - I have not run the manual checks M1 to M6. They belong to validate.
+
+  Differences from the plan
+  - In server-source.spec.ts, the destroy case opens the stream, destroys the
+    service, and then checks that 60 s later no new EventSource exists. If the
+    watchdog were still running, it would open one.
+  - source=server picks the server with no warning. G1 says that any value other
+    than frontend warns, so this is a small drift. I recorded it in
+    docs/assumptions.md.
+  - The badge copies the #stream-status rules from the design. Those rules give
+    every tone a white border and a shadow. The result is that the Connecting
+    badge has no grey outline, although G6 calls neutral "outlined". I recorded
+    this as an assumption. If you want the grey outline, it is a one-line
+    change.
+  - The Dockerfile leaves the platform out of its FROM lines because Docker
+    warned about the fixed value. make docker-build passes --platform 
+    linux/arm64 instead.
+  - make docker runs docker run without -it. Docker still passes Ctrl+C to
+    Uvicorn without it.
+  - The badge styles are in stream-badge.scss, as the side panel keeps its own
+    styles. Only the two new color tokens went into styles.scss.
+  - git rm staged the deletion of the icon font for a moment. I unstaged it, so
+    the index is as you left it.
+  - I added no entry to docs/ai-changes.md for this step. The move of the icons
+    to Google Fonts is already logged under the feature 4 plan, and you made no
+    changes during implement.
+  - Coverage is not 100 percent on the frontend. One line in server-source.ts is
+    uncovered, which is the default EventSource factory that the tests replace.
+    The same gap exists in test-source.ts from feature 3.
+
+  Clear the session before you run /spec-driven validate.
+
+✻ Brewed for 5m 25s · done 8:38 PM
+
+※ recap: I implemented feature 4 on the feature/04-stream branch, which adds the stream badge, the reconnect logic, and the Docker image, and all tests and linters pass. Next, clear the session and run /spec-driven validate.

@@ -105,3 +105,8 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The roadmap had one testing feature for the latency, the stress test, and the tuning. I split it into feature 8 for latency and feature 9 for load. The submission check is now feature 10. The older entries in this log still call the testing feature feature 8 and the submission check feature 9.
 - The roadmap had a measured latency with no method. I asked for a timestamp at each stage on the server and the client, and for a total that the client calculates. I first asked for the total in the side panel, and then I removed it. The AI wrote that the server adds its timestamps to each batch. I asked for the timestamps in the SSE `id` field with the sequence number, in a form such as `id:epoch time`.
 - I asked for a load test that raises the rate, then the number of clients, then the batch interval, each until it stops passing. The AI kept the rule that the highest rate that passes becomes the new default, and it removed the search for the batch interval with the lowest latency.
+
+## Feature 8, Latency, plan
+
+- The AI proposed four server timestamps, with one stage for the random values and one for the JSON text. I chose three server timestamps, so the two are one generate stage and the id is shorter.
+- The AI proposed that the client measures the clock offset every 10 s. I chose a measurement at start and on each `latency.reset()` only, so the client sends no requests in the background.

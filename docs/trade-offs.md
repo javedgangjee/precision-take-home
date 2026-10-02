@@ -155,3 +155,14 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - Testing is two features, which are feature 8 for latency and feature 9 for load. The load test then uses the latency measurement from feature 8 as its pass check. The cost is one more feature before the submission check.
 - The load test raises the batch interval until a step fails. It no longer looks for the batch interval with the lowest latency at the default rate. The cost is that the default interval stays at 50 ms with no measurement that shows it is the best one.
 - The server timestamps for feature 8 go in the SSE `id` field, after the batch sequence number. The batch data stays a JSON array of integers. The cost is that the id is no longer a plain number, so the client must split it before it counts the missed batches.
+
+## Feature 8, Latency, plan
+
+- The server has one generate stage that holds the making of the values and the JSON encoding. The id has three times and adds about 50 bytes to a batch. The cost is that the results cannot show which of the two grows at a high sample rate.
+- The `sent` time is the time when the stream route hands the event to the web server. The app cannot see the write to the socket. The cost is that the network stage also holds the write by Uvicorn and the load balancer.
+- The measurement stops when the canvas draw call returns. The browser gives no time for the light on the display. The cost is that the total leaves out about one frame.
+- The client compares the two clocks with `GET /time` and keeps the offset from the request with the shortest round trip. The alternative was to trust both clocks, and a laptop clock is often tens of milliseconds off. The cost is one new endpoint and an error of at most half of the round trip.
+- The client measures the offset at start and on each `latency.reset()`. It sends no requests in the background. The cost is that the two clocks can drift by 1 to 3 ms each minute, so each run must start with a reset.
+- I read the times from `latency.report()` in the console. The feature needs no new part in the side panel, and feature 9 can call the same function. The cost is that a reviewer must open the console to see the latency.
+- The value that I compare with the 100 ms target is the p99 of the total over 60 s. One long pause in the browser does not fail a run. The cost is that the 12 slowest batches of 1,200 can be above the target.
+- The client keeps the stage times of the last 1,200 batches and no raw data file. The memory stays small. The cost is that I cannot draw a chart of the latency over time.

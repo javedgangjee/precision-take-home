@@ -1,0 +1,35 @@
+# Feature 8 requirements: Latency
+
+## Requirements from the sources
+
+- R1. The server takes a timestamp at each stage of its work, from generation to send. (roadmap feature 8)
+- R2. The timestamps are not in the batch data. The data stays a JSON array of integers. (roadmap feature 8; N5)
+- R3. The timestamps go in the `id` field of the batch event, after the batch sequence number. (roadmap feature 8)
+- R4. The client reads the sequence number from the first part of the id, so the missed batch count still works. (roadmap feature 8; N5; feature 7, R7)
+- R5. The client adds a timestamp at each stage of its work, from receipt to render. (roadmap feature 8)
+- R6. The client calculates the total latency from generation to render. (roadmap feature 8; N6)
+- R7. The side panel does not show the latency. (roadmap feature 8)
+- R8. The feature writes docs/results.md. The file gives the measured time for each stage and compares the total with the 100 ms target. (roadmap feature 8; N6)
+- R9. The settings packet, `GET /health`, and the four admin endpoints stay as they are. (feature 6, G2 and G3; feature 7, G1)
+- R10. The README and the three logs in docs/ record this feature. (roadmap, S2, S3, S7, N14; CLAUDE.md)
+
+## Items the sources do not cover
+
+The roadmap leaves four decisions to this plan. They are the stages, the form of the id, the clock comparison, and the way I read the times. Each item below was my proposal. The user answered each one.
+
+- G1. **Agreed with a change.** I proposed four server timestamps, with one stage for the values and one for the JSON text. The user chose three server timestamps, so the two are one stage. The measurement has eight timestamps and seven stages. The server takes three timestamps on its own clock, and the client takes five on its own clock.
+  - `started` is the time just before the generator makes the values of the batch. The server makes every value of a batch at this one time, so no value is older than this.
+  - `encoded` is the time when the JSON text exists and the batch goes into the client queues.
+  - `sent` is the time when the stream route takes the batch from the queue of that client and hands the event to the web server. Each client has its own `sent` time.
+  - `received` is the time when the message handler of the client starts.
+  - `parsed` is the time when the client has the array of integers.
+  - `applied` is the time when the counts hold the batch.
+  - `frame` is the time when the animation frame callback that draws the batch starts.
+  - `drawn` is the time when the canvas draw call returns.
+
+  The stages are generate, queue, network, parse, apply, frame wait, and draw, in that order. Each stage runs from one timestamp to the next. The generate stage holds the making of the values and the JSON encoding. The total runs from `started` to `drawn`. The network stage runs from `sent` to `received`, so it holds the write by Uvicorn, the load balancer, the network, and the browser. The measurement stops at `drawn`. The time from the draw call to the light on the display is not measured, and docs/results.md says so.
+- G2. **Agreed.** The id of a batch event is four whole numbers with a colon between them, in the form `<sequence number>:<started>:<encoded>:<sent>`. Each of the three times is the number of microseconds since the Unix epoch, such as `1234:1790812800123456:1790812800123541:1790812800123702`. The id adds about 50 bytes to each batch. The client reads an id with only a sequence number as a batch with no times. Such a batch goes into the missed batch count and gives no latency sample.
+- G3. **Agreed with a change.** I proposed a new measurement of the offset every 10 s. The user chose a measurement at start and on each `latency.reset()` only, so the network panel stays quiet. The client measures the difference between the two clocks with a new endpoint. `GET /time` returns the server time as `{"epoch_us":1790812800123456}`. The client clock is `performance.timeOrigin + performance.now()`. The client reads its clock before the request and after the response. The offset is the server time minus the midpoint of the two client times. The client makes 5 requests, one after the other, and keeps the offset from the request with the shortest round trip. It does this at start and again on each `latency.reset()`, and the old offset stays in use until the new one exists. The two clocks can drift by 1 to 3 ms each minute, so each run starts with a reset. The client adds the offset to its own times when it calculates the network stage and the total. The other stages each use one clock and need no offset. The error of the offset is at most half of the round trip, and the report gives the round trip. A batch that finishes before the first offset exists gives no latency sample.
+- G4. **Agreed.** I read the times in the Chrome DevTools console. The client sets `window.latency` when it uses the server source. `latency.report()` prints a table with one row for each stage and one row for the total. Each row gives the p50, the p95, the p99, and the max in milliseconds. The report also gives the number of batches, the clock offset, and the round trip. It returns the same values as an object, so `copy(latency.report())` puts them on the clipboard. `latency.reset()` drops the samples and measures the clock offset again, so a run starts clean. The client measures all the time and keeps the last 1,200 batches, which is 60 s at the default settings. It also keeps at most 1,200 batches that wait for a frame, so a hidden tab cannot grow the memory. The test source has no server times, so it sets no `window.latency`.
+- G5. **Agreed.** The value that I compare with the 100 ms target is the p99 of the total. Feature 9 uses the same value for its pass check. The run for docs/results.md uses the cloud server, the default server settings, one client, N = 32, and Chrome with the tab in front. I call `latency.reset()`, wait 60 s, and call `copy(latency.report())`. I do a second run with the local server in Docker, which shows how much of the total is the network. I paste the two reports into the implement session, and the AI writes docs/results.md from them. The file gives the run conditions, a table of the stages for each run, the p99 of the total next to the 100 ms target, the error bound of the clock offset, and the part that is not measured. The implement mode stops and waits for my two reports before it writes the file.
+- G6. **Agreed.** The new code goes in these files. On the server, backend/app/broadcaster.py takes the first two timestamps and keeps them in the batch, and backend/app/main.py takes the `sent` time, builds the id, and adds `GET /time`. On the client, frontend/src/app/source/batch-id.ts reads the id. A new folder frontend/src/app/latency/ holds latency-stats.ts for the percentiles, clock-sync.ts for the offset, and latency-tracker.ts for the samples and the report. frontend/src/app/source/source-settings.ts gives the address of `GET /time`. The server source, the heat map component, and the app component call the new code.

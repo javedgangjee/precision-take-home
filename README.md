@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, the latency measurement, and the Makefile targets for the load test are in place. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, the latency measurement, and the load test are in place. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -252,11 +252,10 @@ Run `make destroy` to remove the stack. The hosted zone stays, because the stack
 
 The load test measures the limits of the cloud server on the samples per second, the number of clients, and the size of a batch. It runs against the cloud server only. I change the settings between the steps with `make cloud-setting-update`, so the server needs no restart.
 
-The test has three parts, in this order.
+The test has two parts, in this order.
 
-1. The first part raises the samples per second through 20,000, 250,000, 500,000, and 1,000,000, with one client and a batch interval of 50 ms.
+1. The first part raises the samples per second through 20,000, 250,000, 500,000, and 1,000,000, with one client and a batch interval of 50 ms. The batches hold 1,000, 12,500, 25,000, and 50,000 integers.
 2. The second part raises the number of clients through 2, 5, 10, 20, 50, and 100, at 20,000 samples per second and a batch interval of 50 ms. One Chrome tab measures, and each other client is a curl process on the laptop that reads the stream and drops the data.
-3. The third part raises the batch interval through 100 ms, 500 ms, and 1 s, with one client at 20,000 samples per second. The batches hold 2,000, 10,000, and 20,000 integers.
 
 Each step has 3 runs of 30 seconds. A run passes when the p99 of the total latency from `latency.report()` is at most 100 ms and the frame rate stays at 54 fps or more. A step passes when all 3 runs pass, and a part ends at its first step that fails. After each part, `make cloud-cpu` gives the CPU use of the server, as a clue to what limits a step. The CPU is not part of the pass rule.
 
@@ -268,6 +267,6 @@ The specs/features/09-load/validation.md file gives the method, with the console
 - The docs/assumptions.md file records the assumptions I made.
 - The docs/trade-offs.md file records the trade-offs I made.
 - The docs/ai-changes.md file records where I changed the AI output, and why.
-- The docs/results.md file gives the measured latency for each stage and compares the total with the 100 ms target. The limits from the load test go in the same file.
+- The docs/results.md file gives the measured latency for each stage and compares the total with the 100 ms target. It also gives the limits from the load test.
 - The docs/logs/ folder holds my Claude Code session logs, with one folder for each roadmap feature.
 - The context/ folder holds the brief, the HTML design, and my design notes.

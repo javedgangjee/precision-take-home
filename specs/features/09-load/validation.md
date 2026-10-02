@@ -1,6 +1,6 @@
 # Feature 9 validation: Load
 
-The project documents have no worked example for this feature. The cases follow the answers to G1 to G14 in requirements.md. The feature adds no test file, so each automated check is a command.
+The project documents have no worked example for this feature. The cases follow the answers to G1 to G15 in requirements.md. The feature adds no test file, so each automated check is a command.
 
 ## Automated checks
 
@@ -50,7 +50,7 @@ The command is `git diff --name-only main -- backend frontend infra`.
 
 ## Load test method
 
-The manual checks M2 to M4 use this method. I run them in the validate session.
+The manual checks M2 and M3 use this method. I run them in the validate session.
 
 ### Setup
 
@@ -173,14 +173,7 @@ The part uses 20,000 samples per second, a batch interval of 50 ms, and a max va
 3. The expected result is 3 runs for each step that ran. The check passes when the results exist and the part stopped by the rule.
 4. Stop the curl clients.
 
-### M4. The third part gives the longest batch interval that passes
-
-The part uses one client, 20,000 samples per second, and a max value of 10,000. The step at 50 ms is the first step of M2.
-
-1. Do one step for each batch interval of 100 ms, 500 ms, and 1,000 ms, with `make cloud-setting-update BATCH_INTERVAL_MS=100` and so on. Stop after the first step that fails.
-2. The expected result is 3 runs for each step that ran. The expected number of batches in a run is 300, 60, and 30. The check passes when the results exist and the part stopped by the rule.
-
-### M5. The cloud server is at its defaults, and it is paused or destroyed
+### M4. The cloud server is at its defaults, and it is paused or destroyed
 
 This check is the last step of the load test, so the server does not cost more than it must when I leave it overnight.
 
@@ -191,17 +184,45 @@ This check is the last step of the load test, so the server does not cost more t
    - Run `make destroy`. The expected result is that `curl https://api.precision.jgangjee.com/health` fails. The stack then costs nothing. Run `make deploy` before a reviewer uses the server, and read the new admin token.
 4. Close the client tab.
 
-### M6. docs/results.md gives the limits
+### M5. docs/results.md gives the limits
 
 1. Open docs/results.md.
 2. The expected result is a section "Feature 9, Load" after the feature 8 section, and the feature 8 section is as it was.
-3. The section gives the run conditions and one table for each part. Each table row gives the step, the `p99`, the `lowFps`, and the number of batches of each run, and whether the step passes. Each table also gives the average and the maximum CPU of the minutes of each step, from the CPU table of the part. The numbers match the results from M2 to M4.
-4. The section gives the highest samples per second, the highest number of clients, and the longest batch interval that pass, and the largest batch that passes in integers and in bytes. It names no new default, because I decide on the default after the test.
+3. The section gives the run conditions and one table for each part. Each table row gives the step, the `p99`, the `lowFps`, and the number of batches of each run, and whether the step passes. Each table also gives the average and the maximum CPU of the minutes of each step, from the CPU table of the part. The numbers match the results from M2 and M3.
+4. The section gives the highest samples per second and the highest number of clients that pass, and the largest batch that passes in integers and in bytes. It names no new default, because I decide on the default after the test.
 5. The section says that every client shared one home link, that the extra clients were curl processes, and that a batch that does not arrive gives no latency sample.
 
-### M7. The README and the logs record this feature
+### M6. The README and the logs record this feature
 
 1. Open README.md.
-2. The expected result is that the Makefile targets section has the four targets, the Deploy section exports `CLOUD_ADMIN_TOKEN`, and a Load test section names the three parts, the pass rule, and docs/results.md.
+2. The expected result is that the Makefile targets section has the four targets, the Deploy section exports `CLOUD_ADMIN_TOKEN`, and a Load test section names the two parts, the pass rule, and docs/results.md.
 3. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-changes.md.
 4. The expected result is that docs/trade-offs.md and docs/ai-changes.md each have a section for feature 9. docs/assumptions.md has one when the feature made an assumption.
+
+## Results, 2026-10-02
+
+Every check passes except M4, which fails on one point.
+
+- V1 passes. Each of the three commands exits with 2, names `CLOUD_ADMIN_TOKEN`, and prints no reply from a server.
+- V2 passes. The command exits with 2 and names the three variables.
+- V3 passes. The AI ran `make backend` and the eight cases in order. The first five exit with 0 and give the expected replies. The two bad values get status 422, the wrong token gets status 401, and the settings stay at 20000, 50, and not paused. No output holds `local-admin-token`.
+- V4 passes. `make test` exits with 0. The backend runs 101 tests with 100 percent coverage, the frontend runs 169 tests in 24 files, and infra runs 7 tests, and all of them pass.
+- V5 passes. `make lint` exits with 0.
+- V6 passes. The command prints nothing.
+- M1 passes. The user ran the four targets on the cloud server.
+- M2 passes. The steps at 20,000, 250,000, 500,000, and 1,000,000 each have 3 runs, and every run passes. The part ended at its last step. The highest p99 is 55.496 ms at 1,000,000, and the lowest frame rate is 60 in every run. After the part, the server was at 100 samples per second, and the user set 20,000 before M3.
+- M3 passes with a change of the steps. The user ran the step at 5 clients and then went straight to 100 clients, and both steps pass. The steps at 2, 10, 20, and 50 did not run. The count of curl clients was 4 after the first step and 99 after the second, which is the number that each step started.
+- M4 fails on one point. The server is paused, and the count of curl clients is 0. The settings packet of the stream still gives 100 samples per second, and the check expects 20,000. `make cloud-setting-update SAMPLES_PER_SECOND=20000` fixes it, and it works during a pause.
+- M5 passes. The AI wrote the section "Feature 9, Load" into docs/results.md in this session from the results that the user pasted, and the feature 8 section has no changed line.
+- M6 passes. The README has the four targets, the export of `CLOUD_ADMIN_TOKEN`, and a Load test section with the two parts. The three logs have sections for feature 9.
+
+Each item in requirements.md has at least one passing check, except R10 and one half of R11. R1 has M2, M3, and M5. R2 has M2 and M3. R3 has M1, M2, and M3. R4 has V1, V2, V3, and M1. R5 has M2 and M3. R6 has M2 and M3. R7 has M2, with the steps from G12. R8 has M3. R11 has M5 for the limits. R12 has M6. R10 and the new default in R11 have no check, because G8 leaves the default to the replan.
+
+The run differs from the method in these ways.
+
+- The user removed the third part, on the batch interval, before it ran. G15 in requirements.md gives the reason. The file had a manual check M4 for that part, and the later checks moved up by one number.
+- The runs have no `start` value, because the snippet that ran did not return one. The AI recorded the time of each paste and matched the steps with the CPU rows by that time.
+- The first result that the user pasted came from a server at a batch interval of 100 ms, with 300 batches in each run. It does not count. The step at 20,000 ran again at 50 ms.
+- The CPU table that the user pasted after M2 had no rows for the step at 20,000. The AI ran `make cloud-cpu MINUTES=50` after M3 and took the rows for both parts from that table.
+- The branch changes specs/roadmap.md, which plan.md does not name. The user asked for the roadmap to follow the removal of the third part.
+

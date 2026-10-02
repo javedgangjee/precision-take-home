@@ -145,3 +145,9 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 ## Feature 9, Load, implement
 
 - The AI gave the CPU table of `make cloud-cpu` the heading Time (UTC) and did not check the times. I asked the AI to confirm that the times are in UTC. The AWS CLI printed them in the time zone of my laptop, which was 4 hours behind UTC, so a row did not match the `start` time of a run. The AI set `TZ=UTC` for the CloudWatch call, and the times now match the UTC clock.
+
+## Feature 9, Load, validate
+
+- The plan had a third part that raised the batch interval through 100 ms, 500 ms, and 1 s. I removed it before it ran, because it proves nothing. The total latency starts when the server makes a batch, so a longer interval adds no wait to it, and the first part already passes with a larger batch. The AI removed the part from the roadmap, the feature specs, and the README.
+- The plan had the client steps in rising order, at 2, 5, 10, 20, 50, and 100. The step at 5 clients passed with a p99 of about 25 ms, which was far below the limit, so I went straight to 100. That step passed, and the steps at 2, 10, 20, and 50 did not run.
+- The AI reported the results of each part with no statement of what limits the server. I read the CPU table and asked the AI to record that the 0.25 vCPU of the task is the limit, as an assumption.

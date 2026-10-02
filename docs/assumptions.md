@@ -113,3 +113,8 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The Makefile puts each setting value into the JSON body with no check. A value that is not a whole number gets status 422 from the server, and the target fails.
 - `make cloud-cpu` uses the AWS profile that is active in the shell, which is the profile of the deploy. It finds the service through the stack name `PrecisionStack`.
 - The times in the CPU table are in UTC, as is the `start` time of each run from the console snippet. I match the two by the minute.
+
+## Feature 9, Load, validate
+
+- With one client, the 0.25 vCPU of the task is what limits the samples per second. The step at 1,000,000 passes with a p99 of about 55 ms, and the CPU is at about 82 percent in that step. The CPU rises in a straight line with the rate, at 24 percent for 250,000 and 43 percent for 500,000, so it reaches 100 percent at about 1,200,000 samples per second. I did not test a rate above 1,000,000, because that is the top of the range in N11, so the real limit is an assumption.
+- At 20,000 samples per second, the same CPU is what limits the number of clients. The step at 100 clients passes with a p99 of about 38 ms, and the CPU is at 76 to 81 percent in that step. The CPU is at about 6 percent with 1 client and 9 percent with 5 clients, so each client adds about 0.7 percent, and the CPU reaches 100 percent at about 130 clients. I did not test above 100 clients, so the real limit is an assumption.

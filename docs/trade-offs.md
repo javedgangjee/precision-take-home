@@ -195,3 +195,8 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The targets hide their commands, so the output is only the reply of the server. The cost is that I do not see the curl command that ran. `make -n cloud-pause` prints it, with the name of the token variable in place of the token.
 - The targets check the status code and not only the curl exit code, so a redirect or any other status that is not 200 fails the target. The cost is three more lines of shell.
 - `make cloud-cpu` gives the start and the end of the period to the AWS CLI in Unix seconds. The recipe needs no `date` options, which differ between macOS and Linux. The cost is a command that is harder to read than one with dates.
+
+## Feature 9, Load, validate
+
+- The load test has no part on the batch interval. The cost is that no run shows the client at a longer interval, and the default of 50 ms has no measurement against the other intervals.
+- The second part ran with 5 clients and with 100 clients only. The cost is that the results have three points for the number of clients, with the 1 client step of the first part, so they do not show how the p99 rises between 5 and 100.

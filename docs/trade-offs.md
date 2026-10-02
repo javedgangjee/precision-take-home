@@ -40,7 +40,7 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The generator schedules each batch from a fixed start time on the monotonic clock. The batches do not drift. After a stall, the server skips the missed ticks instead of making them in a burst (changed in the feature 2 review).
 - The stream tests run the app in a real Uvicorn server on a free port, because the in-process test clients wait for the end of a response. The cost is slower tests and a background thread in the fixture.
 - The sequence number goes in the SSE `id` field instead of the data. The data stays a plain array. The cost is that the browser sends the last id back on a reconnect, and the server must ignore it.
-- The batches carry no timestamp yet. Feature 7 decides how to measure latency across two clocks. The cost is that the payload format may change in feature 7.
+- The batches carry no timestamp yet. Feature 8 decides how to measure latency across two clocks. The cost is that the payload format may change in feature 8.
 - \* The generator uses `random.Random.choices` from the standard library instead of NumPy. It needs no new dependency and makes a 5,000-value batch in about 0.5 ms, three times faster than a `randrange` loop. The cost is speed. NumPy made the same batch in 0.11 ms, including the conversion to a list for JSON, which is about four times faster. At 20 batches a second, the saving is about 0.7 percent of one core, which does not justify a large dependency.
 - The broadcaster encodes each batch to JSON once and sends the same string to every client with `raw_data`. Encoding costs 0.28 ms per batch instead of 2.94 ms per batch per client, so a 0.25 vCPU task can serve many more clients. The cost is that the route bypasses the FastAPI data validation and encoding, so the broadcaster owns the wire format.
 
@@ -94,7 +94,7 @@ Each entry gives the date, the phase, the choice, and what it costs.
 ## 2026-09-30, replan after feature 3, frontend
 
 - The hotspot mode is removed from the roadmap. The project ends with the testing feature. The cost is that the heat map stays nearly flat under the uniform generator.
-- Feature 7 writes its findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.
+- Feature 8 writes its findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.
 
 ## 2026-09-30, implement feature 4, stream
 

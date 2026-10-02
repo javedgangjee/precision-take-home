@@ -150,3 +150,36 @@ The local server runs in Docker for every local check. `make docker` builds the 
 2. The expected result is that each file has an entry dated for the settings display feature.
 3. Open README.md.
 4. The expected result is that it describes the settings packet, the Paused badge, the Missed batches readout, and the three settings readouts. The note that the client has no Paused state is gone.
+
+## Results, 2026-10-01
+
+Every check passes.
+
+- V1 passes. The eight broadcaster tests for the packet, the change counter, and the wake item pass.
+- V2 passes. The six new stream tests and the changed ping test pass in Uvicorn on a local port. The feature 2 and feature 6 stream tests pass with the same cases.
+- V3 passes. The seven missed batch counter tests pass.
+- V4 passes. The seven settings packet tests and the four missed batch count tests of the server source pass.
+- V5 passes. The badge test has the Paused row, and the four rows from feature 4 pass.
+- V6 passes. The six side panel tests for the settings readouts, the Missed batches readout, and the order pass.
+- V7 passes. The test source test for the settings and the unset missed batch count passes.
+- V8 passes. `make lint` exits with 0. ruff and mypy pass on backend/ and infra/, and ESLint and Prettier pass on frontend/.
+- V9 passes. `npx ng build` exits with 0, and the initial bundle is 151.28 kB.
+- `make test` exits with 0. The backend runs 92 tests with 100 percent coverage, the frontend runs 126 tests in 20 files, and infra runs 7 tests, and all of them pass.
+- M1 passes. The user saw the default settings and the readouts followed the PATCH.
+- M2 passes. The badge shows Paused during the pause, the stream stays open, and the badge shows Live after the resume.
+- M3 passes. A client that connects during a pause shows Paused.
+- M4 passes with step 4. The DevTools Offline setting did not cut the open stream, so the user ran the check with the cloud server and turned the Wi-Fi off.
+- M5 passes. A server restart sets the Missed batches readout to 0.
+- M6 passes. The test source shows its own settings and no Missed batches readout.
+- M7 passes. The user deployed the stack, and the cloud server sends the settings packet.
+- M8 passes. The client follows a settings change on the cloud server.
+- M9 passes. The three logs each have an entry dated 2026-10-01 for this feature, and the README describes the settings packet, the Paused badge, and the four new readouts.
+
+Each item in requirements.md has at least one passing check. R1 has V1, V2, and M7. R2 has V2, M1, M2, and M3. R3 has V1, V2, and V4. R4 has V1 and V2. R5 has V4, V6, M1, and M8. R6 has V4, V5, and M2. R7 has V3, V4, M4, and M5. R8 has V6 and M1. R9 has the feature 4 test that keeps the counts through a reconnect, M2, and M5. R10 has V2 and the admin and health tests in the backend run. R11 has M9. G1 has V1 and V2. G2 has V4 and M3. G3 has V3, V4, M4, and M5. G4 has V5 and M2. G5 has V6 and M1. G6 has V7 and M6. G7 has V1 for the shared model.
+
+Two parts of the items have no check of their own. I confirmed each one by reading the code.
+
+- G1 says that two changes before a client reads the first one give one packet with the newest values. No test asserts this. The stream route in backend/app/main.py compares one change counter and sends the current packet, so it sends one packet for both changes.
+- G7 names the files for the new client code. The diff has frontend/src/app/source/missed-batches.ts, and frontend/src/app/source/stream-status.ts has the `paused` state and the two signals.
+
+The branch changes two files that plan.md does not name. frontend/src/app/app.spec.ts adds `addEventListener` to the fake EventSource. frontend/src/app/panel/stream-badge.scss makes the badge and its icon larger.

@@ -177,3 +177,14 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 ## Feature 8, Latency, review
 
 - The server defaults are 20,000 samples per second and a max value of 10,000, so each batch holds 1,000 integers from 0 to 9,999. These are the settings of the runs in docs/results.md. The cost is about five times the bytes for each client, and a default 32 by 32 grid that does not fill evenly. With 10,000 values on 1,024 cells, 784 cells get 10 values each and 240 cells get 9.
+
+## Feature 9, Load, plan
+
+- The three cloud targets read the admin token from the shell variable `CLOUD_ADMIN_TOKEN`. These targets make no AWS call, and the Makefile holds no token. The cost is one export in each new terminal.
+- A snippet in the DevTools console times each run and reads the frame rate. The client code does not change. The cost is that the snippet has no test and lives in validation.md of the feature.
+- The extra clients of the second part are curl processes on the laptop. They need no new code. The cost is that every client shares one home link, so the link can set the limit on clients before the server does. A curl client also does not parse or draw.
+- A step passes only when all 3 runs pass. The limit is a rate that held for 90 seconds. The cost is that one slow second on the network fails a step and ends the part.
+- The second part and the third part run at 20,000 samples per second. The numbers line up with the feature 8 runs. The cost is that they do not describe the server at a higher default.
+- The pass rule reads the p99 of the batches that arrive. The server can drop a batch for a slow client, and that batch gives no latency sample. docs/results.md gives the number of batches of each run next to the expected number, and the pass rule does not use that number.
+- The Makefile targets have no automated test. The checks are commands in validation.md that run the targets against the local server. The cost is that `make test` does not catch a broken target.
+- `make cloud-cpu` reads the standard ECS CPU metric from CloudWatch. It needs no change to the stack. The cost is one value for each minute, so a 30 second run has no value of its own, and the CPU is a clue and not a measurement of a step.

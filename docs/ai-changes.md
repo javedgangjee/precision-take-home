@@ -129,3 +129,15 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 
 - The AI wrote `head -c 600` in the two manual checks that read the stream with curl. At 20,000 samples per second, one batch is about 4,900 bytes, so the output showed no `id:` line. The AI found this in validate, and I approved the change to `head -c 12000`.
 - The implement runs for docs/results.md were 7 and 13 seconds. I ran both again for 60 seconds in validate, and the AI wrote the new reports into docs/results.md.
+
+## Feature 9, Load, plan
+
+- I asked the AI to limit the code, because this feature is a test. The plan adds three Makefile targets and no test file, and it changes no file in backend/, frontend/, or infra/.
+- The AI proposed that a step passes when 2 of its 3 runs pass. I asked for 3 full runs, so a step passes only when all 3 pass. I repeat a run only for an obvious error in the setup, such as a hidden tab.
+- The AI proposed that the second part and the third part run at the highest rate that passes the first part. I chose 20,000 samples per second, so the numbers line up with the feature 8 runs.
+- The AI proposed batch intervals of 100, 200, 500, and 1,000 ms. I asked for 25 ms, 50 ms, 100 ms, 500 ms, and 1 s. The AI found that the server rejects 25 ms, because the range starts at 50 ms, and that the 50 ms step repeats the first step of the first part. I dropped 25 ms, and the third part runs 100 ms, 500 ms, and 1 s.
+- The AI proposed that the implement step changes the default rate when a higher rate passes. I chose to decide after I read the results, so the change goes to the replan.
+- The AI proposed that I run the load test in the implement session, as in feature 8. I moved it to the validate session, because this feature is mostly a testing and validation step.
+- The roadmap set the first part at 20,000, 100,000, and 1,000,000 samples per second, and the AI kept those steps. I had tested 100,000 before, so I changed the steps to 20,000 as a baseline, then 250,000, 500,000, and 1,000,000.
+- I added a fourth Makefile target, `make cloud-cpu`, which prints the CPU use of the cloud service from CloudWatch. The plan had no server metric, so a failed step gave no clue to its cause. The AI added the start time of each run to the console snippet, so a run matches a row of the CPU table.
+- I added a last step to the load test that pauses or destroys the cloud server, so it does not cost more than it must when I leave it overnight. The plan ended the test with the server live at its defaults.

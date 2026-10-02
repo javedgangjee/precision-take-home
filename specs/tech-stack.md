@@ -2,6 +2,14 @@
 
 The versions match the tools on my laptop on 2026-09-29. Where a library is not on the laptop, the version is the latest release on that date.
 
+## Summary
+
+- The backend is a Python 3.13 server built with FastAPI. It sends batches of random integers to the client over Server-Sent Events.
+- The frontend is an Angular 21 client that runs on the local machine and draws the grid on an HTML canvas.
+- The backend runs in a Docker image on AWS ECS Fargate, behind an Application Load Balancer. AWS CDK in Python defines the infrastructure.
+- The tests use pytest for the backend and the infrastructure, and Vitest for the frontend.
+- A Makefile runs the common tasks, which include the local servers, the tests, the linters, and the deploy.
+
 ## Backend
 
 - The backend uses Python 3.13.15.
@@ -37,3 +45,4 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - Docker 29.8.0 builds the image, and AWS CLI 2.37.4 handles credentials.
 - The public URL of the backend is https://api.precision.jgangjee.com.
 - A Makefile holds the common tasks, such as running the backend, running the frontend, running the tests, and deploying. It must work with GNU Make 3.81, which ships with macOS.
+- The Makefile has four targets for the cloud server. Three of them call the admin API with curl and read the admin token from `CLOUD_ADMIN_TOKEN` in the shell. The fourth is `make cloud-cpu`, which reads the CPU use of the service from CloudWatch with the AWS CLI.

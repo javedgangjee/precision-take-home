@@ -50,7 +50,7 @@ The brief is the main source of truth. Where my notes or the HTML design disagre
 - N9. Counts stay on screen while the client reconnects.
 - N10. The client reconnects with backoff and shows one of four states, which are Live, Connecting, Reconnecting, and Paused. Feature 7 adds the Paused state.
 - N11. The server settings are samples per second from 1 to 1,000,000, batch interval from 50 ms to 1 s, and a maximum value from 1 to 10,000. The defaults are 20,000 samples per second, a 50 ms batch interval, and a maximum value of 10,000, so each batch holds 1,000 integers from 0 to 9,999. A fourth setting lists the origins that can call the server from a browser, and the default is http://localhost:4200. A fifth setting is the token for the admin API, and it has no default. The server reads these settings from environment variables at start. The admin API from feature 6 can change the first three settings while the server runs, and a restart sets them back to the environment values. The server sends the first three settings and the pause state to each client in a settings packet, and the side panel shows the three settings.
-- N12. A stress test measures the limits on clients, samples, and payload size, if it is feasible.
+- N12. A stress test measures the limits on clients, samples, and payload size, if it is feasible. Feature 9 ran the test, and docs/results.md gives the limits.
 - N13. A Makefile runs the frontend and the backend, runs the tests, and deploys.
 - N14. Three logs in docs/ record the assumptions, the trade-offs, and my changes to AI output in each phase. They are assumptions.md, trade-offs.md, and ai-changes.md.
 

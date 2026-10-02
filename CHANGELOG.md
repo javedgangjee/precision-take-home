@@ -72,6 +72,15 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 8 adds `latency.report()` and `latency.reset()` to the browser console for the server source, and the report gives the p50, the p95, the p99, and the max of each stage and of the total over the last 1,200 batches.
 - Feature 8 adds docs/results.md, which gives the measured times of a cloud run and a local run, and the p99 of the total is 28.5 ms in the cloud run against the 100 ms target.
 - Feature 8 adds a Latency section to the README and describes the new batch id and `GET /time`.
+- Feature 9 adds the Makefile targets `cloud-pause`, `cloud-resume`, and `cloud-setting-update`, which call the admin API of the cloud server with curl and read the admin token from `CLOUD_ADMIN_TOKEN` in the shell.
+- Feature 9 makes `make cloud-setting-update` send each of `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, and `MAX_VALUE` that is set, and it stops with a message when none is set.
+- Feature 9 makes the three targets print the reply of the server, fail when the status is not 200, and send no request when the token is not set.
+- Feature 9 adds the make variable `CLOUD_SERVER`, which points the three targets at another server, such as http://localhost:8000.
+- Feature 9 adds the Makefile target `cloud-cpu`, which prints the CPU use of the cloud service from CloudWatch with one row for each minute of the last 30 minutes, and `MINUTES` changes the 30.
+- Feature 9 adds a load test of the cloud server to docs/results.md, with one part that raises the samples per second and one part that raises the number of clients.
+- Feature 9 records that 1,000,000 samples per second with one client passes, with a highest p99 of 55.5 ms against the 100 ms target and a largest batch of 50,000 integers, which is about 244 KB.
+- Feature 9 records that 100 clients at 20,000 samples per second pass, and that no step of the test failed.
+- Feature 9 adds a Load test section to the README, which gives the two parts and the pass rule.
 
 ### Changed
 
@@ -88,6 +97,7 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 8 raises the server defaults to 20,000 samples per second and a maximum value of 10,000, so each batch holds 1,000 integers from 0 to 9,999, and the test source defaults match.
 - Feature 8 raises the upper limit of samples per second on the server from 100,000 to 1,000,000.
 - Feature 8 raises the largest N from 64 to 100.
+- Feature 9 makes the README section Deploy export the cloud admin token as `CLOUD_ADMIN_TOKEN`, where it set `TOKEN` before.
 
 ### Removed
 

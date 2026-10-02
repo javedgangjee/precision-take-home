@@ -8,15 +8,15 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_valida
 logger = logging.getLogger(__name__)
 
 
-SamplesPerSecond = Annotated[int, Field(ge=1, le=100_000)]
+SamplesPerSecond = Annotated[int, Field(ge=1, le=1_000_000)]
 BatchIntervalMs = Annotated[int, Field(ge=50, le=1_000)]
 MaxValue = Annotated[int, Field(ge=1, le=10_000)]
 
 
 class Settings(BaseModel):
-    samples_per_second: SamplesPerSecond = 5_000
+    samples_per_second: SamplesPerSecond = 20_000
     batch_interval_ms: BatchIntervalMs = 50
-    max_value: MaxValue = 1_024
+    max_value: MaxValue = 10_000
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:4200"])
     # With no token, the server has no admin API.
     admin_token: str | None = None

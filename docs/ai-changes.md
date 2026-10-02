@@ -110,3 +110,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 
 - The AI proposed four server timestamps, with one stage for the random values and one for the JSON text. I chose three server timestamps, so the two are one generate stage and the id is shorter.
 - The AI proposed that the client measures the clock offset every 10 s. I chose a measurement at start and on each `latency.reset()` only, so the client sends no requests in the background.
+
+## Feature 8, Latency, implement
+
+- The plan set both runs for docs/results.md at 5,000 samples per second and a max value of 1,024, with a wait of 60 seconds. I ran both at 20,000 samples per second and a max value of 10,000, and I took the reports after 7 and 13 seconds. The AI read the settings packet of both servers to confirm the settings, and docs/results.md gives the real conditions.

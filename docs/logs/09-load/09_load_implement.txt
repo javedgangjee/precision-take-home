@@ -1,0 +1,558 @@
+ ▐▛███▛█   Claude Code v2.1.287
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven implement                                                        
+
+  Searched for 1 pattern, read 11 files, ran 3 shell commands (ctrl+o to expand)
+
+⏺ I have read the specs and the feature 9 plan. Your last commit says the plan
+  is reviewed, so I am treating it as approved. I am now adding the four targets
+  to the Makefile.
+
+⏺ Update(Makefile)
+  ⎿  Added 14 lines, removed 1 line
+       8  LOCAL_CLIENT := http://localhost:$(FRONTEND_PORT)/?server=http:
+          //localhost:$(BACKEND_PORT)
+       9  # The local server uses this fixed token for the admin API. The
+           cloud server uses a secret.
+      10  LOCAL_ADMIN_TOKEN := local-admin-token
+      11 +# The cloud targets call this server. They read its admin token
+         + from CLOUD_ADMIN_TOKEN in the shell.                          
+      12 +CLOUD_SERVER ?= https://api.precision.jgangjee.com             
+      13 +STACK := PrecisionStack                                        
+      14 +# make cloud-cpu prints this many minutes of CPU values.       
+      15 +MINUTES ?= 30                                                  
+      16  
+      17 +# Each setting that is set adds one field to the body of make c
+         +loud-setting-update.                                           
+      18 +comma := ,                                                     
+      19 +space := $(subst ,, )                                          
+      20 +SETTINGS := $(if $(SAMPLES_PER_SECOND),"samples_per_second":$(S
+         +AMPLES_PER_SECOND)) \                                          
+      21 +  $(if $(BATCH_INTERVAL_MS),"batch_interval_ms":$(BATCH_INTERVA
+         +L_MS)) \                                                       
+      22 +  $(if $(MAX_VALUE),"max_value":$(MAX_VALUE))                  
+      23 +SETTINGS_BODY := {$(subst $(space),$(comma),$(strip $(SETTINGS)
+         +))}                                                            
+      24 +                                                               
+      25  # Stop the Angular CLI from asking about usage data on the firs
+          t run.
+      26  export NG_CLI_ANALYTICS := false
+      27  
+      15 -.PHONY: install backend frontend dev docker-build docker test t
+         -est-backend test-frontend test-infra lint lint-backend lint-fro
+         -ntend lint-infra synth deploy destroy                          
+      28 +.PHONY: install backend frontend dev docker-build docker test t
+         +est-backend test-frontend test-infra lint lint-backend lint-fro
+         +ntend lint-infra synth deploy destroy cloud-pause cloud-resume 
+         +cloud-setting-update cloud-cpu                                 
+      29  
+      30  install:
+      31    cd backend && uv sync
+
+⏺ Update(Makefile)
+  ⎿  Added 36 lines
+       84  
+       85  destroy:
+       86    cd infra && cdk destroy
+       87 +                                                              
+       88 +# This sends one request to the admin API of the cloud server 
+          +and prints the reply.                                         
+       89 +# The arguments are the method, the path, and any extra curl o
+          +ptions.                                                       
+       90 +# It sends no request when the token is not set, and it fails 
+          +when the status is not 200.                                   
+       91 +# Each line starts with @, so the output does not show the tok
+          +en.                                                           
+       92 +define cloud_admin                                            
+       93 +@test -n "$$CLOUD_ADMIN_TOKEN" || { echo "CLOUD_ADMIN_TOKEN is
+          + not set. The README section Deploy gives the commands."; exit
+          + 1; }                                                         
+       94 +@reply=$$(curl -sS -X $(1) "$(CLOUD_SERVER)$(2)" -H "Authoriza
+          +tion: Bearer $$CLOUD_ADMIN_TOKEN" $(3) -w '\n%{http_code}') ||
+          + exit 1; \                                                    
+       95 +  status=$$(printf '%s\n' "$$reply" | tail -n 1); \           
+       96 +  printf '%s\n' "$$reply" | sed '$$d'; \                      
+       97 +  test "$$status" = 200 || { echo "The status is $$status."; e
+          +xit 1; }                                                      
+       98 +endef                                                         
+       99 +                                                              
+      100 +cloud-pause:                                                  
+      101 +  $(call cloud_admin,POST,/admin/pause)                       
+      102 +                                                              
+      103 +cloud-resume:                                                 
+      104 +  $(call cloud_admin,POST,/admin/resume)                      
+      105 +                                                              
+      106 +cloud-setting-update:                                         
+      107 +  @test -n "$(SAMPLES_PER_SECOND)$(BATCH_INTERVAL_MS)$(MAX_VAL
+          +UE)" || { echo "Set at least one of SAMPLES_PER_SECOND, BATCH_
+          +INTERVAL_MS, and MAX_VALUE."; exit 1; }                       
+      108 +  $(call cloud_admin,PATCH,/admin/settings,-H "Content-Type: a
+          +pplication/json" -d '$(SETTINGS_BODY)')                       
+      109 +                                                              
+      110 +# CloudWatch has one CPU value for each minute, and a value sh
+          +ows about 2 minutes late.                                     
+      111 +# The percent is of the 0.25 vCPU of the task. The times are i
+          +n UTC.                                                        
+      112 +cloud-cpu:                                                    
+      113 +  @output() { aws cloudformation describe-stacks --stack-name 
+          +$(STACK) \                                                    
+      114 +      --query "Stacks[0].Outputs[?OutputKey=='$$1'].OutputValu
+          +e" --output text; }; \                                        
+      115 +  cluster=$$(output ClusterName) && service=$$(output ServiceN
+          +ame) && now=$$(date +%s) && \                                 
+      116 +  aws cloudwatch get-metric-statistics --namespace AWS/ECS --m
+          +etric-name CPUUtilization \                                   
+      117 +    --dimensions Name=ClusterName,Value=$$cluster Name=Service
+          +Name,Value=$$service \                                        
+      118 +    --start-time $$((now - $(MINUTES) * 60)) --end-time $$now 
+          +--period 60 \                                                 
+      119 +    --statistics Average Maximum \                            
+      120 +    --query "sort_by(Datapoints, &Timestamp)[].[Timestamp, Ave
+          +rage, Maximum]" --output text | \                             
+      121 +  awk 'BEGIN { printf "%-16s  %7s  %7s\n", "Time (UTC)", "Avg 
+          +%", "Max %" } \                                               
+      122 +    { printf "%-16s  %7.1f  %7.1f\n", substr($$1, 1, 16), $$2,
+          + $$3 }'                                                       
+
+  Ran 6 shell commands (ctrl+o to expand)
+
+⏺ Background command "Start a local backend on port 8001 for check V3" failed
+with exit code 2
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The four targets work, and checks V1 to V3 pass. make test and make lint are
+  running while I update the README and the logs.
+
+⏺ Update(Makefile)
+  ⎿  Added 1 line, removed 1 line
+      88  # This sends one request to the admin API of the cloud server a
+          nd prints the reply.
+      89  # The arguments are the method, the path, and any extra curl op
+          tions.
+      90  # It sends no request when the token is not set, and it fails w
+          hen the status is not 200.
+      91 -# Each line starts with @, so the output does not show the toke
+         -n.                                                             
+      91 +# The shell reads the token, so make never prints it.          
+      92  define cloud_admin
+      93  @test -n "$$CLOUD_ADMIN_TOKEN" || { echo "CLOUD_ADMIN_TOKEN is 
+          not set. The README section Deploy gives the commands."; exit 1
+          ; }
+      94  @reply=$$(curl -sS -X $(1) "$(CLOUD_SERVER)$(2)" -H "Authorizat
+          ion: Bearer $$CLOUD_ADMIN_TOKEN" $(3) -w '\n%{http_code}') || e
+          xit 1; \
+
+⏺ Update(Makefile)
+  ⎿  Added 4 lines, removed 4 lines
+      113    @output() { aws cloudformation describe-stacks --stack-name 
+           $(STACK) \
+      114        --query "Stacks[0].Outputs[?OutputKey=='$$1'].OutputValu
+           e" --output text; }; \
+      115    cluster=$$(output ClusterName) && service=$$(output ServiceN
+           ame) && now=$$(date +%s) && \
+      116 -  aws cloudwatch get-metric-statistics --namespace AWS/ECS --m
+          -etric-name CPUUtilization \                                   
+      116 +  rows=$$(aws cloudwatch get-metric-statistics --namespace AWS
+          +/ECS --metric-name CPUUtilization \                           
+      117      --dimensions Name=ClusterName,Value=$$cluster Name=Service
+           Name,Value=$$service \
+      118      --start-time $$((now - $(MINUTES) * 60)) --end-time $$now 
+           --period 60 \
+      119      --statistics Average Maximum \
+      120 -    --query "sort_by(Datapoints, &Timestamp)[].[Timestamp, Ave
+          -rage, Maximum]" --output text | \                             
+      121 -  awk 'BEGIN { printf "%-16s  %7s  %7s\n", "Time (UTC)", "Avg 
+          -%", "Max %" } \                                               
+      122 -    { printf "%-16s  %7.1f  %7.1f\n", substr($$1, 1, 16), $$2,
+          - $$3 }'                                                       
+      120 +    --query "sort_by(Datapoints, &Timestamp)[].[Timestamp, Ave
+          +rage, Maximum]" --output text) && \                           
+      121 +  printf '%s\n' "$$rows" | awk 'BEGIN { printf "%-16s  %7s  %7
+          +s\n", "Time (UTC)", "Avg %", "Max %" } \                      
+      122 +    NF { printf "%-16s  %7.1f  %7.1f\n", substr($$1, 1, 16), $
+          +$2, $$3 }'                                                    
+
+⏺ Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      2  
+      3  This repo is my take-home project for the Precision Neuroscience
+          full-stack role. A cloud server streams nonnegative integers to
+          a web client. The client bins each number into an N by N grid a
+         nd paints each cell on a blue-to-red heat map in real time.
+      4  
+      5 -The project is in progress. The scaffold, the backend stream, th
+        -e heat map client, the client connection to the server, the clou
+        -d deploy, the admin API, the settings display, and the latency m
+        -easurement are in place. specs/roadmap.md shows the status of ea
+        -ch feature.                                                     
+      5 +The project is in progress. The scaffold, the backend stream, th
+        +e heat map client, the client connection to the server, the clou
+        +d deploy, the admin API, the settings display, the latency measu
+        +rement, and the Makefile targets for the load test are in place.
+        + specs/roadmap.md shows the status of each feature.             
+      6  
+      7  ## Repo layout
+      8  
+
+⏺ Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      18  - You need uv 0.11.24. uv installs Python 3.13.15 for you if it
+           is missing.
+      19  - You need Node.js 22.22.1 and npm 11.20.0.
+      20  - You need the AWS CDK CLI 2.1143.0 for `make synth`. Install i
+          t with `npm install -g aws-cdk@2.1143.0`.
+      21 -- You need AWS CLI 2.37.4 with credentials for `make deploy` an
+         -d `make destroy`. The AWS account must be bootstrapped for CDK 
+         -in the region of your AWS profile. The Deploy section gives the
+         - command.                                                      
+      21 +- You need AWS CLI 2.37.4 with credentials for `make deploy`, `
+         +make destroy`, and `make cloud-cpu`. The AWS account must be bo
+         +otstrapped for CDK in the region of your AWS profile. The Deplo
+         +y section gives the command.                                   
+      22  - You need GNU Make 3.81 or later. macOS ships with 3.81.
+      23  - You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make d
+          ocker-build`, `make docker`, and `make deploy`.
+      24  - The client loads its icons from Google Fonts, so the browser 
+          needs the network.
+
+⏺ Update(README.md)
+  ⎿  Added 4 lines
+      40  - `make synth` synthesizes the CDK app into infra/cdk.out/. It 
+          needs no AWS credentials.
+      41  - `make deploy` builds the backend image and deploys the CDK st
+          ack to AWS. The Deploy section has the details.
+      42  - `make destroy` removes the CDK stack from AWS.
+      43 +- `make cloud-pause` pauses the stream of the cloud server, and
+         + `make cloud-resume` resumes it. Both call the admin API with c
+         +url, and they read the admin token from `CLOUD_ADMIN_TOKEN` in 
+         +the shell. The Deploy section shows how to set it.             
+      44 +- `make cloud-setting-update` changes the settings of the cloud
+         + server. It sends each of `SAMPLES_PER_SECOND`, `BATCH_INTERVAL
+         +_MS`, and `MAX_VALUE` that is set, such as `make cloud-setting-
+         +update SAMPLES_PER_SECOND=100000`. It reads the same token.    
+      45 +- These three targets print the reply of the server, and they f
+         +ail when the status is not 200. They send no request when the t
+         +oken is not set. `CLOUD_SERVER` changes the server address, so 
+         +`CLOUD_SERVER=http://localhost:8000` with the token `local-admi
+         +n-token` calls the local server.                               
+      46 +- `make cloud-cpu` prints the CPU use of the cloud service from
+         + CloudWatch, with one row for each minute of the last 30 minute
+         +s. Each row has the time in UTC, the average, and the maximum i
+         +n percent of the 0.25 vCPU of the task. `MINUTES` changes the 3
+         +0. It needs AWS credentials and no admin token.                
+      47  
+      48  ## Backend stream
+      49  
+
+⏺ Update(README.md)
+  ⎿  Added 25 lines, removed 2 lines
+      233  ```sh
+      234  ARN=$(aws cloudformation describe-stacks --stack-name Precisio
+           nStack \
+      235    --query "Stacks[0].Outputs[?OutputKey=='AdminTokenSecretArn'
+           ].OutputValue" --output text)
+      236 -TOKEN=$(aws secretsmanager get-secret-value --secret-id "$ARN"
+          - --query SecretString --output text)                          
+      237 -curl https://api.precision.jgangjee.com/admin/settings -H "Aut
+          -horization: Bearer $TOKEN"                                    
+      236 +export CLOUD_ADMIN_TOKEN=$(aws secretsmanager get-secret-value
+          + --secret-id "$ARN" --query SecretString --output text)       
+      237 +curl https://api.precision.jgangjee.com/admin/settings -H "Aut
+          +horization: Bearer $CLOUD_ADMIN_TOKEN"                        
+      238  ```
+      239  
+      240 +The cloud targets of the Makefile read `CLOUD_ADMIN_TOKEN`, so
+          + they work in the same terminal after the export. The values i
+          +n the third command are the defaults.                         
+      241 +                                                              
+      242 +```sh                                                         
+      243 +make cloud-pause                                              
+      244 +make cloud-resume                                             
+      245 +make cloud-setting-update SAMPLES_PER_SECOND=20000 BATCH_INTER
+          +VAL_MS=50 MAX_VALUE=10000                                     
+      246 +make cloud-cpu                                                
+      247 +```                                                           
+      248 +                                                              
+      249  Run `make destroy` to remove the stack. The hosted zone stays,
+            because the stack only imports it.
+      250  
+      251 +## Load test                                                  
+      252 +                                                              
+      253 +The load test measures the limits of the cloud server on the s
+          +amples per second, the number of clients, and the size of a ba
+          +tch. It runs against the cloud server only. I change the setti
+          +ngs between the steps with `make cloud-setting-update`, so the
+          + server needs no restart.                                     
+      254 +                                                              
+      255 +The test has three parts, in this order.                      
+      256 +                                                              
+      257 +1. The first part raises the samples per second through 20,000
+          +, 250,000, 500,000, and 1,000,000, with one client and a batch
+          + interval of 50 ms.                                           
+      258 +2. The second part raises the number of clients through 2, 5, 
+          +10, 20, 50, and 100, at 20,000 samples per second and a batch 
+          +interval of 50 ms. One Chrome tab measures, and each other cli
+          +ent is a curl process on the laptop that reads the stream and 
+          +drops the data.                                               
+      259 +3. The third part raises the batch interval through 100 ms, 50
+          +0 ms, and 1 s, with one client at 20,000 samples per second. T
+          +he batches hold 2,000, 10,000, and 20,000 integers.           
+      260 +                                                              
+      261 +Each step has 3 runs of 30 seconds. A run passes when the p99 
+          +of the total latency from `latency.report()` is at most 100 ms
+          + and the frame rate stays at 54 fps or more. A step passes whe
+          +n all 3 runs pass, and a part ends at its first step that fail
+          +s. After each part, `make cloud-cpu` gives the CPU use of the 
+          +server, as a clue to what limits a step. The CPU is not part o
+          +f the pass rule.                                              
+      262 +                                                              
+      263 +The specs/features/09-load/validation.md file gives the method
+          +, with the console snippet that times a run and reads its fram
+          +e rate. The docs/results.md file records the limits.          
+      264 +                                                              
+      265  ## Specs and logs
+      266  
+      267  - The specs/ folder holds the mission, the tech stack, the roa
+           dmap, and a plan for each feature.
+
+⏺ Update(README.md)
+  ⎿  Added 1 line, removed 1 line
+      268  - The docs/assumptions.md file records the assumptions I made.
+      269  - The docs/trade-offs.md file records the trade-offs I made.
+      270  - The docs/ai-changes.md file records where I changed the AI o
+           utput, and why.
+      271 -- The docs/results.md file gives the measured latency for each
+          - stage and compares the total with the 100 ms target.         
+      271 +- The docs/results.md file gives the measured latency for each
+          + stage and compares the total with the 100 ms target. The limi
+          +ts from the load test go in the same file.                    
+      272  - The docs/logs/ folder holds my Claude Code session logs, wit
+           h one folder for each roadmap feature.
+      273  - The context/ folder holds the brief, the HTML design, and my
+            design notes.
+
+⏺ Update(docs/assumptions.md)
+  ⎿  Added 7 lines
+      106  - Chrome rounds the client clock to 0.1 ms. The parse stage an
+           d the apply stage are shorter than that at the default setting
+           s, so they read as 0 or 0.1 ms.
+      107  - A time request that returns a status other than 200 counts a
+           s a failed request and gives no sample. A client that connects
+            to a server from before this feature then has no offset and n
+           o samples.
+      108  - The report rounds each value to 0.001 ms.
+      109 +                                                              
+      110 +## Feature 9, Load, implement                                 
+      111 +                                                              
+      112 +- A setting variable that is exported in the shell counts as s
+          +et, as it does for `make docker`. `make cloud-setting-update` 
+          +then sends it with no value on the command line.              
+      113 +- The Makefile puts each setting value into the JSON body with
+          + no check. A value that is not a whole number gets status 422 
+          +from the server, and the target fails.                        
+      114 +- `make cloud-cpu` uses the AWS profile that is active in the 
+          +shell, which is the profile of the deploy. It finds the servic
+          +e through the stack name `PrecisionStack`.                    
+      115 +- The times in the CPU table are in UTC, as is the `start` tim
+          +e of each run from the console snippet. I match the two by the
+          + minute.                                                      
+
+⏺ Update(docs/trade-offs.md)
+  ⎿  Added 7 lines
+      188  - The pass rule reads the p99 of the batches that arrive. The 
+           server can drop a batch for a slow client, and that batch give
+           s no latency sample. docs/results.md gives the number of batch
+           es of each run next to the expected number, and the pass rule 
+           does not use that number.
+      189  - The Makefile targets have no automated test. The checks are 
+           commands in validation.md that run the targets against the loc
+           al server. The cost is that `make test` does not catch a broke
+           n target.
+      190  - `make cloud-cpu` reads the standard ECS CPU metric from Clou
+           dWatch. It needs no change to the stack. The cost is one value
+            for each minute, so a 30 second run has no value of its own, 
+           and the CPU is a clue and not a measurement of a step.
+      191 +                                                              
+      192 +## Feature 9, Load, implement                                 
+      193 +                                                              
+      194 +- The three admin targets share one `define` block in the Make
+          +file, which checks the token, sends the request, and checks th
+          +e status. The rule for the token and the status has one copy. 
+          +The cost is a block that is harder to read than three plain cu
+          +rl lines.                                                     
+      195 +- The targets hide their commands, so the output is only the r
+          +eply of the server. The cost is that I do not see the curl com
+          +mand that ran. `make -n cloud-pause` prints it, with the name 
+          +of the token variable in place of the token.                  
+      196 +- The targets check the status code and not only the curl exit
+          + code, so a redirect or any other status that is not 200 fails
+          + the target. The cost is three more lines of shell.           
+      197 +- `make cloud-cpu` gives the start and the end of the period t
+          +o the AWS CLI in Unix seconds. The recipe needs no `date` opti
+          +ons, which differ between macOS and Linux. The cost is a comma
+          +nd that is harder to read than one with dates.                
+
+⏺ Background command "Run make test, make lint, and the V6 diff check" completed
+(exit code 0)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The implement steps for feature 9 are done, and nothing is committed. I did
+  not ask you to confirm the plan, because your last commit says it is reviewed.
+
+  What changed
+
+  - The Makefile has the four targets cloud-pause, cloud-resume,
+    cloud-setting-update, and cloud-cpu.
+  - README.md has the four targets, the CLOUD_ADMIN_TOKEN export in the Deploy
+    section, and a new Load test section.
+  - docs/assumptions.md and docs/trade-offs.md each have a section "Feature 9,
+    Load, implement".
+
+  Check results
+
+  ┌───────┬──────────────────────────────────────────────────────────────────┐
+  │ Check │                              Result                              │
+  ├───────┼──────────────────────────────────────────────────────────────────┤
+  │ V1    │ It passes. Each of the three commands stops, names               │
+  │       │ CLOUD_ADMIN_TOKEN, and sends no request.                         │
+  ├───────┼──────────────────────────────────────────────────────────────────┤
+  │ V2    │ It passes. The command stops and names the three variables.      │
+  ├───────┼──────────────────────────────────────────────────────────────────┤
+  │ V3    │ It passes on all eight cases, and no output holds the token.     │
+  ├───────┼──────────────────────────────────────────────────────────────────┤
+  │ V4    │ make test exits with 0. The backend has 101 tests, the frontend  │
+  │       │ has 169, and the infra has 7.                                    │
+  ├───────┼──────────────────────────────────────────────────────────────────┤
+  │ V5    │ make lint exits with 0.                                          │
+  ├───────┼──────────────────────────────────────────────────────────────────┤
+  │ V6    │ The diff against main for backend, frontend, and infra is empty. │
+  └───────┴──────────────────────────────────────────────────────────────────┘
+
+  I also ran make cloud-cpu against the live stack. It printed 29 rows for 30
+  minutes and 4 rows for MINUTES=5, where M1 expects about 28 and about 3.
+
+  Differences from the plan
+
+  - V3 ran against a backend on port 8001, because your Docker container holds
+    port 8000. I did not touch the container, and I stopped the 8001 server
+    after the check.
+  - docs/ai-changes.md has no implement entry, because you changed nothing in
+    this session.
+  - The README says that docs/results.md records the limits. That section does
+    not exist until the validate session writes it.
+  - The Deploy example for make cloud-setting-update sends the default values,
+    so a reader who copies it does not change the cloud server.
+  - The README prerequisites line now names make cloud-cpu next to make deploy
+    and make destroy.
+  - make install ran once by mistake, from a quoting error in my check loop. It
+    reinstalled the dependencies from the lock files and changed no tracked
+    file.
+
+  Next step
+
+  Review the diff and commit. Then clear the session and run /spec-driven 
+  validate.
+
+✻ Brewed for 4m 14s · done 3:55 PM
+
+※ recap: Feature 9 adds a load test for the cloud server, and the implement step is done with the four Makefile targets, the README, and the logs updated and all automated checks passing. Review the diff, commit, then run `/spec-driven validate`.
+
+❯ run make cloud-cpu, make sure that is utc                                     
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Update(Makefile)
+  ⎿  Added 2 lines, removed 1 line
+      108    $(call cloud_admin,PATCH,/admin/settings,-H "Content-Type: a
+           pplication/json" -d '$(SETTINGS_BODY)')
+      109  
+      110  # CloudWatch has one CPU value for each minute, and a value sh
+           ows about 2 minutes late.
+      111 -# The percent is of the 0.25 vCPU of the task. The times are i
+          -n UTC.                                                        
+      111 +# The percent is of the 0.25 vCPU of the task.                
+      112 +# The AWS CLI prints times in the zone of the laptop, so TZ=UT
+          +C makes them UTC.                                             
+      113  cloud-cpu:
+      114    @output() { aws cloudformation describe-stacks --stack-name 
+           $(STACK) \
+      115        --query "Stacks[0].Outputs[?OutputKey=='$$1'].OutputValu
+           e" --output text; }; \
+
+⏺ Update(Makefile)
+  ⎿  Added 1 line, removed 1 line
+      114    @output() { aws cloudformation describe-stacks --stack-name 
+           $(STACK) \
+      115        --query "Stacks[0].Outputs[?OutputKey=='$$1'].OutputValu
+           e" --output text; }; \
+      116    cluster=$$(output ClusterName) && service=$$(output ServiceN
+           ame) && now=$$(date +%s) && \
+      117 -  rows=$$(aws cloudwatch get-metric-statistics --namespace AWS
+          -/ECS --metric-name CPUUtilization \                           
+      117 +  rows=$$(TZ=UTC aws cloudwatch get-metric-statistics --namesp
+          +ace AWS/ECS --metric-name CPUUtilization \                    
+      118      --dimensions Name=ClusterName,Value=$$cluster Name=Service
+           Name,Value=$$service \
+      119      --start-time $$((now - $(MINUTES) * 60)) --end-time $$now 
+           --period 60 \
+      120      --statistics Average Maximum \
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(docs/ai-changes.md)
+  ⎿  Added 4 lines
+      141  - The roadmap set the first part at 20,000, 100,000, and 1,000
+           ,000 samples per second, and the AI kept those steps. I had te
+           sted 100,000 before, so I changed the steps to 20,000 as a bas
+           eline, then 250,000, 500,000, and 1,000,000.
+      142  - I added a fourth Makefile target, `make cloud-cpu`, which pr
+           ints the CPU use of the cloud service from CloudWatch. The pla
+           n had no server metric, so a failed step gave no clue to its c
+           ause. The AI added the start time of each run to the console s
+           nippet, so a run matches a row of the CPU table.
+      143  - I added a last step to the load test that pauses or destroys
+            the cloud server, so it does not cost more than it must when 
+           I leave it overnight. The plan ended the test with the server 
+           live at its defaults.
+      144 +                                                              
+      145 +## Feature 9, Load, implement                                 
+      146 +                                                              
+      147 +- The AI gave the CPU table of `make cloud-cpu` the heading Ti
+          +me (UTC) and did not check the times. I asked the AI to confir
+          +m that the times are in UTC. The AWS CLI printed them in the t
+          +ime zone of my laptop, which was 4 hours behind UTC, so a row 
+          +did not match the `start` time of a run. The AI set `TZ=UTC` f
+          +or the CloudWatch call, and the times now match the UTC clock.
+
+⏺ The times were not UTC. The table said "Time (UTC)", but the AWS CLI printed
+  the times in the zone of your laptop, which is 4 hours behind UTC. My first
+  report was wrong on this point, because I did not compare the times with a
+  clock.
+
+  I fixed it in the Makefile by setting TZ=UTC on the CloudWatch call. The run
+  after the fix matches the UTC clock, which read 20:02:57 at the time of the
+  run.
+
+  Time (UTC)          Avg %    Max %
+  2026-10-02T19:56      0.6      0.6
+  2026-10-02T19:57      0.6      0.6
+  2026-10-02T19:58      0.6      0.6
+  2026-10-02T19:59      0.6      0.6
+  2026-10-02T20:00      0.6      0.6
+  2026-10-02T20:01      0.6      0.7
+
+  The newest row is about 2 minutes behind the clock, as G13 expects. The rows
+  now line up with the start time of each run from the console snippet, which is
+  also UTC.
+
+  I added an entry for this under "Feature 9, Load, implement" in
+  docs/ai-changes.md. The README and docs/assumptions.md already said UTC, so
+  they needed no change. Nothing is committed.
+
+✻ Brewed for 40s · done 4:03 PM

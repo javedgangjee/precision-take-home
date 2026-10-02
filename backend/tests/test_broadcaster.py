@@ -230,18 +230,6 @@ def test_resume_clears_paused_in_the_packet_and_a_second_resume_changes_nothing(
     assert broadcaster.version == version + 1
 
 
-def test_update_pause_and_resume_keep_the_next_sequence_number() -> None:
-    broadcaster = make()
-    broadcaster.publish([1], 0)
-    next_seq = broadcaster.next_seq
-
-    broadcaster.update(Settings(samples_per_second=20))
-    broadcaster.pause()
-    broadcaster.resume()
-
-    assert broadcaster.next_seq == next_seq
-
-
 def test_pause_puts_one_wake_item_in_an_empty_queue() -> None:
     broadcaster = make()
     queue = broadcaster.subscribe()

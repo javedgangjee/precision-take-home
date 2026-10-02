@@ -9,7 +9,8 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - The web framework is FastAPI 0.142.1, with Pydantic 2.13.5.
 - The ASGI server is Uvicorn 0.54.0.
 - The backend sends the stream to the client with Server-Sent Events. The client sends nothing back, so the project does not use WebSockets.
-- The stream has two event types. A batch event has an `id` line and no event name. A settings packet has the event name `update` and no `id` line.
+- The stream has two event types. A batch event has an `id` line and no event name. The `id` holds the batch sequence number and three server timestamps, in the form `<sequence number>:<started>:<encoded>:<sent>`. A settings packet has the event name `update` and no `id` line.
+- The backend has a `GET /time` endpoint that returns the server time. The client uses it to measure the offset between its clock and the server clock.
 - The backend has an admin API under /admin that changes the stream settings and pauses the stream. Each admin request needs a bearer token, which the backend reads from the `ADMIN_TOKEN` environment variable.
 - The backend runs locally for development, both with uv and in a Docker image in Docker Desktop 4.92.0. The same image runs in the cloud.
 - The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverage. The goal is 100 percent coverage, and no minimum is enforced.
@@ -23,6 +24,7 @@ The versions match the tools on my laptop on 2026-09-29. Where a library is not 
 - Prettier 3.9.9 formats the frontend code, and `make lint` checks the format. Angular CLI 21.2.1 wrote the range ^3.8.1, and npm resolved it to 3.9.9.
 - The frontend draws the grid on an HTML canvas. It applies each batch to the counts when the batch arrives, and it redraws at most once per display frame with requestAnimationFrame.
 - The frontend keeps counts as 64-bit floats, so large counts do not overflow.
+- The frontend measures the latency of each batch from generation to render. It gives the result in the browser console with `latency.report()`, and the side panel does not show it.
 - The HTML design in context/ sets the look of the client. The brief wins where the two differ. The side panel readouts and the stream badge differ from the design, because I changed their look in the feature 7 review.
 - The tests use Vitest. The goal is 100 percent coverage, and no minimum is enforced.
 

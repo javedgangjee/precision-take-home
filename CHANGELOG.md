@@ -66,6 +66,12 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 7 adds the Samples per second, Batch interval, and Max value readouts to the side panel, which follow the settings packet with no reload.
 - Feature 7 makes the test source show its `rate`, `interval`, and `max` values in the three settings readouts, with no Missed batches readout.
 - Feature 7 adds a Pause section to the README and describes the settings packet and the four new readouts.
+- Feature 8 adds a `GET /time` endpoint that returns the server time in microseconds since the Unix epoch, such as `{"epoch_us":1790812800123456}`, with the header `Cache-Control: no-store` and no token.
+- Feature 8 makes the client measure each batch from generation to render with eight timestamps and seven stages, which are generate, queue, network, parse, apply, frame wait, and draw.
+- Feature 8 makes the client measure the offset between its clock and the server clock with 5 requests to `GET /time`, when the page loads and on each `latency.reset()`.
+- Feature 8 adds `latency.report()` and `latency.reset()` to the browser console for the server source, and the report gives the p50, the p95, the p99, and the max of each stage and of the total over the last 1,200 batches.
+- Feature 8 adds docs/results.md, which gives the measured times of a cloud run and a local run, and the p99 of the total is 28.5 ms in the cloud run against the 100 ms target.
+- Feature 8 adds a Latency section to the README and describes the new batch id and `GET /time`.
 
 ### Changed
 
@@ -77,6 +83,11 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 7 puts the label above the value in every side panel readout and moves Frame rate to the bottom of the panel.
 - Feature 7 makes the readout labels, the readout values, and the stream badge larger.
 - Feature 7 reduces the gap between readouts from 20 px to 12 px, and the side panel scrolls in a short window.
+- Feature 8 makes the `id` of a batch event four whole numbers in the form `<sequence number>:<started>:<encoded>:<sent>`, where it was the sequence number alone, and the three times are server timestamps in microseconds.
+- Feature 8 makes the client read the sequence number from the first part of the id, so the Missed batches readout works as before.
+- Feature 8 raises the server defaults to 20,000 samples per second and a maximum value of 10,000, so each batch holds 1,000 integers from 0 to 9,999, and the test source defaults match.
+- Feature 8 raises the upper limit of samples per second on the server from 100,000 to 1,000,000.
+- Feature 8 raises the largest N from 64 to 100.
 
 ### Removed
 

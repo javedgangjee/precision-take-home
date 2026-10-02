@@ -27,8 +27,8 @@ export function labelledIndices(n: number): number[] {
  * and the edges are rounded to whole pixels, so cell sizes differ by at most 1.
  */
 export function cellRect(row: number, col: number, n: number, size: number, gap = 1): Rect {
-  const step = (size + gap) / n;
-  const edge = (i: number) => Math.round(i * step);
+  const pitch = (size + gap) / n;
+  const edge = (i: number) => Math.round(i * pitch);
   const x = edge(col);
   const width = edge(col + 1) - gap - x;
   const bottom = edge(row);

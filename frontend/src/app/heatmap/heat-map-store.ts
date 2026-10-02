@@ -67,6 +67,7 @@ export class HeatMapStore {
     return redraw;
   }
 
+  /** Updates the readout signals from the counts and frame rate meter. */
   private updateReadouts(): void {
     const { counts, meter } = this;
     this.samplesSignal.set(counts.total);

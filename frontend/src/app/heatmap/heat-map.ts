@@ -52,12 +52,14 @@ export class HeatMap {
   }
 
   private start(): void {
+    // setup
     this.ctx = this.canvas().nativeElement.getContext('2d');
-    this.observer = new ResizeObserver(() => this.layout());
+    this.observer = new ResizeObserver(() => this.layout()); // listens for host size changes
+    // Frame loop
     this.observer.observe(this.host.nativeElement);
     document.fonts?.ready.then(() => this.store.markDirty());
+    // Runs 60 times/sec for each frame
     const loop = (now: number) => {
-      // The tracker gets the times of a frame that draws, for the batches that the frame shows.
       const frame = this.clock();
       if (this.store.frame(now)) {
         this.draw();

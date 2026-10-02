@@ -88,11 +88,11 @@ These tests use a fake EventSource, fake timers, and a random value of 1.
 
 ## Manual checks
 
-The local token is `local-admin-token`. The checks use Chrome.
+The local server runs in Docker for every local check. `make docker` builds the backend image and runs it at http://localhost:8000, and it needs Docker Desktop. The local token is `local-admin-token`. The checks use Chrome.
 
 ### M1. The panel shows the settings and follows a change
 
-1. Run `make backend` in one terminal and `make frontend` in a second terminal. Open http://localhost:4200/?server=http://localhost:8000.
+1. Start Docker Desktop. Run `make docker` in one terminal and `make frontend` in a second terminal. Open http://localhost:4200/?server=http://localhost:8000.
 2. The expected result is a Live badge. The Missed batches readout shows 0. The three settings readouts show 5,000 samples per second, a 50 ms batch interval, and a max value of 1,024. The whole panel fits in the window with no clipped readout.
 3. Run `curl -X PATCH localhost:8000/admin/settings -H "Authorization: Bearer local-admin-token" -H "Content-Type: application/json" -d '{"samples_per_second": 20, "batch_interval_ms": 1000}'`.
 4. The expected result is that the readouts show 20 and 1,000 ms within 1 s, with no reload. The badge stays Live.
@@ -120,7 +120,7 @@ The local token is `local-admin-token`. The checks use Chrome.
 
 ### M5. A server restart resets the missed batches
 
-1. With a Missed batches readout above 0 from M4, press Ctrl+C in the `make backend` terminal, wait 10 seconds, and run `make backend` again.
+1. With a Missed batches readout above 0 from M4, press Ctrl+C in the `make docker` terminal, wait 10 seconds, and run `make docker` again.
 2. The expected result is a Reconnecting badge and then a Live badge. The Missed batches readout shows 0, the counts keep their values, and the settings readouts show the default settings.
 
 ### M6. The test source shows its own settings
@@ -133,9 +133,18 @@ The local token is `local-admin-token`. The checks use Chrome.
 1. Run `make deploy`, and open http://localhost:4200 with no query.
 2. The expected result is a Live badge and settings readouts with the default settings.
 3. Run `curl -N https://api.precision.jgangjee.com/stream | head -c 300`. The expected result is that the first event has the lines `event: update` and `data:` with the four fields, and has no `id:` line.
-4. Read the token with the AWS CLI command in the README. Pause and resume the cloud server with the admin requests. The expected result is a Paused badge and then a Live badge.
+4. Read the token into `TOKEN` with the AWS CLI commands in the Deploy section of the README. Run `curl -X POST https://api.precision.jgangjee.com/admin/pause -H "Authorization: Bearer $TOKEN"`. The expected result is a Paused badge within 1 s.
+5. Run `curl -X POST https://api.precision.jgangjee.com/admin/resume -H "Authorization: Bearer $TOKEN"`. The expected result is a Live badge within 1 s.
 
-### M8. The README and the logs record this feature
+### M8. The client follows a settings change on the cloud server
+
+1. With M7 running and `TOKEN` set, keep http://localhost:4200 open with no query. The readouts show 5,000 samples per second, a 50 ms batch interval, and a max value of 1,024.
+2. Run `curl -X PATCH https://api.precision.jgangjee.com/admin/settings -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"samples_per_second": 20, "batch_interval_ms": 1000, "max_value": 64}'`.
+3. The expected result is that the readouts show 20, 1,000 ms, and 64 within 1 s, with no reload. The badge stays Live, and the samples received readout goes up by 20 each second.
+4. Run the same command with the body `{"samples_per_second": 5000, "batch_interval_ms": 50, "max_value": 1024}`.
+5. The expected result is that the readouts show 5,000, 50 ms, and 1,024 within 1 s, with no reload. The badge stays Live.
+
+### M9. The README and the logs record this feature
 
 1. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-changes.md.
 2. The expected result is that each file has an entry dated for the settings display feature.

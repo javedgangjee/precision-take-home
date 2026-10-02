@@ -1,8 +1,8 @@
 # Trade-offs
 
-Each entry gives the date, the phase, the choice, and what it costs.
+Each heading gives the feature number, the feature name, and the spec-driven step. Each entry gives the choice and what it costs.
 
-## 2026-09-29, constitution
+## Constitution
 
 - The stream uses Server-Sent Events instead of WebSockets. The client sends nothing to the server, so a one-way channel is enough. The cost is that any future client-to-server message needs a separate HTTP call.
 - The server generates one shared stream for all clients. The server load stays flat as clients join. The cost is that clients cannot have their own settings.
@@ -14,12 +14,12 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The client draws the grid on a canvas instead of one DOM or SVG element per cell. A 64 by 64 grid has 4,096 cells, and a canvas repaints them without DOM updates. The cost is that the cells are not in the DOM, so tests must check the counts instead of the elements.
 - The client redraws with requestAnimationFrame instead of once per batch. Batches arrive every 50 ms, and the browser paints at the display rate, so the client draws only the latest state. The cost is up to one frame of added latency, which is about 17 ms at 60 Hz.
 
-## 2026-09-29, plan for feature 1, scaffold
+## Feature 1, Scaffold, plan
 
 - The repo is one monorepo, and backend/ and infra/ are separate uv projects. The CDK libraries stay out of the backend image. The cost is two lock files to keep current.
 - The backend fails its tests below 80 percent coverage, the same rule as the frontend. The cost is one more dev dependency.
 
-## 2026-09-29, implement feature 1, scaffold
+## Feature 1, Scaffold, implement
 
 - The frontend keeps Angular 21.2.24, which npm resolved from the ranges that Angular CLI 21.2.1 wrote. The project gets the latest 21.2 patches. The cost is that the version differs from the CLI that created the project.
 - The backend adds httpx2 as a dev dependency. The FastAPI test client needs an HTTP client, and Starlette warns that httpx is deprecated for it. The cost is one more dev dependency.
@@ -27,12 +27,12 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The Makefile sets NG_CLI_ANALYTICS to false, so the Angular CLI never stops to ask about usage data. The cost is that the Angular team gets no usage data from this project.
 - The CDK app has no feature flags in cdk.json, because the stack is empty. The cost is a notice on each synth until feature 5 adds the resources and the flags.
 
-## 2026-09-29, replan after feature 1, scaffold
+## Feature 1, Scaffold, replan
 
 - The tests measure coverage and aim for 100 percent, but no minimum is enforced and no check tests the minimum. The rule was hard to prove and added little. The cost is that coverage can drop without a failed build.
 - The admin page moves from a stretch goal to feature 6, before the testing feature. The stress test can then change the sample rate without a server restart. The cost is one more feature before the latency and limit measurements.
 
-## 2026-09-29, plan for feature 2, backend
+## Feature 2, Backend, plan
 
 - The heartbeat is the built-in FastAPI keep-alive, which sends `: ping` after 15 idle seconds. It needs no extra code. The cost is that the stream test patches a private FastAPI name to shorten the wait.
 - A bad environment value logs a warning and falls back to its default, and the server still starts. A typo does not take the stream down. The cost is that the server can run with settings the operator did not intend.
@@ -44,25 +44,25 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - \* The generator uses `random.Random.choices` from the standard library instead of NumPy. It needs no new dependency and makes a 5,000-value batch in about 0.5 ms, three times faster than a `randrange` loop. The cost is speed. NumPy made the same batch in 0.11 ms, including the conversion to a list for JSON, which is about four times faster. At 20 batches a second, the saving is about 0.7 percent of one core, which does not justify a large dependency.
 - The broadcaster encodes each batch to JSON once and sends the same string to every client with `raw_data`. Encoding costs 0.28 ms per batch instead of 2.94 ms per batch per client, so a 0.25 vCPU task can serve many more clients. The cost is that the route bypasses the FastAPI data validation and encoding, so the broadcaster owns the wire format.
 
-## 2026-09-29, implement feature 2, backend
+## Feature 2, Backend, implement
 
 - The generator keeps the carried fraction as a whole number of thousandths of a sample instead of a float. The carry stays exact over any number of batches. The cost is a less obvious formula in the code.
 - The broadcaster tests run the event loop with `asyncio.run` inside plain tests instead of adding pytest-asyncio. The project needs no new dependency. The cost is a small wrapper function in the async test.
 - The stream test fixture binds a socket to a free port and hands it to Uvicorn. No other process can take the port between the bind and the start. The cost is more fixture code than a plain port number.
 
-## 2026-09-30, review feature 2, backend
+## Feature 2, Backend, review
 
 - `make backend` gives open streams 3 seconds to close on shutdown, and then Uvicorn cancels them. The server always stops in about 3 seconds. The cost is that Uvicorn logs an error line for the cancelled streams, and a client sees its stream cut off.
 - \* After a stall, the broadcaster runs only the latest tick that is due and skips the older ticks. The server does not spend CPU on batches that the client queues would drop, and it does not send a flood of old data. The cost is that the samples of the skipped ticks are never made, so the rate over a stall falls below the setting. The sequence number counts only the batches that the server sends, so a client cannot see the skipped ticks as a gap.
 
-## 2026-09-30, compact the batch payload, backend
+## Feature 2, Backend, after validate
 
 - The broadcaster encodes each batch with the compact JSON separators `(",", ":")`. A default batch drops from 24,558 characters to 19,559, which is 20 percent less, and the encode time stays at 0.29 ms. The client still gets a plain JSON array, so R2 holds. The cost is that the stream is harder to read by eye in curl.
 - The server does not send the batch as base64 of packed integers. Base64 of 16-bit values is 13,336 characters, and 10-bit packing is 8,336 characters. Both break R2, because the data is no longer a JSON array. The browser also decodes base64 slower than `JSON.parse`, at 0.4 to 0.6 ms against 0.09 ms per batch in Node 22.
 - The server does not gzip the stream. The Starlette GZipMiddleware skips `text/event-stream`, because it buffers the response. A custom per-event gzip needs one compressor for each client and must flush after each event. Gzip alone cuts the compact batch only to 8,149 bytes, because random values do not compress well.
 - The server does not send counts per value in place of the values. Counts make a batch 2,078 characters, but they break R2 and the brief, which asks for an array of random integers.
 
-## 2026-09-30, plan for feature 3, frontend
+## Feature 3, Frontend, plan
 
 - The test source settings come from the URL query instead of fields in the side panel. The panel stays as the HTML design shows it. The cost is that each change needs a reload, which also resets the counts.
 - The test source runs in a Web Worker and posts each batch as a JSON string, which the main thread parses. The main thread does the same work as it will for the SSE stream in feature 4, so the stress test measures the real path. The cost is a worker config file and a change to angular.json, and the unit tests use a fake worker, because jsdom cannot run one.
@@ -74,36 +74,36 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The N buttons hide with `visibility: hidden` at the limits instead of going disabled. The field does not move. The cost is that the button under the pointer or the keyboard focus disappears at the limit, and the focus leaves it.
 - The heat map state lives in one store service, the drawing lives in a plain renderer class, and the components only bind signals and forward events. Each part is small and has its own tests. The cost is more files than one component that does it all.
 
-## 2026-09-30, implement feature 3, frontend
+## Feature 3, Frontend, implement
 
 - The renderer fills each cell with its own `fillRect` call, which is 4,096 calls a frame at N = 64. The code is short and easy to test with a fake context. The cost is that it is slower than writing the pixels to one ImageData. The stress test shows whether that matters.
 - The worker makes batches on a `setInterval` timer. The code is short. The cost is that a busy worker sends late batches and does not skip or catch up, as the server does after a stall.
 - tsconfig.app.json leaves out the worker files, which tsconfig.worker.json compiles with the web worker types. The plan named only the new config and angular.json. The cost is one more changed config file.
 
-## 2026-09-30, review for feature 3, frontend
+## Feature 3, Frontend, review
 
 - The Material Symbols font is a subset from Google Fonts that holds only the add and remove glyphs, and the client serves it from frontend/public/fonts/. The file is 1 KB and the client needs no network for it, as G9 asks for the other fonts. The cost is that a new icon needs a new subset download.
 - The frame rate reading is the frame count divided by the real window length, so a stall lowers it. The cost is that a hidden tab pauses requestAnimationFrame, and the first window after the tab shows again reads low and can show the error line for up to 1 s.
 - A resize draws the grid at once, outside the frame loop, so the grid never paints blank. The cost is a second draw in a frame when a batch and a resize land in the same frame, which happens only while the user resizes.
 - The test source worker sends one batch at a time and waits for an ack from the main thread, with a queue of 2 behind it. A slow main thread gets fresh batches and the backlog stays at 3 batches at most. The cost is one extra message per batch, and the queue fills only when the main thread lags. The server queue in feature 4 fills when the network lags, because the browser reads the SSE stream off the main thread.
 
-## 2026-09-30, validate feature 3, frontend
+## Feature 3, Frontend, validate
 
 - The error line compares the frame rate with a fixed target of 60 fps instead of the peak since load. A page that loads under heavy load now shows the drop. The cost is that a 120 Hz display running at 60 fps shows no line, and a browser capped at 30 fps shows the line at all times.
 
-## 2026-09-30, replan after feature 3, frontend
+## Feature 3, Frontend, replan
 
 - The hotspot mode is removed from the roadmap. The project ends with the testing feature. The cost is that the heat map stays nearly flat under the uniform generator.
 - Feature 8 writes its findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.
 
-## 2026-09-30, implement feature 4, stream
+## Feature 4, Stream, implement
 
 - The Material Symbols icons load from Google Fonts, and the local subset is gone. One font serves all five icons, and a new icon needs only a change to the link. The cost is that the client needs the network for the icons, and the icons are blank until the font loads.
 - The client closes the EventSource on each drop and makes a new one after a backoff delay of 1 s that doubles up to 30 s, with a random factor from 0.5 to 1. The built-in EventSource retry has a fixed delay. The cost is more code to own, and a reconnect takes up to 1 s longer than the built-in retry after a short drop.
 - The watchdog drops a live stream after 5 s with no batch. It catches a connection that hangs with no error. The cost is a false drop if the server pauses for more than 5 s, which happens only when the server stalls.
 - The Docker image is built for linux/arm64 only. It runs native on my laptop and matches Fargate ARM64. The cost is that an Intel machine runs it under emulation.
 
-## 2026-09-30, implement feature 5, deploy
+## Feature 5, Deploy, implement
 
 - The VPC has public subnets only and no NAT gateway, and the task gets a public IP. A NAT gateway costs about $32 a month in each zone. The cost is that the task sits in a public subnet. Its security group lets in traffic only from the ALB, so the task cannot be reached from the internet.
 - The service runs one task, and a deploy stops the old task before it starts the new one. Two streams never run at once, so every client sees one sequence of batch ids. The cost is that the stream is down for about a minute on each deploy, and the client shows Reconnecting.
@@ -115,20 +115,17 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The infra tests check only the key settings in the template, and there is no full test suite for the stack. The cost is that a change to a setting the tests do not check can pass `make test`.
 - The default rate is 5,000 samples per second instead of 100,000, so each batch holds 250 integers. A lower rate keeps the data transfer cost low while I develop against the cloud stack. The cost is a lighter load than the brief limit, and I plan to raise the default before submission.
 
-## 2026-09-30, replan after feature 5, deploy
+## Feature 5, Deploy, replan
 
 - The admin page and the settings display are two features instead of one. Each feature stays small enough to review in one pass. The cost is that feature 6 ships live settings that the client cannot show until feature 7.
 - Pause lives entirely in feature 6, with its own pause event, apart from the init and update packets of feature 7. A pause then never makes the clients reconnect, even before feature 7. The cost is a second kind of control event that feature 7 does not fold into its packets.
 - The badge gets a fourth state, Paused, in place of a note in the side panel. The user sees the pause where the stream state already shows. The cost is a change to N10, which named three states from my design notes.
-
-## 2026-10-01, roadmap change to feature 6, admin API
-
 - Feature 6 is a set of HTTP endpoints with no admin web page. I change the settings and pause the stream with curl. The cost is that a reviewer needs a terminal to try the live settings.
 - The pause event and the Paused badge move to feature 7, with the init and update packets. Feature 6 then changes only the backend. The cost is that between feature 6 and feature 7 a pause makes each client reconnect every 5 s, because the client watchdog sees no batches.
 - Feature 8 adds a tuning step that sets the default rate to the highest rate that meets the 100 ms target and 54 fps. This replaces the plan to raise the default before submission by hand. The cost is that the default depends on one set of measurements on my laptop and one Fargate task size.
 - Feature 9 is a checklist that compares the repo with the brief and the project overview before I submit. The check catches a missing document before a reviewer does. The cost is one more feature, and the check reads only the files, so it cannot judge the quality of the write-ups.
 
-## 2026-10-01, implement feature 6, admin API
+## Feature 6, Admin API, implement
 
 - The admin API uses one shared bearer token on the public URL. It needs no new port, no IAM signing, and no change to the load balancer. The cost is that anyone with the token can change the stream, and the token does not rotate.
 - The cloud token lives in Secrets Manager with a random value. No token sits in the repo or in the task environment in the template. The cost is about $0.40 a month, and a reader needs two AWS CLI calls to get the token.
@@ -136,7 +133,7 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The admin handlers are async, so they run on the event loop with the broadcaster. The broadcaster wakes its loop with an `asyncio.Event`, which is not safe to set from a worker thread. The cost is that a slow handler would block the stream, and each handler only sets a few fields.
 - main.py sets up the root logger at the info level, because Uvicorn sets up only its own loggers. Each admin change then shows in the terminal and in CloudWatch. The cost is that info logs from other libraries also show.
 
-## 2026-10-01, plan for feature 7, settings display
+## Feature 7, Settings Display, plan
 
 - One packet type carries the three settings and the pause state. The client has one handler, and each packet holds the full state. The cost is that a pause sends the three settings again, which adds about 85 bytes to that packet.
 - The settings packet has no id and takes no sequence number, so the batch ids stay 1 apart and the missed batch count reads only batches. The cost is that a client cannot detect a lost settings packet from the ids. The server never drops one from a queue, and each new connection gets one first.
@@ -145,7 +142,7 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The client detects a server restart from a batch id lower than the last one, so the packet needs no server start time. The cost is a false gap in the missed batch count when the new server passes the old id before the client reconnects.
 - The panel shows the missed batches and the three settings as four full readouts. They match the readouts from feature 3. The cost is a panel that is about 240 px taller.
 
-## 2026-10-01, implement feature 7, settings display
+## Feature 7, Settings Display, implement
 
 - The broadcaster keeps one settings packet and a change counter. Each stream keeps the counter value of the last packet it sent and sends the packet when the values differ. The packet never sits in a client queue, so the queue cannot drop it. The cost is that the stream route has a second thing to check on each pass.
 - A change puts a wake item in each empty client queue, so a stream with no batches still sends the packet. The cost is that the queue holds two kinds of item, and the code that reads it must tell a batch from a wake item. A full queue can drop a wake item, and that is safe, because the stream then wakes for a batch.

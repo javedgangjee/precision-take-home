@@ -58,6 +58,14 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 6 makes the CDK stack create a Secrets Manager secret with a random 32-character value, pass it to the task as `ADMIN_TOKEN`, and output its ARN as `AdminTokenSecretArn`.
 - Feature 6 makes the server log each admin change at the info level, and the changes live in memory only, so a restart or a deploy sets the settings back to the environment values.
 - Feature 6 adds an Admin API section to the README, with a curl command for each endpoint and the AWS CLI commands that read the cloud token.
+- Feature 7 adds a settings packet to `GET /stream`, which is a Server-Sent Event with the line `event: update` that holds the samples per second, the batch interval, the maximum value, and the pause state as one JSON object.
+- Feature 7 makes the server send the settings packet as the first event on each connection, and again to every client after an admin change to a setting or to the pause state.
+- Feature 7 gives the settings packet no `id` and keeps it out of the client queue, so the batch sequence number does not advance for it and the queue for a slow client never drops it.
+- Feature 7 adds a Paused badge with a pause icon, which shows while the server is paused.
+- Feature 7 adds a Missed batches readout to the side panel, which counts the gaps in the batch ids across reconnects and goes back to 0 after a change to N or a server restart.
+- Feature 7 adds the Samples per second, Batch interval, and Max value readouts to the side panel, which follow the settings packet with no reload.
+- Feature 7 makes the test source show its `rate`, `interval`, and `max` values in the three settings readouts, with no Missed batches readout.
+- Feature 7 adds a Pause section to the README and describes the settings packet and the four new readouts.
 
 ### Changed
 
@@ -65,6 +73,10 @@ This file records the changes to the project that matter to a person who reads o
 - Feature 4 makes the client load the Material Symbols icons from Google Fonts instead of a bundled font, so the icons need the network.
 - Feature 5 makes the client read from https://api.precision.jgangjee.com by default, and `make dev` and `make docker` print the URL that points the client at the local server.
 - Feature 5 lowers the default rate on the server and in the test source from 100,000 to 5,000 samples per second, so each batch holds 250 integers, to keep cloud cost low during development.
+- Feature 7 makes the client keep the stream open and stop its 5 s check during a server pause, where it showed Reconnecting before.
+- Feature 7 puts the label above the value in every side panel readout and moves Frame rate to the bottom of the panel.
+- Feature 7 makes the readout labels, the readout values, and the stream badge larger.
+- Feature 7 reduces the gap between readouts from 20 px to 12 px, and the side panel scrolls in a short window.
 
 ### Removed
 

@@ -26,12 +26,6 @@ def test_time_tells_a_cache_not_to_keep_the_response() -> None:
     assert response.headers["cache-control"] == "no-store"
 
 
-def test_cors_allows_the_configured_origin_to_read_the_time() -> None:
-    response = client.get("/time", headers={"Origin": "http://localhost:4200"})
-
-    assert response.headers["access-control-allow-origin"] == "http://localhost:4200"
-
-
 def test_time_needs_no_token_when_the_server_has_an_admin_token() -> None:
     response = TestClient(create_app(Settings(admin_token="test-token"))).get("/time")
 

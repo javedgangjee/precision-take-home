@@ -115,6 +115,7 @@ The plan had steps at 2, 10, 20, and 50 clients. I went from 5 clients straight 
 - The largest batch that passes holds 50,000 integers, which is about 244 KB.
 - No run lost a batch. Every run has 600 or 601 batches.
 - The frame rate stayed at 60 fps in every run.
+- The default stays at 20,000 samples per second. One client uses about 6 percent of the CPU at that rate and 82 percent at 1,000,000, and I did not test two clients at a high rate.
 
 ### What limits the server
 

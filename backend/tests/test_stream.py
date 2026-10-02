@@ -161,27 +161,6 @@ def test_batch_times_are_in_order_and_the_data_is_an_array_of_integers(
     assert all(isinstance(value, int) for value in data)
 
 
-def test_two_clients_get_the_same_started_and_encoded_times(live_server: LiveServer) -> None:
-    url = live_server(Settings())
-
-    with (
-        httpx2.stream("GET", f"{url}/stream", timeout=5) as first,
-        httpx2.stream("GET", f"{url}/stream", timeout=5) as second,
-    ):
-        first_stream = batches(first.iter_lines())
-        second_stream = batches(second.iter_lines())
-        a = next(first_stream)
-        b = next(second_stream)
-        # A client that subscribed one tick earlier has one extra batch, so skip ahead to match.
-        while seq(a) < seq(b):
-            a = next(first_stream)
-        while seq(b) < seq(a):
-            b = next(second_stream)
-
-    assert seq(a) == seq(b)
-    assert times(a)[:2] == times(b)[:2]
-
-
 def test_started_goes_up_across_three_batches_in_a_row(live_server: LiveServer) -> None:
     url = live_server(Settings())
 

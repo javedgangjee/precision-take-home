@@ -36,4 +36,21 @@ describe('TestSource', () => {
 
     expect(TestBed.inject(StreamStatus).state()).toBe('test');
   });
+
+  it('writes the settings from the URL query and leaves the missed batch count unset', () => {
+    history.replaceState(null, '', '/?source=frontend&rate=1000000&interval=100&max=64');
+    TestBed.configureTestingModule({
+      providers: [{ provide: TEST_SOURCE_WORKER, useValue: () => new FakeWorker() }],
+    });
+    TestBed.inject(TestSource).start();
+    history.replaceState(null, '', '/');
+
+    const status = TestBed.inject(StreamStatus);
+    expect(status.settings()).toEqual({
+      samplesPerSecond: 1_000_000,
+      batchIntervalMs: 100,
+      maxValue: 64,
+    });
+    expect(status.missedBatches()).toBeNull();
+  });
 });

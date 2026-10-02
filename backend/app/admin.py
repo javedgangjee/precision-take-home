@@ -3,19 +3,11 @@ import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
-from pydantic import BaseModel
 
-from app.broadcaster import Broadcaster
+from app.broadcaster import Broadcaster, SettingsPacket
 from app.settings import Settings, SettingsUpdate
 
 logger = logging.getLogger(__name__)
-
-
-class AdminState(BaseModel):
-    samples_per_second: int
-    batch_interval_ms: int
-    max_value: int
-    paused: bool
 
 
 async def check_token(
@@ -39,24 +31,19 @@ async def check_token(
 router = APIRouter(prefix="/admin", dependencies=[Depends(check_token)])
 
 
-def state(request: Request) -> AdminState:
-    settings: Settings = request.app.state.settings
+def state(request: Request) -> SettingsPacket:
+    """Return the same settings packet that the stream sends."""
     broadcaster: Broadcaster = request.app.state.broadcaster
-    return AdminState(
-        samples_per_second=settings.samples_per_second,
-        batch_interval_ms=settings.batch_interval_ms,
-        max_value=settings.max_value,
-        paused=broadcaster.paused,
-    )
+    return broadcaster.state
 
 
 @router.get("/settings")
-async def get_settings(request: Request) -> AdminState:
+async def get_settings(request: Request) -> SettingsPacket:
     return state(request)
 
 
 @router.patch("/settings")
-async def patch_settings(request: Request, update: SettingsUpdate) -> AdminState:
+async def patch_settings(request: Request, update: SettingsUpdate) -> SettingsPacket:
     changes = update.model_dump(exclude_unset=True)
     settings: Settings = request.app.state.settings.model_copy(update=changes)
     request.app.state.settings = settings
@@ -66,14 +53,14 @@ async def patch_settings(request: Request, update: SettingsUpdate) -> AdminState
 
 
 @router.post("/pause")
-async def pause(request: Request) -> AdminState:
+async def pause(request: Request) -> SettingsPacket:
     request.app.state.broadcaster.pause()
     logger.info("Admin paused the generation")
     return state(request)
 
 
 @router.post("/resume")
-async def resume(request: Request) -> AdminState:
+async def resume(request: Request) -> SettingsPacket:
     request.app.state.broadcaster.resume()
     logger.info("Admin resumed the generation")
     return state(request)

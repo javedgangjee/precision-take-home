@@ -9,7 +9,9 @@ describe('App', () => {
 
   beforeEach(() => {
     createWorker = vi.fn(() => ({ postMessage: vi.fn(), terminate: vi.fn() }) as unknown as Worker);
-    createEventSource = vi.fn(() => ({ close: vi.fn() }) as unknown as EventSource);
+    createEventSource = vi.fn(
+      () => ({ close: vi.fn(), addEventListener: vi.fn() }) as unknown as EventSource,
+    );
     TestBed.configureTestingModule({
       providers: [
         { provide: TEST_SOURCE_WORKER, useValue: createWorker },

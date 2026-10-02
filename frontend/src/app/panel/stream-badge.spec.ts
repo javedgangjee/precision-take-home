@@ -23,6 +23,7 @@ describe('StreamBadge', () => {
     ['connecting', 'Connecting', 'neutral', 'progress_activity'],
     ['live', 'Live', 'success', 'sensors'],
     ['reconnecting', 'Reconnecting', 'warning', 'sync'],
+    ['paused', 'Paused', 'neutral', 'pause'],
     ['test', 'Test source', 'neutral', null],
   ] as const)(
     'shows %s as "%s" with the %s tone and the %s icon',

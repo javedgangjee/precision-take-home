@@ -15,7 +15,9 @@ export const TEST_SOURCE_WORKER = new InjectionToken<() => Worker>('TEST_SOURCE_
  * Starts the test source worker with the settings from the page URL. Each
  * message is a JSON array string, which the service parses and applies to the
  * counts, as the server source does. The service then acks the batch, so the
- * worker sends the next one. It sets the stream state to test.
+ * worker sends the next one. It sets the stream state to test and writes its
+ * settings to the stream status. The worker messages have no batch id, so the
+ * missed batch count stays unset.
  */
 @Injectable({ providedIn: 'root' })
 export class TestSource implements OnDestroy {
@@ -29,6 +31,11 @@ export class TestSource implements OnDestroy {
     if (this.worker) return;
     this.status.set('test');
     const settings = readTestSourceSettings(this.document.location.search);
+    this.status.setSettings({
+      samplesPerSecond: settings.rate,
+      batchIntervalMs: settings.interval,
+      maxValue: settings.max,
+    });
     this.worker = this.createWorker();
     this.worker.onmessage = ({ data }: MessageEvent<string>) => {
       this.store.applyBatch(JSON.parse(data) as number[]);

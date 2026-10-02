@@ -2,6 +2,7 @@ import json
 import threading
 import time
 from collections.abc import Callable, Iterator
+from typing import Any
 
 import httpx2
 import pytest
@@ -14,6 +15,9 @@ ADMIN = Settings(admin_token="test-token")
 AUTH = {"Authorization": "Bearer test-token"}
 # Batches made before an admin change can still be on the way: 2 in the queue and 1 in the send.
 MAX_STALE = 3
+DEFAULT_PACKET = (
+    '{"samples_per_second":5000,"batch_interval_ms":50,"max_value":1024,"paused":false}'
+)
 
 
 def events(lines: Iterator[str]) -> Iterator[Event]:
@@ -31,6 +35,22 @@ def events(lines: Iterator[str]) -> Iterator[Event]:
             event[field] = value
 
 
+def batches(lines: Iterator[str]) -> Iterator[Event]:
+    """Parse SSE lines into events, and skip the update events."""
+    return (event for event in events(lines) if event.get("event") != "update")
+
+
+def next_update(stream: Iterator[Event]) -> dict[str, Any]:
+    """Return the settings packet of the next update event, which must come within 1 s."""
+    started = time.monotonic()
+    for event in stream:
+        assert time.monotonic() - started < 1
+        if event.get("event") == "update":
+            packet: dict[str, Any] = json.loads(event["data"])
+            return packet
+    raise AssertionError("the stream ended with no update event")
+
+
 def test_stream_returns_event_stream(live_server: LiveServer) -> None:
     url = live_server(Settings())
 
@@ -39,12 +59,27 @@ def test_stream_returns_event_stream(live_server: LiveServer) -> None:
         assert response.headers["content-type"].startswith("text/event-stream")
 
 
-def test_first_event_is_a_batch_of_250_integers(live_server: LiveServer) -> None:
+def test_first_event_is_the_settings_packet_and_the_second_is_a_batch(
+    live_server: LiveServer,
+) -> None:
+    url = live_server(Settings())
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        stream = events(response.iter_lines())
+        first = next(stream)
+        second = next(stream)
+
+    assert first == {"event": "update", "data": DEFAULT_PACKET}
+    assert "id" in second
+    assert "event" not in second
+
+
+def test_first_batch_has_250_integers(live_server: LiveServer) -> None:
     url = live_server(Settings())
     started = time.monotonic()
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
-        event = next(events(response.iter_lines()))
+        event = next(batches(response.iter_lines()))
 
     assert time.monotonic() - started < 1
     values = json.loads(event["data"])
@@ -57,7 +92,7 @@ def test_ids_go_up_by_1(live_server: LiveServer) -> None:
     url = live_server(Settings())
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
-        stream = events(response.iter_lines())
+        stream = batches(response.iter_lines())
         ids = [int(next(stream)["id"]) for _ in range(3)]
 
     assert ids == [ids[0], ids[0] + 1, ids[0] + 2]
@@ -70,8 +105,8 @@ def test_two_clients_get_the_same_batch(live_server: LiveServer) -> None:
         httpx2.stream("GET", f"{url}/stream", timeout=5) as first,
         httpx2.stream("GET", f"{url}/stream", timeout=5) as second,
     ):
-        first_stream = events(first.iter_lines())
-        second_stream = events(second.iter_lines())
+        first_stream = batches(first.iter_lines())
+        second_stream = batches(second.iter_lines())
         a = next(first_stream)
         b = next(second_stream)
         # A client that subscribed one tick earlier has one extra batch, so skip ahead to match.
@@ -89,9 +124,13 @@ def test_idle_stream_sends_ping(live_server: LiveServer, monkeypatch: pytest.Mon
     url = live_server(Settings(samples_per_second=1))
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
-        first = next(events(response.iter_lines()))
+        stream = events(response.iter_lines())
+        first = next(stream)
+        second = next(stream)
 
-    assert first == {"comment": "ping"}
+    assert first["event"] == "update"
+    assert json.loads(first["data"])["samples_per_second"] == 1
+    assert second == {"comment": "ping"}
 
 
 def admin(url: str, method: str, path: str, body: dict[str, int] | None = None) -> None:
@@ -117,7 +156,7 @@ def test_patch_changes_the_rate_and_the_interval(live_server: LiveServer) -> Non
     url = live_server(ADMIN)
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
-        stream = events(response.iter_lines())
+        stream = batches(response.iter_lines())
         next(stream)
         admin(
             url, "PATCH", "/admin/settings", {"samples_per_second": 20, "batch_interval_ms": 1000}
@@ -133,7 +172,7 @@ def test_patch_changes_the_max_value(live_server: LiveServer) -> None:
     url = live_server(ADMIN)
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
-        stream = events(response.iter_lines())
+        stream = batches(response.iter_lines())
         next(stream)
         admin(url, "PATCH", "/admin/settings", {"max_value": 3})
         skip_stale(stream, lambda event: max(values(event)) <= 2)
@@ -148,7 +187,7 @@ def test_pause_stops_the_events_and_resume_goes_on_from_the_next_id(
     url = live_server(ADMIN)
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
-        stream = events(response.iter_lines())
+        stream = batches(response.iter_lines())
         last = next(stream)
         paused_at = time.monotonic()
         admin(url, "POST", "/admin/pause")
@@ -170,7 +209,7 @@ def test_paused_stream_sends_ping(live_server: LiveServer, monkeypatch: pytest.M
     url = live_server(ADMIN)
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
-        stream = events(response.iter_lines())
+        stream = batches(response.iter_lines())
         admin(url, "POST", "/admin/pause")
         pings = [
             event for event in (next(stream) for _ in range(MAX_STALE + 3)) if "comment" in event
@@ -189,8 +228,8 @@ def test_two_clients_get_the_same_batch_after_a_change(live_server: LiveServer) 
         httpx2.stream("GET", f"{url}/stream", timeout=5) as first,
         httpx2.stream("GET", f"{url}/stream", timeout=5) as second,
     ):
-        first_stream = events(first.iter_lines())
-        second_stream = events(second.iter_lines())
+        first_stream = batches(first.iter_lines())
+        second_stream = batches(second.iter_lines())
         next(first_stream)
         next(second_stream)
         admin(url, "PATCH", "/admin/settings", {"max_value": 3})
@@ -204,3 +243,79 @@ def test_two_clients_get_the_same_batch_after_a_change(live_server: LiveServer) 
 
     assert a["id"] == b["id"]
     assert a["data"] == b["data"]
+
+
+def test_patch_sends_an_update_event(live_server: LiveServer) -> None:
+    url = live_server(ADMIN)
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        stream = events(response.iter_lines())
+        next(stream)
+        admin(url, "PATCH", "/admin/settings", {"samples_per_second": 20})
+        packet = next_update(stream)
+
+    assert packet["samples_per_second"] == 20
+    assert packet["paused"] is False
+
+
+def test_pause_and_resume_each_send_an_update_event(live_server: LiveServer) -> None:
+    url = live_server(ADMIN)
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        stream = events(response.iter_lines())
+        next(stream)
+        admin(url, "POST", "/admin/pause")
+        after_pause = next_update(stream)
+        admin(url, "POST", "/admin/resume")
+        after_resume = next_update(stream)
+
+    assert after_pause["paused"] is True
+    assert after_resume["paused"] is False
+
+
+def test_client_that_connects_during_a_pause_gets_paused_first(live_server: LiveServer) -> None:
+    url = live_server(ADMIN)
+    admin(url, "POST", "/admin/pause")
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        first = next(events(response.iter_lines()))
+
+    assert first["event"] == "update"
+    assert json.loads(first["data"])["paused"] is True
+
+
+def test_update_event_leaves_no_gap_in_the_batch_ids(live_server: LiveServer) -> None:
+    url = live_server(ADMIN)
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        stream = events(response.iter_lines())
+        next(stream)
+        ids = [int(next(stream)["id"])]
+        admin(url, "PATCH", "/admin/settings", {"max_value": 3})
+        # Read the batches up to the update event, and then 2 batches more.
+        for event in stream:
+            if event.get("event") == "update":
+                break
+            ids.append(int(event["id"]))
+        ids += [int(next(stream)["id"]) for _ in range(2)]
+
+    assert ids == list(range(ids[0], ids[0] + len(ids)))
+
+
+def test_two_clients_each_get_the_update_event(live_server: LiveServer) -> None:
+    url = live_server(ADMIN)
+
+    with (
+        httpx2.stream("GET", f"{url}/stream", timeout=5) as first,
+        httpx2.stream("GET", f"{url}/stream", timeout=5) as second,
+    ):
+        first_stream = events(first.iter_lines())
+        second_stream = events(second.iter_lines())
+        next(first_stream)
+        next(second_stream)
+        admin(url, "PATCH", "/admin/settings", {"max_value": 3})
+        a = next_update(first_stream)
+        b = next_update(second_stream)
+
+    assert a["max_value"] == 3
+    assert b["max_value"] == 3

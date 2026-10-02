@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HeatMapStore } from '../heatmap/heat-map-store';
+import { StreamStatus } from '../source/stream-status';
 import { SidePanel } from './side-panel';
 
 describe('SidePanel', () => {
   let fixture: ComponentFixture<SidePanel>;
   let store: HeatMapStore;
+  let status: StreamStatus;
   let element: HTMLElement;
 
   const field = () => element.querySelector<HTMLInputElement>('#grid-size')!;
@@ -15,6 +17,8 @@ describe('SidePanel', () => {
     Array.from(element.querySelectorAll('.md-readout')).find(
       (e) => e.querySelector('.md-readout-label')?.textContent?.trim() === label,
     )!;
+  const readoutLabels = () =>
+    Array.from(element.querySelectorAll('.md-readout-label')).map((e) => e.textContent?.trim());
   const readoutValue = (label: string) =>
     readout(label).querySelector('.md-readout-value')!.textContent!.replace(/\s+/g, ' ').trim();
   const warning = () => element.querySelector('.danger-text');
@@ -30,6 +34,7 @@ describe('SidePanel', () => {
 
   beforeEach(async () => {
     store = TestBed.inject(HeatMapStore);
+    status = TestBed.inject(StreamStatus);
     fixture = TestBed.createComponent(SidePanel);
     element = fixture.nativeElement;
     await render();
@@ -118,5 +123,57 @@ describe('SidePanel', () => {
     await render();
     expect(readoutValue('Frame rate')).toBe('60 fps');
     expect(warning()).toBeNull();
+  });
+
+  it('has no settings readout with no settings', () => {
+    expect(readout('Samples per second')).toBeUndefined();
+    expect(readout('Batch interval')).toBeUndefined();
+    expect(readout('Max value')).toBeUndefined();
+  });
+
+  it('shows "5,000", "50 ms", and "1,024" for the default settings', async () => {
+    status.setSettings({ samplesPerSecond: 5000, batchIntervalMs: 50, maxValue: 1024 });
+    await render();
+    expect(readoutValue('Samples per second')).toBe('5,000');
+    expect(readoutValue('Batch interval')).toBe('50 ms');
+    expect(readoutValue('Max value')).toBe('1,024');
+  });
+
+  it('shows "100,000", "1,000 ms", and "10,000" after a change to the settings', async () => {
+    status.setSettings({ samplesPerSecond: 5000, batchIntervalMs: 50, maxValue: 1024 });
+    await render();
+    status.setSettings({ samplesPerSecond: 100_000, batchIntervalMs: 1000, maxValue: 10_000 });
+    await render();
+    expect(readoutValue('Samples per second')).toBe('100,000');
+    expect(readoutValue('Batch interval')).toBe('1,000 ms');
+    expect(readoutValue('Max value')).toBe('10,000');
+  });
+
+  it('shows "0" and "1,234" in the Missed batches readout', async () => {
+    status.setMissedBatches(0);
+    await render();
+    expect(readoutValue('Missed batches')).toBe('0');
+    status.setMissedBatches(1234);
+    await render();
+    expect(readoutValue('Missed batches')).toBe('1,234');
+  });
+
+  it('has no Missed batches readout with no missed batch count', () => {
+    expect(readout('Missed batches')).toBeUndefined();
+  });
+
+  it('shows the four readouts below Frame rate in order', async () => {
+    status.setMissedBatches(0);
+    status.setSettings({ samplesPerSecond: 5000, batchIntervalMs: 50, maxValue: 1024 });
+    await render();
+    expect(readoutLabels()).toEqual([
+      'Samples received',
+      'Max count',
+      'Frame rate',
+      'Missed batches',
+      'Samples per second',
+      'Batch interval',
+      'Max value',
+    ]);
   });
 });

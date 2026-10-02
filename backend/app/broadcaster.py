@@ -4,6 +4,8 @@ import json
 import time
 from typing import NamedTuple
 
+from pydantic import BaseModel
+
 from app.generator import BatchGenerator
 from app.settings import Settings
 
@@ -24,33 +26,50 @@ class Batch(NamedTuple):
     text: str
 
 
+class SettingsPacket(BaseModel):
+    """The settings and the pause state. The stream sends it, and the admin API returns it."""
+
+    samples_per_second: int
+    batch_interval_ms: int
+    max_value: int
+    paused: bool
+
+
 class Broadcaster:
     """Makes one shared stream of batches and hands each batch to every subscriber.
 
     Each subscriber has a small queue. A full queue drops its oldest batch, so a
     slow client gets fresh data and never slows the others.
+
+    The broadcaster also keeps the settings packet. The packet never goes into a
+    queue, so a slow client cannot lose it. Each stream reads the packet from here
+    when the change counter moves.
     """
 
-    def __init__(self, generator: BatchGenerator, interval_s: float) -> None:
+    def __init__(self, generator: BatchGenerator, settings: Settings) -> None:
         self._generator = generator
-        self._interval_s = interval_s
-        self._queues: set[asyncio.Queue[Batch]] = set()
+        self._settings = settings
+        # None is a wake item. It tells an idle stream to look at the change counter.
+        self._queues: set[asyncio.Queue[Batch | None]] = set()
         self._task: asyncio.Task[None] | None = None
         # Set on each change to the settings or the pause state, to wake the run loop.
         self._changed = asyncio.Event()
         self.paused = False
         self.next_seq = 0
+        # Goes up by 1 on each change to the settings or the pause state.
+        self.version = 0
+        self._build_packet()
 
     @property
     def subscriber_count(self) -> int:
         return len(self._queues)
 
-    def subscribe(self) -> asyncio.Queue[Batch]:
-        queue: asyncio.Queue[Batch] = asyncio.Queue(maxsize=QUEUE_SIZE)
+    def subscribe(self) -> asyncio.Queue[Batch | None]:
+        queue: asyncio.Queue[Batch | None] = asyncio.Queue(maxsize=QUEUE_SIZE)
         self._queues.add(queue)
         return queue
 
-    def unsubscribe(self, queue: asyncio.Queue[Batch]) -> None:
+    def unsubscribe(self, queue: asyncio.Queue[Batch | None]) -> None:
         self._queues.discard(queue)
 
     def publish(self, values: list[int]) -> None:
@@ -66,19 +85,39 @@ class Broadcaster:
     def update(self, settings: Settings) -> None:
         """Use new settings from the next batch. The schedule starts again from now."""
         self._generator.update(settings)
-        self._interval_s = settings.batch_interval_ms / 1_000
-        self._changed.set()
+        self._settings = settings
+        self._notify()
 
     def pause(self) -> None:
         if not self.paused:
             self.paused = True
-            self._changed.set()
+            self._notify()
 
     def resume(self) -> None:
         """Start the schedule again from now, so the batches that the pause skipped are not sent."""
         if self.paused:
             self.paused = False
-            self._changed.set()
+            self._notify()
+
+    def _build_packet(self) -> None:
+        self.state = SettingsPacket(
+            samples_per_second=self._settings.samples_per_second,
+            batch_interval_ms=self._settings.batch_interval_ms,
+            max_value=self._settings.max_value,
+            paused=self.paused,
+        )
+        # Encode once, so every stream sends the same string.
+        self.packet = self.state.model_dump_json()
+
+    def _notify(self) -> None:
+        """Record a change, and wake the run loop and each stream that waits on an empty queue."""
+        self._build_packet()
+        self.version += 1
+        self._changed.set()
+        for queue in self._queues:
+            # A stream with a batch in its queue wakes for the batch and then sees the change.
+            if queue.empty():
+                queue.put_nowait(None)
 
     async def run(self) -> None:
         while True:
@@ -91,12 +130,13 @@ class Broadcaster:
 
     async def _run_schedule(self) -> None:
         """Publish batches on a fixed schedule until a setting or the pause state changes."""
+        interval_s = self._settings.batch_interval_ms / 1_000
         # Schedule each tick from a fixed start, so the batches do not drift.
         start = time.monotonic()
         tick = 0
         while True:
-            tick = next_tick(tick, time.monotonic() - start, self._interval_s)
-            delay = max(0.0, start + tick * self._interval_s - time.monotonic())
+            tick = next_tick(tick, time.monotonic() - start, interval_s)
+            delay = max(0.0, start + tick * interval_s - time.monotonic())
             with contextlib.suppress(TimeoutError):
                 await asyncio.wait_for(self._changed.wait(), delay)
             # A change can arrive after the timeout fires and before this task runs again.

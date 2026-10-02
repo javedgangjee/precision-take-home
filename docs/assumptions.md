@@ -89,3 +89,11 @@ Each entry gives the date, the phase, and the assumption.
 - A 401 response sends the header `WWW-Authenticate: Bearer`.
 - Up to 3 batches made before a change can still reach a client after the change. Two wait in the client queue, and one is in the send. The live tests skip these batches.
 - A batch whose timer fires at the same moment as a pause is not sent. The server checks for a change again before each batch.
+
+## 2026-10-01, implement feature 7, settings display
+
+- Each `PATCH /admin/settings` that returns status 200 sends a settings packet, even when the new values equal the old ones. A pause while paused and a resume while running send none.
+- The browser gives each batch event its `id` line as `lastEventId`. The client reads that value as the batch sequence number.
+- A batch that arrives during a pause goes into the counts and into the missed batch count. It does not start the watchdog.
+- The missed batch count resets on the Angular pass that follows a change to N. A batch that arrives between the change and that pass can add to the count before the reset.
+- A Chrome window on a laptop is at least 720 px tall inside. The panel with seven readouts and the frame rate warning is 723 px tall with the page header, so it fits. In a shorter window the panel scrolls.

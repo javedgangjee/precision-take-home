@@ -9,6 +9,11 @@
   padding: var(--space-6);
   background: var(--surface-card);
   box-shadow: var(--shadow-rest);
+  /* In a short window the panel scrolls, so no readout is clipped. */
+  overflow-y: auto;
+}
+:host > * {
+  flex: none;
 }
 
 hr {
@@ -88,10 +93,11 @@ hr {
   cursor: default;
 }
 
+/* The gap is smaller than the panel gap, so the seven readouts fit in a 720 px window. */
 .readouts {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--space-3);
 }
 
 .md-readout {

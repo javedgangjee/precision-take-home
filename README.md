@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, and the admin API are in place. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, and the settings display are in place. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -45,6 +45,19 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 
 `GET /stream` sends the stream as Server-Sent Events. Each event holds one batch as a compact JSON array of random integers in its `data` field, with no spaces. The `id` field holds the batch sequence number, which starts at 0 when the server starts and goes up by 1 for each batch. A gap in the ids shows that the client missed batches. The server generates one shared stream, so every client gets the same batches. When the server sends nothing for 15 seconds, it sends the comment `: ping`.
 
+The stream has one more event type, which is the settings packet. It has the line `event: update`, and its `data` field holds the three stream settings and the pause state as one compact JSON object.
+
+```
+event: update
+data: {"samples_per_second":5000,"batch_interval_ms":50,"max_value":1024,"paused":false}
+```
+
+- The settings packet is the first event on each connection.
+- The server sends it again to every client after each `PATCH /admin/settings` that returns status 200, and after a pause or a resume that changes the pause state.
+- The settings packet is not a batch. It has no `id` line, and the batch sequence number does not advance when the server sends one.
+- The server keeps one current packet and does not put it in the client queue, so the queue that drops the oldest batch for a slow client never drops a settings packet. When two changes happen before a client reads the first one, the client gets one packet with the newest values.
+- Batches that the server made before a change can still arrive after the packet.
+
 Run `make backend`, and then run this command in another terminal to see the stream.
 
 ```sh
@@ -65,7 +78,7 @@ For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make backend` sends o
 
 ## Admin API
 
-The admin API changes the stream settings and pauses the stream while the server runs, so a test of a new rate needs no restart. Every client gets the change at once, because the server keeps one shared stream. The changes live in memory only. A restart or a deploy sets the settings back to the environment values and ends the pause.
+The admin API changes the stream settings and pauses the stream while the server runs, so a test of a new rate needs no restart. Every client gets the change at once, because the server keeps one shared stream. The server also sends each client a settings packet with the new state, as the Backend stream section describes. The changes live in memory only. A restart or a deploy sets the settings back to the environment values and ends the pause.
 
 Each admin request must send the header `Authorization: Bearer <token>`. A request with a missing or wrong token gets status 401. When `ADMIN_TOKEN` is not set, every admin path returns status 404. The local token from `make backend`, `make dev`, and `make docker` is `local-admin-token`. The Deploy section shows how to read the cloud token.
 
@@ -83,8 +96,6 @@ Each request returns the settings and the pause state as one JSON object, such a
 - While paused, the server sends no batches, and the batch id does not advance. The `: ping` heartbeat keeps each connection open. A resume starts the schedule again and does not send the batches that the pause skipped. A settings change during a pause applies when the stream resumes.
 - A pause while paused and a resume while running return status 200 and change nothing.
 - The server logs each change.
-
-The client has no Paused state yet. During a pause, the client sees no batches for 5 seconds and shows Reconnecting until the stream resumes.
 
 Run `make backend`, and then run these commands in another terminal.
 
@@ -117,12 +128,21 @@ For example, http://localhost:4200/?server=http://localhost:8000 connects to the
 - A cell with no hits is white. A cell with hits gets a color from blue (#1E00FF) at a count of 1 through cyan, green, and yellow to red (#FF0033) at the max count.
 - The color scale shows the max count at the top, the midpoint in the middle, and 1 at the bottom.
 - The minus and plus buttons change N from 1 to 64. The up and down arrow keys in the N field change N by 1, and by 10 with Shift. A change to N resets all counts to zero.
-- A badge at the top of the side panel shows the stream state. Connecting is a white badge, and it shows from the start until the stream opens. Live is a green badge, and it shows while batches arrive. Reconnecting is an amber badge, and it shows after a live stream drops until the stream opens again. Test source is a white badge with no icon, and it shows while the test source runs.
+- A badge at the top of the side panel shows the stream state. Connecting is a white badge, and it shows from the start until the stream opens. Live is a green badge, and it shows while batches arrive. Reconnecting is an amber badge, and it shows after a live stream drops until the stream opens again. Paused is a white badge with a pause icon, and it shows while the server is paused. Test source is a white badge with no icon, and it shows while the test source runs.
 - The side panel shows the samples received, the max count, and the frame rate. A red line shows below the frame rate when it falls below 90 percent of the target of 60 fps. Run the client in Chrome with Energy Saver off, because Energy Saver caps the frame rate at 30 fps.
+- The Missed batches readout shows how many batches the client did not get. The client reads the batch id of each batch, and an id that skips ahead adds the size of the gap to the count. The count starts at 0 when the page loads, and it spans a reconnect. A change to N sets it to 0. A batch id lower than the last one means that the server restarted, and it also sets the count to 0.
+- The Samples per second, Batch interval, and Max value readouts show the settings of the stream. The client reads them from the settings packet, so they change within a second of an admin change, with no reload. They do not show until the first settings packet arrives.
+- In a short window the side panel scrolls.
 
 ### Reconnect
 
-When the stream drops, the client closes it and tries again after a delay. The first delay is 1 second, and each failed attempt doubles it up to 30 seconds. A random factor from 0.5 to 1 spreads out the clients after a server restart. The delay goes back to 1 second after the stream opens. The browser hides the `: ping` heartbeat from the client, so the client also counts a live stream as dropped when no batch arrives for 5 seconds. The counts stay on screen during a reconnect. Only a change to N resets them. Batches that the server sends during the drop are lost.
+When the stream drops, the client closes it and tries again after a delay. The first delay is 1 second, and each failed attempt doubles it up to 30 seconds. A random factor from 0.5 to 1 spreads out the clients after a server restart. The delay goes back to 1 second after the stream opens. The browser hides the `: ping` heartbeat from the client, so the client also counts a live stream as dropped when no batch arrives for 5 seconds. The counts stay on screen during a reconnect. Only a change to N resets them. Batches that the server sends during the drop are lost, and the Missed batches readout counts them.
+
+One limit stays in the missed batch count. After a server restart, the count gets a false gap when the first new batch id is higher than the last id the client saw. This needs a server that ran for less time than the client took to reconnect.
+
+### Pause
+
+When a settings packet says that the server is paused, the client shows Paused, keeps the stream open, and stops the 5 second check, because the server sends no batches during a pause. The grid and the readouts keep their values. A settings packet with the pause off sets the state to Live and starts the check again. The badge shows Live when the stream opens, so a client that connects during a pause shows Live for a moment before it shows Paused. When the stream drops during a pause, the client shows Reconnecting and tries again with the same delays.
 
 ### Test source
 
@@ -133,6 +153,8 @@ With `source=frontend` in the URL query, a test source in a Web Worker makes the
 | `rate` | 100000 | 1 to 100000000 | This sets how many integers the source makes each second. The range goes past the server limit, so a stress test can push the browser. |
 | `interval` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
 | `max` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
+
+The three settings readouts in the side panel show the `rate`, `interval`, and `max` values in use. The panel has no Missed batches readout, because the worker messages have no batch id.
 
 A change to the query needs a reload, which also resets the counts. For a stress test, run `make frontend`, open http://localhost:4200/?source=frontend&rate=1000000&interval=50&max=1024, set N to 64, and watch the frame rate.
 

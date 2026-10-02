@@ -12,6 +12,7 @@ const LOOKS: Record<StreamState, BadgeLook> = {
   connecting: { label: 'Connecting', tone: 'neutral', icon: 'progress_activity' },
   live: { label: 'Live', tone: 'success', icon: 'sensors' },
   reconnecting: { label: 'Reconnecting', tone: 'warning', icon: 'sync' },
+  paused: { label: 'Paused', tone: 'neutral', icon: 'pause' },
   test: { label: 'Test source', tone: 'neutral', icon: null },
 };
 

@@ -101,3 +101,7 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 - The AI proposed that a change to N keeps the missed batch count. I chose that a change to N resets the count to 0, as it does for the samples received.
 - The AI proposed the blue info tone for the Paused badge. I chose the neutral white badge with the `pause` icon.
 - The AI proposed a compact group of three small rows for the settings. I chose four full readouts in the style of the other readouts.
+
+## 2026-10-01, implement feature 7, settings display
+
+- I made no change to the AI output during implement. Changes from my review go here.

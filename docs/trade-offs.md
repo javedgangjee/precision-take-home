@@ -144,3 +144,11 @@ Each entry gives the date, the phase, the choice, and what it costs.
 - The badge shows Live when the stream opens and turns to Paused when the first packet says so. The client needs no extra state for a stream that is open with no packet yet. The cost is that a client that connects during a pause shows Live for a moment.
 - The client detects a server restart from a batch id lower than the last one, so the packet needs no server start time. The cost is a false gap in the missed batch count when the new server passes the old id before the client reconnects.
 - The panel shows the missed batches and the three settings as four full readouts. They match the readouts from feature 3. The cost is a panel that is about 240 px taller.
+
+## 2026-10-01, implement feature 7, settings display
+
+- The broadcaster keeps one settings packet and a change counter. Each stream keeps the counter value of the last packet it sent and sends the packet when the values differ. The packet never sits in a client queue, so the queue cannot drop it. The cost is that the stream route has a second thing to check on each pass.
+- A change puts a wake item in each empty client queue, so a stream with no batches still sends the packet. The cost is that the queue holds two kinds of item, and the code that reads it must tell a batch from a wake item. A full queue can drop a wake item, and that is safe, because the stream then wakes for a batch.
+- The admin response and the settings packet share one model in broadcaster.py. The two cannot drift apart. The cost is that the admin API returns the model that the broadcaster owns, so a new admin-only field needs a second model.
+- The client uses an Angular effect on N to reset the missed batch count. The heat map store needs no change and does not know about the stream. The cost is that the reset runs one pass after the counts reset and not in the same call.
+- The gap between the readouts went from 20 px to 12 px, and the panel scrolls in a short window. The seven readouts then fit in a laptop window. The cost is that the readout spacing no longer matches the HTML design.

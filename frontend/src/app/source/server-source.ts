@@ -1,6 +1,7 @@
-import { inject, Injectable, InjectionToken, OnDestroy } from '@angular/core';
+import { effect, inject, Injectable, InjectionToken, OnDestroy } from '@angular/core';
 import { HeatMapStore } from '../heatmap/heat-map-store';
 import { reconnectDelay } from './backoff';
+import { MissedBatches } from './missed-batches';
 import { StreamStatus } from './stream-status';
 
 /** Makes the EventSource for a stream URL. Tests replace it with a fake. */
@@ -16,10 +17,22 @@ export const STREAM_EVENT_SOURCE = new InjectionToken<(url: string) => EventSour
  */
 export const WATCHDOG_MS = 5000;
 
+/** The data of an `update` event. It holds the server settings and the pause state. */
+interface SettingsPacket {
+  samples_per_second: number;
+  batch_interval_ms: number;
+  max_value: number;
+  paused: boolean;
+}
+
 /**
  * Reads the server stream and applies each batch to the counts. EventSource
  * retries at a fixed delay, so on each drop the service closes it and opens a
  * new one after a backoff delay. The service never resets the counts.
+ *
+ * The stream also sends the settings packet as an `update` event. The service
+ * writes the settings to the stream status, and it stops the watchdog while
+ * the server is paused.
  */
 @Injectable({ providedIn: 'root' })
 export class ServerSource implements OnDestroy {
@@ -32,11 +45,26 @@ export class ServerSource implements OnDestroy {
   private failures = 0;
   private retryTimer: ReturnType<typeof setTimeout> | undefined;
   private watchdogTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The counter lives as long as the service, so it also counts the batches lost in a reconnect. */
+  private readonly missed = new MissedBatches();
+  private n = this.store.n();
+
+  constructor() {
+    // A change to N resets the missed batch count, as it resets the samples received.
+    effect(() => {
+      const n = this.store.n();
+      if (n === this.n) return;
+      this.n = n;
+      this.missed.reset();
+      this.status.setMissedBatches(0);
+    });
+  }
 
   start(url: string): void {
     if (this.url !== null) return;
     this.url = url;
     this.status.set('connecting');
+    this.status.setMissedBatches(0);
     this.connect();
   }
 
@@ -55,16 +83,39 @@ export class ServerSource implements OnDestroy {
       this.status.set('live');
       this.resetWatchdog();
     };
-    source.onmessage = ({ data }: MessageEvent<string>) => {
+    // Only a batch has an id line, so a settings packet never reaches the missed batch count.
+    source.onmessage = ({ data, lastEventId }: MessageEvent<string>) => {
       this.store.applyBatch(JSON.parse(data) as number[]);
-      this.resetWatchdog();
+      this.status.setMissedBatches(this.missed.add(Number(lastEventId)));
+      // A batch made before a pause can arrive after it. It does not start the watchdog.
+      if (this.status.state() !== 'paused') this.resetWatchdog();
     };
+    source.addEventListener('update', ({ data }: MessageEvent<string>) =>
+      this.applySettings(JSON.parse(data) as SettingsPacket),
+    );
     source.onerror = () => this.drop();
+  }
+
+  private applySettings(packet: SettingsPacket): void {
+    this.status.setSettings({
+      samplesPerSecond: packet.samples_per_second,
+      batchIntervalMs: packet.batch_interval_ms,
+      maxValue: packet.max_value,
+    });
+    if (packet.paused) {
+      // The server sends no batches during a pause, so the watchdog would see a drop.
+      this.status.set('paused');
+      clearTimeout(this.watchdogTimer);
+    } else {
+      this.status.set('live');
+      this.resetWatchdog();
+    }
   }
 
   /** Closes the stream and opens a new one after the backoff delay. */
   private drop(): void {
-    if (this.status.state() === 'live') this.status.set('reconnecting');
+    const state = this.status.state();
+    if (state === 'live' || state === 'paused') this.status.set('reconnecting');
     this.close();
     const delay = reconnectDelay(this.failures, Math.random());
     this.failures++;

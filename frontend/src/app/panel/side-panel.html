@@ -46,4 +46,30 @@
     }
   </div>
   <hr />
+  @if (missedText(); as missed) {
+    <div class="md-readout">
+      <div class="md-readout-value">{{ missed }}</div>
+      <div class="md-readout-label">Missed batches</div>
+    </div>
+    <hr />
+  }
+  @if (settingsText(); as settings) {
+    <div class="md-readout">
+      <div class="md-readout-value">{{ settings.samplesPerSecond }}</div>
+      <div class="md-readout-label">Samples per second</div>
+    </div>
+    <hr />
+    <div class="md-readout">
+      <div class="md-readout-value">
+        {{ settings.batchIntervalMs }}<span class="md-readout-unit"> ms</span>
+      </div>
+      <div class="md-readout-label">Batch interval</div>
+    </div>
+    <hr />
+    <div class="md-readout">
+      <div class="md-readout-value">{{ settings.maxValue }}</div>
+      <div class="md-readout-label">Max value</div>
+    </div>
+    <hr />
+  }
 </div>

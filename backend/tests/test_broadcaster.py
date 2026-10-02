@@ -2,13 +2,24 @@ import asyncio
 import json
 import random
 
-from app.broadcaster import Broadcaster, next_tick
+from app.broadcaster import Batch, Broadcaster, next_tick
 from app.generator import BatchGenerator
 from app.settings import Settings
 
+DEFAULT_PACKET = (
+    '{"samples_per_second":5000,"batch_interval_ms":50,"max_value":1024,"paused":false}'
+)
+
 
 def make() -> Broadcaster:
-    return Broadcaster(BatchGenerator(Settings(), random.Random(0)), 0.05)
+    return Broadcaster(BatchGenerator(Settings(), random.Random(0)), Settings())
+
+
+def take(queue: asyncio.Queue[Batch | None]) -> Batch:
+    """Take the next item from the queue. It must be a batch and not a wake item."""
+    item = queue.get_nowait()
+    assert item is not None
+    return item
 
 
 def test_two_subscribers_get_the_same_batches_in_order() -> None:
@@ -19,8 +30,8 @@ def test_two_subscribers_get_the_same_batches_in_order() -> None:
     broadcaster.publish([1, 2])
     broadcaster.publish([3])
 
-    assert [first.get_nowait().text for _ in range(2)] == ["[1,2]", "[3]"]
-    assert [second.get_nowait().text for _ in range(2)] == ["[1,2]", "[3]"]
+    assert [take(first).text for _ in range(2)] == ["[1,2]", "[3]"]
+    assert [take(second).text for _ in range(2)] == ["[1,2]", "[3]"]
 
 
 def test_batch_is_encoded_once() -> None:
@@ -31,8 +42,8 @@ def test_batch_is_encoded_once() -> None:
 
     broadcaster.publish(values)
 
-    text = first.get_nowait().text
-    assert second.get_nowait().text is text
+    text = take(first).text
+    assert take(second).text is text
     assert json.loads(text) == values
 
 
@@ -43,7 +54,7 @@ def test_sequence_numbers_start_at_0_and_go_up_by_1() -> None:
     broadcaster.publish([1])
     broadcaster.publish([2])
 
-    assert [queue.get_nowait().seq for _ in range(2)] == [0, 1]
+    assert [take(queue).seq for _ in range(2)] == [0, 1]
 
 
 def test_full_queue_drops_its_oldest_batch() -> None:
@@ -53,13 +64,13 @@ def test_full_queue_drops_its_oldest_batch() -> None:
 
     broadcaster.publish([1])
     broadcaster.publish([2])
-    other_first = other.get_nowait()
-    other_second = other.get_nowait()
+    other_first = take(other)
+    other_second = take(other)
     broadcaster.publish([3])
 
     assert full.qsize() == 2
-    assert [full.get_nowait().seq for _ in range(2)] == [1, 2]
-    assert [other_first.seq, other_second.seq, other.get_nowait().seq] == [0, 1, 2]
+    assert [take(full).seq for _ in range(2)] == [1, 2]
+    assert [other_first.seq, other_second.seq, take(other).seq] == [0, 1, 2]
 
 
 def test_unsubscribe_removes_the_queue() -> None:
@@ -104,13 +115,17 @@ def test_pause_publishes_no_batch_and_resume_goes_on_from_the_next_sequence_numb
         broadcaster.start()
         await asyncio.sleep(0.2)
         broadcaster.pause()
-        last_before = max(queue.get_nowait().seq for _ in range(queue.qsize()))
+        last_before = max(take(queue).seq for _ in range(queue.qsize()))
         seq_before = broadcaster.next_seq
         await asyncio.sleep(0.5)
         seq_after = broadcaster.next_seq
         published_during_pause = queue.qsize()
         broadcaster.resume()
-        first_after = (await queue.get()).seq
+        # The resume puts a wake item in the empty queue, ahead of the first new batch.
+        assert await queue.get() is None
+        first = await queue.get()
+        assert first is not None
+        first_after = first.seq
         await broadcaster.stop()
         assert published_during_pause == 0
         return seq_before, seq_after, last_before, first_after
@@ -161,3 +176,96 @@ def test_resume_after_a_1_second_pause_sends_no_burst() -> None:
         return broadcaster.next_seq - seq_at_resume
 
     assert asyncio.run(count_in_60_ms_after_resume()) <= 2
+
+
+def test_packet_holds_the_default_settings_with_no_spaces() -> None:
+    assert make().packet == DEFAULT_PACKET
+
+
+def test_update_builds_the_packet_again_and_adds_1_to_the_counter() -> None:
+    broadcaster = make()
+    version = broadcaster.version
+
+    broadcaster.update(Settings(samples_per_second=20))
+
+    assert json.loads(broadcaster.packet)["samples_per_second"] == 20
+    assert broadcaster.version == version + 1
+
+
+def test_pause_sets_paused_in_the_packet_and_a_second_pause_changes_nothing() -> None:
+    broadcaster = make()
+    version = broadcaster.version
+
+    broadcaster.pause()
+    packet = broadcaster.packet
+
+    assert json.loads(packet)["paused"] is True
+    assert broadcaster.version == version + 1
+
+    broadcaster.pause()
+
+    assert broadcaster.packet == packet
+    assert broadcaster.version == version + 1
+
+
+def test_resume_clears_paused_in_the_packet_and_a_second_resume_changes_nothing() -> None:
+    broadcaster = make()
+    broadcaster.pause()
+    version = broadcaster.version
+
+    broadcaster.resume()
+    packet = broadcaster.packet
+
+    assert json.loads(packet)["paused"] is False
+    assert broadcaster.version == version + 1
+
+    broadcaster.resume()
+
+    assert broadcaster.packet == packet
+    assert broadcaster.version == version + 1
+
+
+def test_update_pause_and_resume_keep_the_next_sequence_number() -> None:
+    broadcaster = make()
+    broadcaster.publish([1])
+    next_seq = broadcaster.next_seq
+
+    broadcaster.update(Settings(samples_per_second=20))
+    broadcaster.pause()
+    broadcaster.resume()
+
+    assert broadcaster.next_seq == next_seq
+
+
+def test_pause_puts_one_wake_item_in_an_empty_queue() -> None:
+    broadcaster = make()
+    queue = broadcaster.subscribe()
+
+    broadcaster.pause()
+
+    assert queue.qsize() == 1
+    assert not isinstance(queue.get_nowait(), Batch)
+
+
+def test_pause_puts_no_wake_item_in_a_queue_with_2_batches() -> None:
+    broadcaster = make()
+    queue = broadcaster.subscribe()
+    broadcaster.publish([1])
+    broadcaster.publish([2])
+
+    broadcaster.pause()
+
+    assert queue.qsize() == 2
+    assert [queue.get_nowait() for _ in range(2)] == [Batch(0, "[1]"), Batch(1, "[2]")]
+
+
+def test_2_new_batches_push_a_wake_item_out_of_the_queue() -> None:
+    broadcaster = make()
+    queue = broadcaster.subscribe()
+    broadcaster.pause()
+
+    broadcaster.publish([1])
+    broadcaster.publish([2])
+
+    assert queue.qsize() == 2
+    assert take(queue).seq + 1 == take(queue).seq

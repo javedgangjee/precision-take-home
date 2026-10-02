@@ -1,6 +1,9 @@
 import { effect, inject, Injectable, InjectionToken, OnDestroy } from '@angular/core';
 import { HeatMapStore } from '../heatmap/heat-map-store';
+import { CLIENT_CLOCK } from '../latency/clock-sync';
+import { LatencyTracker } from '../latency/latency-tracker';
 import { reconnectDelay } from './backoff';
+import { readBatchId } from './batch-id';
 import { MissedBatches } from './missed-batches';
 import { StreamStatus } from './stream-status';
 
@@ -33,12 +36,17 @@ interface SettingsPacket {
  * The stream also sends the settings packet as an `update` event. The service
  * writes the settings to the stream status, and it stops the watchdog while
  * the server is paused.
+ *
+ * The service also takes three timestamps for each batch and gives them to the
+ * latency tracker, with the server times from the batch id.
  */
 @Injectable({ providedIn: 'root' })
 export class ServerSource implements OnDestroy {
   private readonly store = inject(HeatMapStore);
   private readonly status = inject(StreamStatus);
   private readonly createEventSource = inject(STREAM_EVENT_SOURCE);
+  private readonly tracker = inject(LatencyTracker);
+  private readonly clock = inject(CLIENT_CLOCK);
   private url: string | null = null;
   private source: EventSource | null = null;
   /** The number of failed attempts since the last open event. */
@@ -85,8 +93,15 @@ export class ServerSource implements OnDestroy {
     };
     // Only a batch has an id line, so a settings packet never reaches the missed batch count.
     source.onmessage = ({ data, lastEventId }: MessageEvent<string>) => {
-      this.store.applyBatch(JSON.parse(data) as number[]);
-      this.status.setMissedBatches(this.missed.add(Number(lastEventId)));
+      const received = this.clock();
+      const values = JSON.parse(data) as number[];
+      const parsed = this.clock();
+      this.store.applyBatch(values);
+      const applied = this.clock();
+      // The id holds the sequence number and then the server times.
+      const id = readBatchId(lastEventId);
+      this.status.setMissedBatches(this.missed.add(id.seq));
+      this.tracker.addBatch({ server: id.times, received, parsed, applied });
       // A batch made before a pause can arrive after it. It does not start the watchdog.
       if (this.status.state() !== 'paused') this.resetWatchdog();
     };

@@ -97,3 +97,12 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - A batch that arrives during a pause goes into the counts and into the missed batch count. It does not start the watchdog.
 - The missed batch count resets on the Angular pass that follows a change to N. A batch that arrives between the change and that pass can add to the count before the reset.
 - A Chrome window on a laptop is at least 720 px tall inside. The panel with seven readouts and the frame rate warning is 723 px tall with the page header, so it fits. In a shorter window the panel scrolls.
+
+## Feature 8, Latency, implement
+
+- The request and the response of `GET /time` take about the same time on the network. The offset is exact only then, and its error is at most half of the round trip.
+- A frame draws every batch that arrived since the frame before it. Those batches share the `frame` and `drawn` times.
+- The server clock does not step during a run. The server reads the wall clock for its three times, and a time correction on the host would move them.
+- Chrome rounds the client clock to 0.1 ms. The parse stage and the apply stage are shorter than that at the default settings, so they read as 0 or 0.1 ms.
+- A time request that returns a status other than 200 counts as a failed request and gives no sample. A client that connects to a server from before this feature then has no offset and no samples.
+- The report rounds each value to 0.001 ms.

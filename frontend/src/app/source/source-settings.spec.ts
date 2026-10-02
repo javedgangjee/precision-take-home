@@ -19,8 +19,19 @@ describe('readSourceSettings', () => {
     expect(readSourceSettings('')).toEqual({
       source: 'server',
       streamUrl: 'https://api.precision.jgangjee.com/stream',
+      timeUrl: 'https://api.precision.jgangjee.com/time',
     });
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('gives the time address at https://api.precision.jgangjee.com/time with no query', () => {
+    expect(readSourceSettings('').timeUrl).toBe('https://api.precision.jgangjee.com/time');
+  });
+
+  it('gives the time address of the server address without its trailing slash', () => {
+    expect(readSourceSettings('?server=http://localhost:8000/').timeUrl).toBe(
+      'http://localhost:8000/time',
+    );
   });
 
   it('uses the test source for source=frontend', () => {

@@ -1,5 +1,7 @@
 import { Component, DOCUMENT, inject } from '@angular/core';
 import { HeatMap } from './heatmap/heat-map';
+import { ClockSync } from './latency/clock-sync';
+import { exposeLatency, LatencyTracker } from './latency/latency-tracker';
 import { SidePanel } from './panel/side-panel';
 import { ServerSource } from './source/server-source';
 import { readSourceSettings } from './source/source-settings';
@@ -19,6 +21,9 @@ export class App {
       inject(TestSource).start();
     } else {
       inject(ServerSource).start(settings.streamUrl);
+      // The latency needs the server times, so only the server source has the measurement.
+      void inject(ClockSync).start(settings.timeUrl);
+      exposeLatency(inject(LatencyTracker));
     }
   }
 }

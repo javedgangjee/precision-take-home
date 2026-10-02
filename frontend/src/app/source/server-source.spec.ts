@@ -1,9 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { HeatMapStore } from '../heatmap/heat-map-store';
+import { CLIENT_CLOCK } from '../latency/clock-sync';
+import { LatencyTracker } from '../latency/latency-tracker';
 import { ServerSource, STREAM_EVENT_SOURCE } from './server-source';
 import { StreamStatus } from './stream-status';
 
 const STREAM_URL = 'http://localhost:8000/stream';
+/** The sequence number is 7, and the server times are 1,000 ms, 1,003 ms, and 1,005 ms. */
+const SHORT_ID = '7:1000000:1003000:1005000';
 const DEFAULT_PACKET = {
   samples_per_second: 5000,
   batch_interval_ms: 50,
@@ -27,8 +31,8 @@ class FakeEventSource {
   open(): void {
     this.onopen?.();
   }
-  /** Fires a batch. The id is the batch sequence number from the `id` line. */
-  message(data: string, id?: number): void {
+  /** Fires a batch. The id is the text of the `id` line, or only its batch sequence number. */
+  message(data: string, id?: number | string): void {
     this.onmessage?.(new MessageEvent('message', { data, lastEventId: id?.toString() }));
   }
   /** Fires a settings packet with the default values and the given changes. */
@@ -46,6 +50,7 @@ describe('ServerSource', () => {
   let store: HeatMapStore;
   let status: StreamStatus;
   let service: ServerSource;
+  let clock: ReturnType<typeof vi.fn<() => number>>;
 
   const latest = () => sources[sources.length - 1];
 
@@ -53,8 +58,10 @@ describe('ServerSource', () => {
     vi.useFakeTimers();
     vi.spyOn(Math, 'random').mockReturnValue(1);
     sources = [];
+    clock = vi.fn(() => 0);
     TestBed.configureTestingModule({
       providers: [
+        { provide: CLIENT_CLOCK, useValue: clock },
         {
           provide: STREAM_EVENT_SOURCE,
           useValue: (url: string) => {
@@ -289,6 +296,54 @@ describe('ServerSource', () => {
       expect(status.missedBatches()).toBe(0);
       batches(5);
       expect(status.missedBatches()).toBe(0);
+    });
+
+    it('is 2 after the sequence numbers 0, 1, and 4, each in an id with three times', () => {
+      for (const seq of [0, 1, 4]) latest().message('[1]', `${seq}:1000000:1003000:1005000`);
+      expect(status.missedBatches()).toBe(2);
+    });
+  });
+
+  describe('latency timestamps', () => {
+    let addBatch: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      addBatch = vi.spyOn(TestBed.inject(LatencyTracker), 'addBatch');
+      store.setN(4);
+      sources[0].open();
+    });
+
+    it('gives the tracker the server times of the short id and the times 10, 11, and 12', () => {
+      clock.mockReturnValueOnce(10).mockReturnValueOnce(11).mockReturnValueOnce(12);
+      sources[0].message('[17,8]', SHORT_ID);
+      expect(store.counts.at(0, 0)).toBe(1);
+      expect(store.counts.at(1, 3)).toBe(1);
+      expect(addBatch).toHaveBeenCalledExactlyOnceWith({
+        server: { started: 1000, encoded: 1003, sent: 1005 },
+        received: 10,
+        parsed: 11,
+        applied: 12,
+      });
+    });
+
+    it('counts a message with the id "5" and gives the tracker a batch with no server times', () => {
+      sources[0].message('[2]', 2);
+      clock.mockReturnValueOnce(10).mockReturnValueOnce(11).mockReturnValueOnce(12);
+      sources[0].message('[17,8]', '5');
+      expect(store.counts.at(0, 0)).toBe(1);
+      expect(store.counts.at(1, 3)).toBe(1);
+      expect(status.missedBatches()).toBe(2);
+      expect(addBatch).toHaveBeenLastCalledWith({
+        server: null,
+        received: 10,
+        parsed: 11,
+        applied: 12,
+      });
+    });
+
+    it('gives the tracker nothing on an update event', () => {
+      sources[0].update();
+      expect(addBatch).not.toHaveBeenCalled();
     });
   });
 });

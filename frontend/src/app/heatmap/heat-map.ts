@@ -7,6 +7,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { CLIENT_CLOCK } from '../latency/clock-sync';
+import { LatencyTracker } from '../latency/latency-tracker';
 import { ColorScale } from './color-scale';
 import { canvasSize, HeatMapRenderer, LABEL_MARGIN } from './heat-map-renderer';
 import { HeatMapStore } from './heat-map-store';
@@ -28,6 +30,8 @@ const SCALE_GAP_PX = 20;
 })
 export class HeatMap {
   private readonly store = inject(HeatMapStore);
+  private readonly tracker = inject(LatencyTracker);
+  private readonly clock = inject(CLIENT_CLOCK);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly canvas = viewChild.required<ElementRef<HTMLCanvasElement>>('canvas');
   private readonly scale = viewChild.required(ColorScale, { read: ElementRef });
@@ -53,7 +57,12 @@ export class HeatMap {
     this.observer.observe(this.host.nativeElement);
     document.fonts?.ready.then(() => this.store.markDirty());
     const loop = (now: number) => {
-      if (this.store.frame(now)) this.draw();
+      // The tracker gets the times of a frame that draws, for the batches that the frame shows.
+      const frame = this.clock();
+      if (this.store.frame(now)) {
+        this.draw();
+        this.tracker.addFrame(frame, this.clock());
+      }
       this.frameId = requestAnimationFrame(loop);
     };
     this.frameId = requestAnimationFrame(loop);

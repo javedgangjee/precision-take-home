@@ -1,19 +1,23 @@
 import { TestBed } from '@angular/core/testing';
 import { App } from './app';
+import { TIME_REQUEST } from './latency/clock-sync';
 import { STREAM_EVENT_SOURCE } from './source/server-source';
 import { TEST_SOURCE_WORKER } from './source/test-source';
 
 describe('App', () => {
   let createWorker: ReturnType<typeof vi.fn>;
   let createEventSource: ReturnType<typeof vi.fn>;
+  let requestTime: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     createWorker = vi.fn(() => ({ postMessage: vi.fn(), terminate: vi.fn() }) as unknown as Worker);
     createEventSource = vi.fn(
       () => ({ close: vi.fn(), addEventListener: vi.fn() }) as unknown as EventSource,
     );
+    requestTime = vi.fn(() => Promise.resolve({ epoch_us: 0 }));
     TestBed.configureTestingModule({
       providers: [
+        { provide: TIME_REQUEST, useValue: requestTime },
         { provide: TEST_SOURCE_WORKER, useValue: createWorker },
         { provide: STREAM_EVENT_SOURCE, useValue: createEventSource },
       ],
@@ -36,6 +40,7 @@ describe('App', () => {
 
   afterEach(() => {
     history.replaceState(null, '', '/');
+    delete window.latency;
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -64,5 +69,28 @@ describe('App', () => {
     await fixture.whenStable();
     expect(createWorker).toHaveBeenCalledOnce();
     expect(createEventSource).not.toHaveBeenCalled();
+  });
+
+  it('starts the clock sync on the cloud server and sets window.latency with no query', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    expect(requestTime).toHaveBeenCalledWith('https://api.precision.jgangjee.com/time');
+    expect(window.latency?.report).toBeTypeOf('function');
+    expect(window.latency?.reset).toBeTypeOf('function');
+  });
+
+  it('starts the clock sync on the server from the query', async () => {
+    history.replaceState(null, '', '/?server=http://localhost:8000');
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    expect(requestTime).toHaveBeenCalledWith('http://localhost:8000/time');
+  });
+
+  it('makes no time request and sets no window.latency with source=frontend', async () => {
+    history.replaceState(null, '', '/?source=frontend');
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    expect(requestTime).not.toHaveBeenCalled();
+    expect(window.latency).toBeUndefined();
   });
 });

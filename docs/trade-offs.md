@@ -166,3 +166,10 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - I read the times from `latency.report()` in the console. The feature needs no new part in the side panel, and feature 9 can call the same function. The cost is that a reviewer must open the console to see the latency.
 - The value that I compare with the 100 ms target is the p99 of the total over 60 s. One long pause in the browser does not fail a run. The cost is that the 12 slowest batches of 1,200 can be above the target.
 - The client keeps the stage times of the last 1,200 batches and no raw data file. The memory stays small. The cost is that I cannot draw a chart of the latency over time.
+
+## Feature 8, Latency, implement
+
+- The client measures all the time, with no setting that turns it off. A report is ready at any moment, and feature 9 needs no setup. The cost is three clock reads for each batch and one or two for each frame in every session.
+- The handler of `GET /time` is async, so it reads the clock on the event loop and not in a worker thread. The response does not wait for a thread. The cost is that a busy event loop delays the response, which makes the round trip longer. The client keeps the shortest of 5 round trips, which limits that effect.
+- A batch that waits for a frame when no offset exists is dropped from the measurement and is not kept for later. The tracker needs no second list. The cost is that the batches of about the first 100 ms after the page loads give no sample.
+- The default time request uses `fetch` and has no unit test, as the default EventSource has none. The tests replace both with fakes. The cost is that the coverage of clock-sync.ts is 90 percent of the lines.

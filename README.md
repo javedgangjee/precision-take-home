@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, and the settings display are in place. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, and the latency measurement are in place. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -43,7 +43,19 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 
 ## Backend stream
 
-`GET /stream` sends the stream as Server-Sent Events. Each event holds one batch as a compact JSON array of random integers in its `data` field, with no spaces. The `id` field holds the batch sequence number, which starts at 0 when the server starts and goes up by 1 for each batch. A gap in the ids shows that the client missed batches. The server generates one shared stream, so every client gets the same batches. When the server sends nothing for 15 seconds, it sends the comment `: ping`.
+`GET /stream` sends the stream as Server-Sent Events. Each event holds one batch as a compact JSON array of random integers in its `data` field, with no spaces. The server generates one shared stream, so every client gets the same batches. When the server sends nothing for 15 seconds, it sends the comment `: ping`.
+
+The `id` field of a batch holds four whole numbers with a colon between them, in the form `<sequence number>:<started>:<encoded>:<sent>`.
+
+```
+data: [794,29,619,38]
+id: 1234:1790812800123456:1790812800123541:1790812800123702
+```
+
+- The sequence number starts at 0 when the server starts and goes up by 1 for each batch. A gap in the sequence numbers shows that the client missed batches.
+- The three times are server timestamps in microseconds since the Unix epoch. The Latency section tells what each one means.
+- Every client gets the same `started` and `encoded` times for a batch. Each client has its own `sent` time.
+- The times are not in the data, so the data stays a JSON array of integers.
 
 The stream has one more event type, which is the settings packet. It has the line `event: update`, and its `data` field holds the three stream settings and the pause state as one compact JSON object.
 
@@ -63,6 +75,8 @@ Run `make backend`, and then run this command in another terminal to see the str
 ```sh
 curl -N localhost:8000/stream | head -c 300
 ```
+
+`GET /time` returns the server time in microseconds since the Unix epoch, such as `{"epoch_us":1790812800123456}`. The client uses it to compare its clock with the server clock. The response has the header `Cache-Control: no-store`, and the request needs no token.
 
 The server reads these environment variables at start. When a value is out of range or not a number, the server logs a warning and uses the default.
 
@@ -92,8 +106,8 @@ Each admin request must send the header `Authorization: Bearer <token>`. A reque
 Each request returns the settings and the pause state as one JSON object, such as `{"samples_per_second": 5000, "batch_interval_ms": 50, "max_value": 1024, "paused": false}`.
 
 - A PATCH value must be an integer in the range in the Backend stream table. A value out of range, a value that is not an integer, or an unknown field gets status 422, and no setting changes. The PATCH cannot change `CORS_ORIGINS`.
-- A change to the batch interval starts the schedule again from the time of the change, so the server sends no burst of batches. The batch id keeps going up.
-- While paused, the server sends no batches, and the batch id does not advance. The `: ping` heartbeat keeps each connection open. A resume starts the schedule again and does not send the batches that the pause skipped. A settings change during a pause applies when the stream resumes.
+- A change to the batch interval starts the schedule again from the time of the change, so the server sends no burst of batches. The batch sequence number keeps going up.
+- While paused, the server sends no batches, and the batch sequence number does not advance. The `: ping` heartbeat keeps each connection open. A resume starts the schedule again and does not send the batches that the pause skipped. A settings change during a pause applies when the stream resumes.
 - A pause while paused and a resume while running return status 200 and change nothing.
 - The server logs each change.
 
@@ -130,7 +144,7 @@ For example, http://localhost:4200/?server=http://localhost:8000 connects to the
 - The minus and plus buttons change N from 1 to 64. The up and down arrow keys in the N field change N by 1, and by 10 with Shift. A change to N resets all counts to zero.
 - A badge at the top of the side panel shows the stream state. Connecting is a white badge, and it shows from the start until the stream opens. Live is a green badge, and it shows while batches arrive. Reconnecting is an amber badge, and it shows after a live stream drops until the stream opens again. Paused is a white badge with a pause icon, and it shows while the server is paused. Test source is a white badge with no icon, and it shows while the test source runs.
 - The side panel shows the samples received, the max count, and the frame rate. A red line shows below the frame rate when it falls below 90 percent of the target of 60 fps. Run the client in Chrome with Energy Saver off, because Energy Saver caps the frame rate at 30 fps.
-- The Missed batches readout shows how many batches the client did not get. The client reads the batch id of each batch, and an id that skips ahead adds the size of the gap to the count. The count starts at 0 when the page loads, and it spans a reconnect. A change to N sets it to 0. A batch id lower than the last one means that the server restarted, and it also sets the count to 0.
+- The Missed batches readout shows how many batches the client did not get. The client reads the sequence number from the id of each batch, and a number that skips ahead adds the size of the gap to the count. The count starts at 0 when the page loads, and it spans a reconnect. A change to N sets it to 0. A sequence number lower than the last one means that the server restarted, and it also sets the count to 0.
 - The Samples per second, Batch interval, and Max value readouts show the settings of the stream. The client reads them from the settings packet, so they change within a second of an admin change, with no reload. They do not show until the first settings packet arrives.
 - In a short window the side panel scrolls.
 
@@ -138,11 +152,38 @@ For example, http://localhost:4200/?server=http://localhost:8000 connects to the
 
 When the stream drops, the client closes it and tries again after a delay. The first delay is 1 second, and each failed attempt doubles it up to 30 seconds. A random factor from 0.5 to 1 spreads out the clients after a server restart. The delay goes back to 1 second after the stream opens. The browser hides the `: ping` heartbeat from the client, so the client also counts a live stream as dropped when no batch arrives for 5 seconds. The counts stay on screen during a reconnect. Only a change to N resets them. Batches that the server sends during the drop are lost, and the Missed batches readout counts them.
 
-One limit stays in the missed batch count. After a server restart, the count gets a false gap when the first new batch id is higher than the last id the client saw. This needs a server that ran for less time than the client took to reconnect.
+One limit stays in the missed batch count. After a server restart, the count gets a false gap when the first new sequence number is higher than the last one the client saw. This needs a server that ran for less time than the client took to reconnect.
 
 ### Pause
 
 When a settings packet says that the server is paused, the client shows Paused, keeps the stream open, and stops the 5 second check, because the server sends no batches during a pause. The grid and the readouts keep their values. A settings packet with the pause off sets the state to Live and starts the check again. The badge shows Live when the stream opens, so a client that connects during a pause shows Live for a moment before it shows Paused. When the stream drops during a pause, the client shows Reconnecting and tries again with the same delays.
+
+### Latency
+
+The client measures the time of each batch from generation to render. The measurement has eight timestamps. The server takes the first three on its clock and sends them in the batch id. The client takes the other five on its clock.
+
+- `started` is the time just before the server makes the values of the batch.
+- `encoded` is the time when the JSON text exists and the batch goes into the client queues.
+- `sent` is the time when the stream route takes the batch from the queue of that client and hands the event to the web server.
+- `received` is the time when the message handler of the client starts.
+- `parsed` is the time when the client has the array of integers.
+- `applied` is the time when the counts hold the batch.
+- `frame` is the time when the animation frame callback that draws the batch starts.
+- `drawn` is the time when the canvas draw call returns.
+
+Each stage runs from one timestamp to the next. The seven stages are generate, queue, network, parse, apply, frame wait, and draw, in that order. The total runs from `started` to `drawn`. The network stage holds the write by Uvicorn, the load balancer, the network, and the browser. The measurement stops at `drawn`, so it does not hold the time from the draw call to the light on the display.
+
+The network stage and the total cross the two clocks, so the client measures the difference between them. It makes 5 requests to `GET /time`, one after the other, and keeps the offset from the request with the shortest round trip. The error of the offset is at most half of that round trip. The client measures the offset when the page loads and on each `latency.reset()`, and it sends no time requests in the background. The two clocks can drift by 1 to 3 ms each minute, so start each run with a reset.
+
+To read the latency, open the Chrome DevTools console and keep the tab in front, because a hidden tab draws no frames.
+
+1. Run `latency.reset()`. It drops the samples and measures the clock offset again.
+2. Wait 60 seconds.
+3. Run `latency.report()`. It prints a table with one row for each stage and one row for the total. The columns are the p50, the p95, the p99, and the max in milliseconds.
+
+The report also returns the same values as an object, with the number of batches, the clock offset, and the round trip. Run `copy(latency.report())` to put them on the clipboard as JSON. The client keeps the last 1,200 batches, which is 60 seconds at the default settings. The side panel does not show the latency. The test source has no server times, so `latency` does not exist with `source=frontend`.
+
+The docs/results.md file gives the measured times and compares the p99 of the total with the 100 ms target.
 
 ### Test source
 
@@ -200,5 +241,6 @@ Run `make destroy` to remove the stack. The hosted zone stays, because the stack
 - The docs/assumptions.md file records the assumptions I made.
 - The docs/trade-offs.md file records the trade-offs I made.
 - The docs/ai-changes.md file records where I changed the AI output, and why.
+- The docs/results.md file gives the measured latency for each stage and compares the total with the 100 ms target.
 - The docs/logs/ folder holds my Claude Code session logs, with one folder for each roadmap feature.
 - The context/ folder holds the brief, the HTML design, and my design notes.

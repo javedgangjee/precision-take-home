@@ -1,6 +1,8 @@
 import asyncio
+import itertools
 import json
 import random
+from collections.abc import Callable
 
 from app.broadcaster import Batch, Broadcaster, next_tick
 from app.generator import BatchGenerator
@@ -15,6 +17,12 @@ def make() -> Broadcaster:
     return Broadcaster(BatchGenerator(Settings(), random.Random(0)), Settings())
 
 
+def make_with_clock(settings: Settings) -> Broadcaster:
+    """Make a broadcaster with a clock that returns 100 and goes up by 100 on each call."""
+    clock: Callable[[], int] = itertools.count(100, 100).__next__
+    return Broadcaster(BatchGenerator(settings, random.Random(0)), settings, clock)
+
+
 def take(queue: asyncio.Queue[Batch | None]) -> Batch:
     """Take the next item from the queue. It must be a batch and not a wake item."""
     item = queue.get_nowait()
@@ -27,8 +35,8 @@ def test_two_subscribers_get_the_same_batches_in_order() -> None:
     first = broadcaster.subscribe()
     second = broadcaster.subscribe()
 
-    broadcaster.publish([1, 2])
-    broadcaster.publish([3])
+    broadcaster.publish([1, 2], 0)
+    broadcaster.publish([3], 0)
 
     assert [take(first).text for _ in range(2)] == ["[1,2]", "[3]"]
     assert [take(second).text for _ in range(2)] == ["[1,2]", "[3]"]
@@ -40,7 +48,7 @@ def test_batch_is_encoded_once() -> None:
     second = broadcaster.subscribe()
     values = BatchGenerator(Settings(), random.Random(0)).next_batch()
 
-    broadcaster.publish(values)
+    broadcaster.publish(values, 0)
 
     text = take(first).text
     assert take(second).text is text
@@ -51,8 +59,8 @@ def test_sequence_numbers_start_at_0_and_go_up_by_1() -> None:
     broadcaster = make()
     queue = broadcaster.subscribe()
 
-    broadcaster.publish([1])
-    broadcaster.publish([2])
+    broadcaster.publish([1], 0)
+    broadcaster.publish([2], 0)
 
     assert [take(queue).seq for _ in range(2)] == [0, 1]
 
@@ -62,11 +70,11 @@ def test_full_queue_drops_its_oldest_batch() -> None:
     full = broadcaster.subscribe()
     other = broadcaster.subscribe()
 
-    broadcaster.publish([1])
-    broadcaster.publish([2])
+    broadcaster.publish([1], 0)
+    broadcaster.publish([2], 0)
     other_first = take(other)
     other_second = take(other)
-    broadcaster.publish([3])
+    broadcaster.publish([3], 0)
 
     assert full.qsize() == 2
     assert [take(full).seq for _ in range(2)] == [1, 2]
@@ -78,7 +86,7 @@ def test_unsubscribe_removes_the_queue() -> None:
     queue = broadcaster.subscribe()
 
     broadcaster.unsubscribe(queue)
-    broadcaster.publish([1])
+    broadcaster.publish([1], 0)
 
     assert broadcaster.subscriber_count == 0
     assert queue.empty()
@@ -227,7 +235,7 @@ def test_resume_clears_paused_in_the_packet_and_a_second_resume_changes_nothing(
 
 def test_update_pause_and_resume_keep_the_next_sequence_number() -> None:
     broadcaster = make()
-    broadcaster.publish([1])
+    broadcaster.publish([1], 0)
     next_seq = broadcaster.next_seq
 
     broadcaster.update(Settings(samples_per_second=20))
@@ -250,13 +258,16 @@ def test_pause_puts_one_wake_item_in_an_empty_queue() -> None:
 def test_pause_puts_no_wake_item_in_a_queue_with_2_batches() -> None:
     broadcaster = make()
     queue = broadcaster.subscribe()
-    broadcaster.publish([1])
-    broadcaster.publish([2])
+    broadcaster.publish([1], 0)
+    broadcaster.publish([2], 0)
 
     broadcaster.pause()
 
     assert queue.qsize() == 2
-    assert [queue.get_nowait() for _ in range(2)] == [Batch(0, "[1]"), Batch(1, "[2]")]
+    assert [(batch.seq, batch.text) for batch in (take(queue), take(queue))] == [
+        (0, "[1]"),
+        (1, "[2]"),
+    ]
 
 
 def test_2_new_batches_push_a_wake_item_out_of_the_queue() -> None:
@@ -264,8 +275,53 @@ def test_2_new_batches_push_a_wake_item_out_of_the_queue() -> None:
     queue = broadcaster.subscribe()
     broadcaster.pause()
 
-    broadcaster.publish([1])
-    broadcaster.publish([2])
+    broadcaster.publish([1], 0)
+    broadcaster.publish([2], 0)
 
     assert queue.qsize() == 2
     assert take(queue).seq + 1 == take(queue).seq
+
+
+def test_make_batch_takes_the_started_and_encoded_times_from_the_clock() -> None:
+    broadcaster = make_with_clock(Settings())
+    queue = broadcaster.subscribe()
+
+    broadcaster.make_batch()
+    broadcaster.make_batch()
+    first = take(queue)
+    second = take(queue)
+
+    assert (first.started, first.encoded) == (100, 200)
+    assert (second.started, second.encoded) == (300, 400)
+
+
+def test_make_batch_gives_the_sequence_numbers_0_and_1() -> None:
+    broadcaster = make_with_clock(Settings())
+    queue = broadcaster.subscribe()
+
+    broadcaster.make_batch()
+    broadcaster.make_batch()
+
+    assert [take(queue).seq for _ in range(2)] == [0, 1]
+
+
+def test_two_subscribers_get_the_same_times_for_the_same_batch() -> None:
+    broadcaster = make_with_clock(Settings())
+    first = broadcaster.subscribe()
+    second = broadcaster.subscribe()
+
+    broadcaster.make_batch()
+    a = take(first)
+    b = take(second)
+
+    assert (a.started, a.encoded) == (b.started, b.encoded)
+
+
+def test_make_batch_makes_no_batch_when_the_generator_returns_no_values() -> None:
+    broadcaster = make_with_clock(Settings(samples_per_second=1, batch_interval_ms=50))
+    queue = broadcaster.subscribe()
+
+    broadcaster.make_batch()
+
+    assert queue.empty()
+    assert broadcaster.next_seq == 0

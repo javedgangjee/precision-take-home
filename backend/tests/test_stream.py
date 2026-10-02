@@ -35,6 +35,21 @@ def events(lines: Iterator[str]) -> Iterator[Event]:
             event[field] = value
 
 
+def seq(event: Event) -> int:
+    """Return the batch sequence number, which is the first part of the id."""
+    return int(event["id"].split(":")[0])
+
+
+def times(event: Event) -> list[int]:
+    """Return the started, encoded, and sent times from the id, in microseconds."""
+    return [int(part) for part in event["id"].split(":")[1:]]
+
+
+def shared_id(event: Event) -> str:
+    """Return the id without the sent time, which each client has for itself."""
+    return event["id"].rsplit(":", 1)[0]
+
+
 def batches(lines: Iterator[str]) -> Iterator[Event]:
     """Parse SSE lines into events, and skip the update events."""
     return (event for event in events(lines) if event.get("event") != "update")
@@ -85,7 +100,7 @@ def test_first_batch_has_250_integers(live_server: LiveServer) -> None:
     values = json.loads(event["data"])
     assert len(values) == 250
     assert all(isinstance(value, int) and 0 <= value <= 1_023 for value in values)
-    assert int(event["id"]) >= 0
+    assert seq(event) >= 0
 
 
 def test_ids_go_up_by_1(live_server: LiveServer) -> None:
@@ -93,7 +108,7 @@ def test_ids_go_up_by_1(live_server: LiveServer) -> None:
 
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
         stream = batches(response.iter_lines())
-        ids = [int(next(stream)["id"]) for _ in range(3)]
+        ids = [seq(next(stream)) for _ in range(3)]
 
     assert ids == [ids[0], ids[0] + 1, ids[0] + 2]
 
@@ -110,13 +125,77 @@ def test_two_clients_get_the_same_batch(live_server: LiveServer) -> None:
         a = next(first_stream)
         b = next(second_stream)
         # A client that subscribed one tick earlier has one extra batch, so skip ahead to match.
-        while int(a["id"]) < int(b["id"]):
+        while seq(a) < seq(b):
             a = next(first_stream)
-        while int(b["id"]) < int(a["id"]):
+        while seq(b) < seq(a):
             b = next(second_stream)
 
-    assert a["id"] == b["id"]
+    assert shared_id(a) == shared_id(b)
     assert a["data"] == b["data"]
+
+
+def test_batch_id_has_four_parts_of_digits(live_server: LiveServer) -> None:
+    url = live_server(Settings())
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        event = next(batches(response.iter_lines()))
+
+    parts = event["id"].split(":")
+    assert len(parts) == 4
+    assert all(part.isascii() and part.isdigit() for part in parts)
+
+
+def test_batch_times_are_in_order_and_the_data_is_an_array_of_integers(
+    live_server: LiveServer,
+) -> None:
+    url = live_server(Settings())
+    before = time.time_ns() // 1_000
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        event = next(batches(response.iter_lines()))
+    after = time.time_ns() // 1_000
+
+    started, encoded, sent = times(event)
+    assert started <= encoded <= sent
+    assert before <= sent <= after
+    assert sent - started <= 1_000_000
+    data = json.loads(event["data"])
+    assert isinstance(data, list)
+    assert all(isinstance(value, int) for value in data)
+
+
+def test_two_clients_get_the_same_started_and_encoded_times(live_server: LiveServer) -> None:
+    url = live_server(Settings())
+
+    with (
+        httpx2.stream("GET", f"{url}/stream", timeout=5) as first,
+        httpx2.stream("GET", f"{url}/stream", timeout=5) as second,
+    ):
+        first_stream = batches(first.iter_lines())
+        second_stream = batches(second.iter_lines())
+        a = next(first_stream)
+        b = next(second_stream)
+        # A client that subscribed one tick earlier has one extra batch, so skip ahead to match.
+        while seq(a) < seq(b):
+            a = next(first_stream)
+        while seq(b) < seq(a):
+            b = next(second_stream)
+
+    assert seq(a) == seq(b)
+    assert times(a)[:2] == times(b)[:2]
+
+
+def test_started_goes_up_across_three_batches_in_a_row(live_server: LiveServer) -> None:
+    url = live_server(Settings())
+
+    with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
+        stream = batches(response.iter_lines())
+        three = [next(stream) for _ in range(3)]
+
+    first = seq(three[0])
+    assert [seq(event) for event in three] == [first, first + 1, first + 2]
+    started = [times(event)[0] for event in three]
+    assert started[0] < started[1] < started[2]
 
 
 def test_idle_stream_sends_ping(live_server: LiveServer, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -201,7 +280,7 @@ def test_pause_stops_the_events_and_resume_goes_on_from_the_next_id(
             assert arrived < 0.1
             last = event
 
-    assert int(event["id"]) == int(last["id"]) + 1
+    assert seq(event) == seq(last) + 1
 
 
 def test_paused_stream_sends_ping(live_server: LiveServer, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -236,12 +315,12 @@ def test_two_clients_get_the_same_batch_after_a_change(live_server: LiveServer) 
         a = skip_stale(first_stream, is_new)
         b = skip_stale(second_stream, is_new)
         # A client that is one batch ahead skips to match, as in the test above.
-        while int(a["id"]) < int(b["id"]):
+        while seq(a) < seq(b):
             a = next(first_stream)
-        while int(b["id"]) < int(a["id"]):
+        while seq(b) < seq(a):
             b = next(second_stream)
 
-    assert a["id"] == b["id"]
+    assert shared_id(a) == shared_id(b)
     assert a["data"] == b["data"]
 
 
@@ -290,14 +369,14 @@ def test_update_event_leaves_no_gap_in_the_batch_ids(live_server: LiveServer) ->
     with httpx2.stream("GET", f"{url}/stream", timeout=5) as response:
         stream = events(response.iter_lines())
         next(stream)
-        ids = [int(next(stream)["id"])]
+        ids = [seq(next(stream))]
         admin(url, "PATCH", "/admin/settings", {"max_value": 3})
         # Read the batches up to the update event, and then 2 batches more.
         for event in stream:
             if event.get("event") == "update":
                 break
-            ids.append(int(event["id"]))
-        ids += [int(next(stream)["id"]) for _ in range(2)]
+            ids.append(seq(event))
+        ids += [seq(next(stream)) for _ in range(2)]
 
     assert ids == list(range(ids[0], ids[0] + len(ids)))
 

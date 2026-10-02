@@ -5,6 +5,8 @@ export interface SourceSettings {
   source: SourceKind;
   /** The address of the server stream, such as http://localhost:8000/stream. */
   streamUrl: string;
+  /** The address of the server time, such as http://localhost:8000/time. */
+  timeUrl: string;
 }
 
 /** The cloud server. Use `?server=http://localhost:8000` for the local server. */
@@ -17,9 +19,11 @@ export const DEFAULT_SERVER = 'https://api.precision.jgangjee.com';
  */
 export function readSourceSettings(query: string): SourceSettings {
   const params = new URLSearchParams(query);
+  const server = readServer(params.get('server'));
   return {
     source: readSource(params.get('source')),
-    streamUrl: `${readServer(params.get('server'))}/stream`,
+    streamUrl: `${server}/stream`,
+    timeUrl: `${server}/time`,
   };
 }
 

@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { CLIENT_CLOCK } from '../latency/clock-sync';
+import { LatencyTracker } from '../latency/latency-tracker';
 import { HeatMap } from './heat-map';
 import { HeatMapRenderer } from './heat-map-renderer';
 import { HeatMapStore } from './heat-map-store';
@@ -64,5 +66,38 @@ describe('HeatMap', () => {
 
     resizeCallback?.();
     expect(draw).toHaveBeenCalledTimes(1);
+  });
+
+  describe('latency timestamps', () => {
+    let clock: ReturnType<typeof vi.fn<() => number>>;
+    let addFrame: ReturnType<typeof vi.spyOn>;
+    let frame: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(async () => {
+      clock = vi.fn(() => 0);
+      TestBed.configureTestingModule({ providers: [{ provide: CLIENT_CLOCK, useValue: clock }] });
+      vi.spyOn(HeatMapRenderer.prototype, 'draw').mockImplementation(() => undefined);
+      addFrame = vi.spyOn(TestBed.inject(LatencyTracker), 'addFrame');
+      frame = vi.spyOn(TestBed.inject(HeatMapStore), 'frame');
+      await TestBed.createComponent(HeatMap).whenStable();
+      clock.mockReturnValueOnce(100).mockReturnValueOnce(103);
+    });
+
+    it('gives the tracker the times 100 and 103 on a frame that draws', () => {
+      frame.mockReturnValueOnce(true);
+      frameCallback?.(1000);
+      expect(addFrame).toHaveBeenCalledExactlyOnceWith(100, 103);
+    });
+
+    it('gives the tracker nothing on a frame that does not draw', () => {
+      frame.mockReturnValueOnce(false);
+      frameCallback?.(1000);
+      expect(addFrame).not.toHaveBeenCalled();
+    });
+
+    it('gives the tracker nothing on a draw from a resize', () => {
+      resizeCallback?.();
+      expect(addFrame).not.toHaveBeenCalled();
+    });
   });
 });

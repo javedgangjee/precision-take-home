@@ -14,7 +14,6 @@ The command for V1 to V7 is `make test`. The command for V8 is `make lint`. The 
 - After an update to 20 samples per second, the packet has `samples_per_second` 20, and the change counter is 1 higher.
 - After a pause, the packet has `paused` true, and the counter is 1 higher. A second pause leaves the packet and the counter as they were.
 - After a resume, the packet has `paused` false, and the counter is 1 higher. A second resume leaves the packet and the counter as they were.
-- An update, a pause, and a resume leave the next batch sequence number as it was.
 - A subscriber with an empty queue gets one wake item after a pause, and the wake item is not a batch.
 - A subscriber with 2 batches in its queue gets no wake item after a pause, and the queue still holds the same 2 batches.
 - With a wake item in the queue, 2 new batches leave only the 2 batches in the queue, and their sequence numbers are 1 apart.

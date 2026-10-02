@@ -43,7 +43,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 
 ## Feature 3, Frontend, plan
 
-- Where the HTML design differs from the brief or the specs, the client follows the brief and the specs. N runs from 1 to 64, the grid has row and column labels, row 0 is at the bottom, cells use (count - 1) / (max - 1), and the frame rate is measured.
+- Where the HTML design differs from the brief or the specs, the client follows the brief and the specs. N runs from 1 to 100, the grid has row and column labels, row 0 is at the bottom, cells use (count - 1) / (max - 1), and the frame rate is measured.
 - The test source in the browser reads `rate`, `interval`, and `max` from the URL query. The defaults match the server. The rate goes up to 100,000,000 samples per second so that the stress test can go past the server limit of 1,000,000.
 - The test source is the only source in feature 3. Feature 4 decides how the user picks the test source or the server.
 - The colors of the brief picture are a sketch. Cell (b), with 5 of 10 hits, looks yellow in the picture and is green on the client scale.
@@ -53,7 +53,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 
 ## Feature 3, Frontend, implement
 
-- A call to set N to the value it already has does nothing. An arrow key press at 1 or 64 then keeps the counts.
+- A call to set N to the value it already has does nothing. An arrow key press at 1 or 100 then keeps the counts.
 - The test source settings must be whole numbers. A value such as 1.5 falls back to its default, as a value out of range does.
 - The grid is never smaller than 120 CSS pixels on a side, as in the HTML design.
 - The client redraws the grid when the fonts finish loading, so the axis labels use IBM Plex Mono.

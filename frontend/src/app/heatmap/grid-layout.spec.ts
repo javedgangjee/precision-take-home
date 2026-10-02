@@ -1,13 +1,13 @@
 import { cellRect, labelledIndices, labelStep } from './grid-layout';
 
 describe('labelStep', () => {
-  it('is 1 up to N = 16, 2 up to N = 32, and 4 up to N = 64', () => {
+  it('is 1 up to N = 16, 2 up to N = 32, and 4 up to N = 100', () => {
     expect(labelStep(1)).toBe(1);
     expect(labelStep(16)).toBe(1);
     expect(labelStep(17)).toBe(2);
     expect(labelStep(32)).toBe(2);
     expect(labelStep(33)).toBe(4);
-    expect(labelStep(64)).toBe(4);
+    expect(labelStep(100)).toBe(4);
   });
 });
 

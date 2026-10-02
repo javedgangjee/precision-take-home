@@ -26,7 +26,7 @@ The tests run the app in Uvicorn on a free local port.
 - The three times are in order, so `started` is at most `encoded`, and `encoded` is at most `sent`.
 - The `sent` time is between the time just before the request and the time just after the test reads the event. The `started` time is at most 1 s before the `sent` time.
 - The data of the event is a JSON array of integers.
-- Two clients that get the batch with the same sequence number get the same `started` and `encoded` times.
+- The feature 2 test for two clients compares the id without the `sent` time, so it covers the `started` and `encoded` times, and this feature adds no test for two clients.
 - Across three batches in a row, the sequence number goes up by 1 each time, and `started` goes up each time.
 - The first event of a connection is still the settings packet with no `id`.
 - The stream tests from features 2, 6, and 7 pass with the same cases, and they read the sequence number from the first part of the id.
@@ -35,7 +35,7 @@ The tests run the app in Uvicorn on a free local port.
 
 - `GET /time` returns status 200 and a JSON object with the one field `epoch_us`. The value is a whole number between the time just before the request and the time just after it, in microseconds.
 - The response has the header `Cache-Control: no-store`.
-- A request with `Origin: http://localhost:4200` gets the header `Access-Control-Allow-Origin: http://localhost:4200`.
+- The CORS rule is the same for every route, and the feature 2 test on `GET /health` covers it, so this endpoint has no CORS test.
 - With `admin_token="test-token"`, a request with no token returns status 200.
 
 ### V4. The client reads the id

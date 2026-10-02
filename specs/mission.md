@@ -41,7 +41,7 @@ The brief is the main source of truth. Where my notes or the HTML design disagre
 
 - N1. The bin index is (v - 1) mod N², the row is index div N, and the column is index mod N. Row 0 is at the bottom of the screen, and column 0 is at the left. This rule matches both brief examples and the example input (e) in the brief picture. The server can send 0, and 0 goes to cell <N-1, N-1>.
 - N2. The grid shows row numbers on the left and column numbers along the bottom, as in the brief picture. When N is too large to label every row and column, the labels appear at a fixed interval.
-- N3. N ranges from 1 to 64, and the default is 32. When the user changes N, all counts reset to zero.
+- N3. N ranges from 1 to 100, and the default is 32. When the user changes N, all counts reset to zero.
 - N4. The color position of a cell is (count - 1) / (max - 1). A count of 1 is the blue end of the scale, #1E00FF, and the max count is the red end, #FF0033. When the max count is 1, every non-empty cell is the blue end. The scale labels run from 1 to the max count.
 - N5. The server sends the stream in batches, and each batch is a JSON array of random integers drawn from a uniform distribution. The server generates one shared stream, and every connected client gets the same batches. Each batch carries a sequence number that starts at 0 when the server starts, so a client can count the batches it missed. The client counts them and shows the count in the side panel.
 - N6. The target latency from generation to render is 100 ms.

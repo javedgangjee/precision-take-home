@@ -26,7 +26,7 @@ The command for V1 to V9 is `make test`. The command for V10 is `make lint`. The
 
 - V3.1. With N = 4, the example input 4, 11, 6, 6, 11, 11, 11, 6, 11, 6, 6, 11, 11, 11, 11, 11 gives cell <2,2> a count of 10, cell <1,1> a count of 5, and cell <0,3> a count of 1. All other cells hold 0, the max is 10, and the total is 16.
 - The default N is 32.
-- `setN(0)` sets N to 1, and `setN(65)` sets N to 64.
+- `setN(0)` sets N to 1, and `setN(101)` sets N to 100.
 - After a batch, `setN(33)` sets every count, the max, and the total to 0.
 
 ### V4. The color map runs from blue to red
@@ -43,7 +43,7 @@ The command for V1 to V9 is `make test`. The command for V10 is `make lint`. The
 
 ### V5. The layout puts row 0 at the bottom and spaces the labels
 
-- `labelStep` returns 1 for N of 1 and 16, 2 for N of 17 and 32, and 4 for N of 33 and 64.
+- `labelStep` returns 1 for N of 1 and 16, 2 for N of 17 and 32, and 4 for N of 33 and 100.
 - With N = 32, the labelled rows are 0, 2, 4, and so on to 30, which is 16 labels.
 - With N = 4 and a 400 px canvas, cell <0,0> touches the bottom left corner, and cell <3,3> touches the top right corner.
 - With N = 7 and a 400 px canvas, the cell widths differ by at most 1 px.
@@ -88,8 +88,8 @@ The renderer tests use a fake 2D context that records each fill.
 - The page header shows "Bin There, Done That".
 - The N field shows "32 × 32" at start.
 - A click on the plus button shows "33 × 33" and sets the samples received to 0.
-- The minus button is hidden at N = 1, and the plus button is hidden at N = 64. Neither button has the disabled attribute.
-- At N = 2, a click on the minus button hides it, and at N = 63, a click on the plus button hides it.
+- The minus button is hidden at N = 1, and the plus button is hidden at N = 100. Neither button has the disabled attribute.
+- At N = 2, a click on the minus button hides it, and at N = 99, a click on the plus button hides it.
 - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and ArrowDown takes away 1.
 - After 1,024 samples, the samples received readout shows "1,024".
 - The frame rate readout shows the meter value with the unit "fps".
@@ -115,7 +115,7 @@ The renderer tests use a fake 2D context that records each fill.
 
 ### M2. The N control works at its limits
 
-1. Click the plus button until N is 64.
+1. Click the plus button until N is 100.
 2. The expected result is that the plus button is hidden, the field does not move, the counts reset on each click, and the axis labels appear at every 4th row and column.
 3. Click the minus button until N is 1.
 4. The expected result is that the minus button is hidden, the field does not move, and the one cell is the red end color #FF0033, because its count is the max count.

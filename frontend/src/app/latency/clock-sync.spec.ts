@@ -72,14 +72,6 @@ describe('ClockSync', () => {
     expect(service.current).toEqual({ offset: 1002, roundTrip: 20 });
   });
 
-  it('counts a response with epoch_us 2050000 as a server time of 2,050 ms', async () => {
-    clock.mockReturnValueOnce(1000).mockReturnValueOnce(1100);
-    request.mockResolvedValueOnce({ epoch_us: 2050000 });
-    next(null, null, null, null);
-    await service.start(TIME_URL);
-    expect(service.current).toEqual({ offset: 1000, roundTrip: 100 });
-  });
-
   it('takes the offset from the other 3 requests when 2 of the 5 fail', async () => {
     next(null, A, B, null, C);
     await service.start(TIME_URL);

@@ -33,7 +33,7 @@ export class HeatMapStore {
   private dirty = true;
   private lastReadout = Number.NEGATIVE_INFINITY;
 
-  /** Sets N in the range 1 to 64 and resets the counts when N changes. */
+  /** Sets N in the range 1 to 100 and resets the counts when N changes. */
   setN(n: number): void {
     const next = Math.max(MIN_N, Math.min(MAX_N, Math.round(n)));
     if (next === this.counts.n) return;

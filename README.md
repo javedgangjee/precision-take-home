@@ -141,7 +141,7 @@ For example, http://localhost:4200/?server=http://localhost:8000 connects to the
 - Each value v goes to cell index (v - 1) mod N². The row is the index divided by N, and the column is the index mod N. On a 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and 0 goes to cell <3,3>.
 - A cell with no hits is white. A cell with hits gets a color from blue (#1E00FF) at a count of 1 through cyan, green, and yellow to red (#FF0033) at the max count.
 - The color scale shows the max count at the top, the midpoint in the middle, and 1 at the bottom.
-- The minus and plus buttons change N from 1 to 64. The up and down arrow keys in the N field change N by 1, and by 10 with Shift. A change to N resets all counts to zero.
+- The minus and plus buttons change N from 1 to 100. The up and down arrow keys in the N field change N by 1, and by 10 with Shift. A change to N resets all counts to zero.
 - A badge at the top of the side panel shows the stream state. Connecting is a white badge, and it shows from the start until the stream opens. Live is a green badge, and it shows while batches arrive. Reconnecting is an amber badge, and it shows after a live stream drops until the stream opens again. Paused is a white badge with a pause icon, and it shows while the server is paused. Test source is a white badge with no icon, and it shows while the test source runs.
 - The side panel shows the samples received, the max count, and the frame rate. A red line shows below the frame rate when it falls below 90 percent of the target of 60 fps. Run the client in Chrome with Energy Saver off, because Energy Saver caps the frame rate at 30 fps.
 - The Missed batches readout shows how many batches the client did not get. The client reads the sequence number from the id of each batch, and a number that skips ahead adds the size of the gap to the count. The count starts at 0 when the page loads, and it spans a reconnect. A change to N sets it to 0. A sequence number lower than the last one means that the server restarted, and it also sets the count to 0.
@@ -197,7 +197,7 @@ With `source=frontend` in the URL query, a test source in a Web Worker makes the
 
 The three settings readouts in the side panel show the `rate`, `interval`, and `max` values in use. The panel has no Missed batches readout, because the worker messages have no batch id.
 
-A change to the query needs a reload, which also resets the counts. For a stress test, run `make frontend`, open http://localhost:4200/?source=frontend&rate=1000000&interval=50&max=1024, set N to 64, and watch the frame rate.
+A change to the query needs a reload, which also resets the counts. For a stress test, run `make frontend`, open http://localhost:4200/?source=frontend&rate=1000000&interval=50&max=10000, set N to 100, and watch the frame rate.
 
 ## Deploy
 

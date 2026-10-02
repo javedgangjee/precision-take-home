@@ -8,10 +8,10 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The server generates one shared stream for all clients. The server load stays flat as clients join. The cost is that clients cannot have their own settings.
 - A change to N resets all counts to zero. The client does not keep raw values, so memory stays fixed. The cost is that the history is lost when N changes.
 - Delivery is lossy and best effort. The server does not buffer or replay batches for a client that disconnects. The cost is gaps in the counts after a reconnect.
-- The client keeps counts as 64-bit floats. They stay exact up to 2⁵³, which a 32-bit integer would overflow in hours at 100,000 samples per second. The cost is twice the memory of 32-bit integers, which is small at 64 by 64 cells.
+- The client keeps counts as 64-bit floats. They stay exact up to 2⁵³, which a 32-bit integer would overflow in hours at 100,000 samples per second. The cost is twice the memory of 32-bit integers, which is small at 100 by 100 cells.
 - The generator uses a uniform distribution. It is the simplest to test. The cost is a nearly flat heat map, so the hotspot mode is a stretch goal.
 - The admin settings page is a stretch goal. The cost is that a settings change needs a server restart.
-- The client draws the grid on a canvas instead of one DOM or SVG element per cell. A 64 by 64 grid has 4,096 cells, and a canvas repaints them without DOM updates. The cost is that the cells are not in the DOM, so tests must check the counts instead of the elements.
+- The client draws the grid on a canvas instead of one DOM or SVG element per cell. A 100 by 100 grid has 10,000 cells, and a canvas repaints them without DOM updates. The cost is that the cells are not in the DOM, so tests must check the counts instead of the elements.
 - The client redraws with requestAnimationFrame instead of once per batch. Batches arrive every 50 ms, and the browser paints at the display rate, so the client draws only the latest state. The cost is up to one frame of added latency, which is about 17 ms at 60 Hz.
 
 ## Feature 1, Scaffold, plan
@@ -76,7 +76,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 
 ## Feature 3, Frontend, implement
 
-- The renderer fills each cell with its own `fillRect` call, which is 4,096 calls a frame at N = 64. The code is short and easy to test with a fake context. The cost is that it is slower than writing the pixels to one ImageData. The stress test shows whether that matters.
+- The renderer fills each cell with its own `fillRect` call, which is 10,000 calls a frame at N = 100. The code is short and easy to test with a fake context. The cost is that it is slower than writing the pixels to one ImageData. The stress test shows whether that matters.
 - The worker makes batches on a `setInterval` timer. The code is short. The cost is that a busy worker sends late batches and does not skip or catch up, as the server does after a stall.
 - tsconfig.app.json leaves out the worker files, which tsconfig.worker.json compiles with the web worker types. The plan named only the new config and angular.json. The cost is one more changed config file.
 

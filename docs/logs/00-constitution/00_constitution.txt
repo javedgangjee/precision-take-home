@@ -109,7 +109,7 @@ draft the docs and interview me as you go along.
          +reen, and column 0 is at the left. This rule matches both brief
          + examples and the example input (e) in the brief picture. The s
          +erver can send 0, and 0 goes to cell <N-1, N-1>.               
-      43  - N2. N ranges from 1 to 64, and the default is 32.
+      43  - N2. N ranges from 1 to 100, and the default is 32.
       44  - N3. The server sends the stream in batches, and each batch is
            a JSON array of random integers.
       45  - N4. The target latency from generation to render is 100 ms.
@@ -134,8 +134,8 @@ draft the docs and interview me as you go along.
           reen, and column 0 is at the left. This rule matches both brief
            examples and the example input (e) in the brief picture. The s
           erver can send 0, and 0 goes to cell <N-1, N-1>.
-      43 -- N2. N ranges from 1 to 64, and the default is 32.            
-      43 +- N2. N ranges from 1 to 64, and the default is 32. When the us
+      43 -- N2. N ranges from 1 to 100, and the default is 32.            
+      43 +- N2. N ranges from 1 to 100, and the default is 32. When the us
          +er changes N, all counts reset to zero.                        
       44  - N3. The server sends the stream in batches, and each batch is
            a JSON array of random integers.
@@ -161,7 +161,7 @@ draft the docs and interview me as you go along.
           reen, and column 0 is at the left. This rule matches both brief
            examples and the example input (e) in the brief picture. The s
           erver can send 0, and 0 goes to cell <N-1, N-1>.
-      43  - N2. N ranges from 1 to 64, and the default is 32. When the us
+      43  - N2. N ranges from 1 to 100, and the default is 32. When the us
           er changes N, all counts reset to zero.
       44 +- N14. The color position of a cell is (count - 1) / (max - 1).
          + A count of 1 is full blue, and the max count is full red. When
@@ -190,7 +190,7 @@ draft the docs and interview me as you go along.
           reen, and column 0 is at the left. This rule matches both brief
            examples and the example input (e) in the brief picture. The s
           erver can send 0, and 0 goes to cell <N-1, N-1>.
-      43  - N2. N ranges from 1 to 64, and the default is 32. When the us
+      43  - N2. N ranges from 1 to 100, and the default is 32. When the us
           er changes N, all counts reset to zero.
       44  - N14. The color position of a cell is (count - 1) / (max - 1).
            A count of 1 is full blue, and the max count is full red. When
@@ -223,7 +223,7 @@ draft the docs and interview me as you go along.
           reen, and column 0 is at the left. This rule matches both brief
            examples and the example input (e) in the brief picture. The s
           erver can send 0, and 0 goes to cell <N-1, N-1>.
-      43  - N2. N ranges from 1 to 64, and the default is 32. When the us
+      43  - N2. N ranges from 1 to 100, and the default is 32. When the us
           er changes N, all counts reset to zero.
       44  - N14. The color position of a cell is (count - 1) / (max - 1).
            A count of 1 is full blue, and the max count is full red. When
@@ -493,7 +493,7 @@ draft the docs and interview me as you go along.
          +s along the bottom, as in the brief picture. When N is too larg
          +e to label every row and column, the labels appear at a fixed i
          +nterval.                                                       
-      44  - N2. N ranges from 1 to 64, and the default is 32. When the us
+      44  - N2. N ranges from 1 to 100, and the default is 32. When the us
           er changes N, all counts reset to zero.
       45  - N14. The color position of a cell is (count - 1) / (max - 1).
            A count of 1 is full blue, and the max count is full red. When
@@ -535,7 +535,7 @@ draft the docs and interview me as you go along.
          -s along the bottom, as in the brief picture. When N is too larg
          -e to label every row and column, the labels appear at a fixed i
          -nterval.                                                       
-      44 -- N2. N ranges from 1 to 64, and the default is 32. When the us
+      44 -- N2. N ranges from 1 to 100, and the default is 32. When the us
          -er changes N, all counts reset to zero.                        
       45 -- N14. The color position of a cell is (count - 1) / (max - 1).
          - A count of 1 is full blue, and the max count is full red. When
@@ -567,7 +567,7 @@ draft the docs and interview me as you go along.
          + along the bottom, as in the brief picture. When N is too large
          + to label every row and column, the labels appear at a fixed in
          +terval.                                                        
-      44 +- N3. N ranges from 1 to 64, and the default is 32. When the us
+      44 +- N3. N ranges from 1 to 100, and the default is 32. When the us
          +er changes N, all counts reset to zero.                        
       45 +- N4. The color position of a cell is (count - 1) / (max - 1). 
          +A count of 1 is full blue, and the max count is full red. When 

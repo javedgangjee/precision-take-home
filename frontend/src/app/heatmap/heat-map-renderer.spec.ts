@@ -1,9 +1,8 @@
+import { BRIEF_EXAMPLE } from './brief-example';
 import { GridCounts } from './grid-counts';
 import { cellRect } from './grid-layout';
 import { HeatMapRenderer, LABEL_MARGIN } from './heat-map-renderer';
 
-/** The example input (e) from the brief picture. */
-const BRIEF_EXAMPLE = [4, 11, 6, 6, 11, 11, 11, 6, 11, 6, 6, 11, 11, 11, 11, 11];
 const SIZE = 400;
 
 interface Fill {

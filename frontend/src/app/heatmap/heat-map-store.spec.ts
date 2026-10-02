@@ -1,8 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { BRIEF_EXAMPLE } from './brief-example';
 import { HeatMapStore } from './heat-map-store';
-
-/** The example input (e) from the brief picture. */
-const BRIEF_EXAMPLE = [4, 11, 6, 6, 11, 11, 11, 6, 11, 6, 6, 11, 11, 11, 11, 11];
 
 describe('HeatMapStore', () => {
   let store: HeatMapStore;

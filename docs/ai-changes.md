@@ -119,3 +119,4 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 
 - The AI wrote the same `DEFAULT_PACKET` string in `test_stream.py` and `test_broadcaster.py`. I had it moved to `tests/conftest.py`, so the default settings packet has one copy in the backend tests.
 - I raised the server defaults to 20,000 samples per second and a max value of 10,000, and I raised the upper limit of samples per second to 1,000,000. The defaults are the settings of the runs in docs/results.md. The AI found 15 backend tests that still had the old values. It updated the tests, the specs, the README, and the test source defaults to match.
+- The AI wrote the same `BRIEF_EXAMPLE` array in three heat map spec files. I had it moved to `frontend/src/app/heatmap/brief-example.ts`, so the example input from the brief has one copy in the frontend tests.

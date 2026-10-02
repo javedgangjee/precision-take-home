@@ -1,0 +1,823 @@
+ ▐▛███▛█   Claude Code v2.1.287
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ /spec-driven replan                                                           
+
+  Read 3 files, ran 2 shell commands (ctrl+o to expand)
+
+⏺ Update(specs/roadmap.md)
+  ⎿  Added 1 line, removed 1 line
+       9  5. **Deploy.** The goal is the backend running on ECS Fargate b
+          ehind an ALB at my domain, deployed with CDK from the Makefile.
+           It covers B2 and N13. The status is done.
+      10  6. **Admin API.** The goal is a set of backend HTTP endpoints t
+          hat change the stream settings while the server runs, so that a
+           test of a new sample rate needs no restart. The feature has no
+           admin web page. An HTTP request sets the samples per second, t
+          he batch interval, and the maximum value, within the ranges in 
+          N11. An HTTP request can also pause and resume the generation. 
+          While paused, the server sends no batches, the batch sequence n
+          umber does not advance, and the server heartbeat keeps each con
+          nection alive. The feature sends no new events to the client an
+          d changes no client code. It covers no required item. The statu
+          s is done.
+      11  7. **Settings Display.** The goal is a client that shows the li
+          ve stream settings, the pause state, and the batches it missed.
+           The server adds one new packet type, which is the settings pac
+          ket. One settings packet holds the samples per second, the batc
+          h interval, the maximum value, and the pause state. The server 
+          sends the settings packet to a client when the client connects,
+           and to every client when a setting or the pause state changes.
+           The server has no separate init, update, or pause message. The
+           settings packet is not a batch. It carries no sequence number,
+           and the batch sequence number does not advance when the server
+           sends one. The missed batch count reads only the batch ids, so
+           a settings packet never adds to it. The server queue that drop
+          s the oldest batch for a slow client does not drop a settings p
+          acket. The side panel shows the three settings and updates them
+           when a settings packet arrives. A client that gets a settings 
+          packet with the pause on stops its 5 s watchdog, keeps the stre
+          am open, and shows Paused in the badge. A settings packet with 
+          the pause off starts the watchdog again. The client reads the b
+          atch sequence number from the id of each batch and counts the b
+          atches it missed, both inside one connection and across a recon
+          nect. When an id skips ahead, the client adds the size of the g
+          ap to the missed batch count. When an id is lower than the last
+           one, the server has restarted, and the client resets the misse
+          d batch count to 0. The side panel shows the missed batch count
+          . It covers N10 for the Paused state and N5 for the missed batc
+          h count, and no other required item. The status is done.
+      12 -8. **Latency.** The goal is a measured latency from generation 
+         -to render. The server takes a timestamp at each stage of its wo
+         -rk, from generation to send. It does not put the timestamps in 
+         -the batch data, so the data stays a JSON array of integers. It 
+         -puts them in the `id` field of the batch event, after the batch
+         - sequence number, in a form such as `<sequence number>:<epoch t
+         -ime>`. The client reads the sequence number from the first part
+         - of the id, so the missed batch count from feature 7 still work
+         -s. The client adds a timestamp at each stage of its work, from 
+         -receipt to render. The client calculates the total latency from
+         - generation to render. The side panel does not show the latency
+         -. The plan for this feature names the stages, sets the exact fo
+         -rm of the id, decides how to compare the server clock with the 
+         -client clock, and decides how I read the measured times from th
+         -e client. The feature writes docs/results.md, which gives the m
+         -easured time for each stage and compares the total with the 100
+         - ms target in N6. It covers N6. The status is in progress.     
+      12 +8. **Latency.** The goal is a measured latency from generation 
+         +to render. The server takes a timestamp at each stage of its wo
+         +rk, from generation to send. It does not put the timestamps in 
+         +the batch data, so the data stays a JSON array of integers. It 
+         +puts them in the `id` field of the batch event, after the batch
+         + sequence number, in a form such as `<sequence number>:<epoch t
+         +ime>`. The client reads the sequence number from the first part
+         + of the id, so the missed batch count from feature 7 still work
+         +s. The client adds a timestamp at each stage of its work, from 
+         +receipt to render. The client calculates the total latency from
+         + generation to render. The side panel does not show the latency
+         +. The plan for this feature names the stages, sets the exact fo
+         +rm of the id, decides how to compare the server clock with the 
+         +client clock, and decides how I read the measured times from th
+         +e client. The feature writes docs/results.md, which gives the m
+         +easured time for each stage and compares the total with the 100
+         + ms target in N6. It covers N6. The status is done.            
+      13  9. **Load.** The goal is a measured set of limits from a load t
+          est. I change the server settings with the admin API from featu
+          re 6 while the server runs. A step of the test passes when the 
+          total latency that feature 8 measures meets the 100 ms target i
+          n N6 and the client stays at 54 fps or more. The test has three
+           parts, in this order. The first part raises the samples per se
+          cond until a step fails. The second part raises the number of c
+          lients until a step fails. The third part raises the batch inte
+          rval until a step fails. The highest samples per second that pa
+          sses becomes the new default. The feature adds the limits and t
+          he new default to docs/results.md. It covers N12. The status is
+           planned.
+      14  10. **Submission Check.** The goal is a repo that holds every d
+          ocument the submission needs, checked against the brief and the
+           project overview. I add the documents to the repo, including t
+          he write-ups for B7 and B8. The AI then checks each requirement
+           in the brief and the project overview against the repo and wri
+          tes docs/submission-checklist.md. The checklist gives each requ
+          irement, the file that meets it, and a status of met or missing
+          . The AI does not write the missing documents. It covers the ch
+          eck of B7, B8, and S1 to S7. The status is planned.
+
+⏺ Skill(changelog)
+  ⎿  Successfully loaded skill
+
+  Read 5 files, ran 3 shell commands (ctrl+o to expand)
+
+⏺ Feature 8 is merged and marked done in the roadmap. I am reading the feature 8
+  log sections now so the changelog entries match what the review step changed.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Feature 8 is merged, and the roadmap now marks it done. These are the
+  changelog entries I propose for the Unreleased section.
+
+  Added
+
+  - Feature 8 adds a GET /time endpoint that returns the server time in
+    microseconds since the Unix epoch, such as {"epoch_us":1790812800123456},
+    with the header Cache-Control: no-store and no token.
+  - Feature 8 makes the client measure each batch from generation to render with
+    eight timestamps and seven stages, which are generate, queue, network,
+    parse, apply, frame wait, and draw.
+  - Feature 8 makes the client measure the offset between its clock and the
+    server clock with 5 requests to GET /time, when the page loads and on each
+    latency.reset().
+  - Feature 8 adds latency.report() and latency.reset() to the browser console
+    for the server source, and the report gives the p50, the p95, the p99, and
+    the max of each stage and of the total over the last 1,200 batches.
+  - Feature 8 adds docs/results.md, which gives the measured times of a cloud
+    run and a local run, and the p99 of the total is 28.5 ms in the cloud run
+    against the 100 ms target.
+  - Feature 8 adds a Latency section to the README and describes the new batch
+    id and GET /time.
+
+  Changed
+
+  - Feature 8 makes the id of a batch event four whole numbers in the form
+    <sequence number>:<started>:<encoded>:<sent>, where it was the sequence
+    number alone, and the three times are server timestamps in microseconds.
+  - Feature 8 makes the client read the sequence number from the first part of
+    the id, so the Missed batches readout works as before.
+  - Feature 8 raises the server defaults to 20,000 samples per second and a
+    maximum value of 10,000, so each batch holds 1,000 integers from 0 to 9,999,
+    and the test source defaults match.
+  - Feature 8 raises the upper limit of samples per second on the server from
+    100,000 to 1,000,000.
+  - Feature 8 raises the largest N from 64 to 100.
+
+  I left out the removed link styles and the test cleanups, because they change
+  nothing for a person who runs the project. The roadmap split in commit bf1a622
+  has no entry for the same reason.
+
+⏺ User answered Claude's questions:
+  ⎿  · Do I save these changelog entries for feature 8 to CHANGELOG.md? → Save 
+     them
+
+⏺ Update(CHANGELOG.md)
+  ⎿  Added 6 lines
+      66  - Feature 7 adds the Samples per second, Batch interval, and Ma
+          x value readouts to the side panel, which follow the settings p
+          acket with no reload.
+      67  - Feature 7 makes the test source show its `rate`, `interval`, 
+          and `max` values in the three settings readouts, with no Missed
+           batches readout.
+      68  - Feature 7 adds a Pause section to the README and describes th
+          e settings packet and the four new readouts.
+      69 +- Feature 8 adds a `GET /time` endpoint that returns the server
+         + time in microseconds since the Unix epoch, such as `{"epoch_us
+         +":1790812800123456}`, with the header `Cache-Control: no-store`
+         + and no token.                                                 
+      70 +- Feature 8 makes the client measure each batch from generation
+         + to render with eight timestamps and seven stages, which are ge
+         +nerate, queue, network, parse, apply, frame wait, and draw.    
+      71 +- Feature 8 makes the client measure the offset between its clo
+         +ck and the server clock with 5 requests to `GET /time`, when th
+         +e page loads and on each `latency.reset()`.                    
+      72 +- Feature 8 adds `latency.report()` and `latency.reset()` to th
+         +e browser console for the server source, and the report gives t
+         +he p50, the p95, the p99, and the max of each stage and of the 
+         +total over the last 1,200 batches.                             
+      73 +- Feature 8 adds docs/results.md, which gives the measured time
+         +s of a cloud run and a local run, and the p99 of the total is 2
+         +8.5 ms in the cloud run against the 100 ms target.             
+      74 +- Feature 8 adds a Latency section to the README and describes 
+         +the new batch id and `GET /time`.                              
+      75  
+      76  ### Changed
+      77  
+
+⏺ Update(CHANGELOG.md)
+  ⎿  Added 5 lines
+      83  - Feature 7 puts the label above the value in every side panel 
+          readout and moves Frame rate to the bottom of the panel.
+      84  - Feature 7 makes the readout labels, the readout values, and t
+          he stream badge larger.
+      85  - Feature 7 reduces the gap between readouts from 20 px to 12 p
+          x, and the side panel scrolls in a short window.
+      86 +- Feature 8 makes the `id` of a batch event four whole numbers 
+         +in the form `<sequence number>:<started>:<encoded>:<sent>`, whe
+         +re it was the sequence number alone, and the three times are se
+         +rver timestamps in microseconds.                               
+      87 +- Feature 8 makes the client read the sequence number from the 
+         +first part of the id, so the Missed batches readout works as be
+         +fore.                                                          
+      88 +- Feature 8 raises the server defaults to 20,000 samples per se
+         +cond and a maximum value of 10,000, so each batch holds 1,000 i
+         +ntegers from 0 to 9,999, and the test source defaults match.   
+      89 +- Feature 8 raises the upper limit of samples per second on the
+         + server from 100,000 to 1,000,000.                             
+      90 +- Feature 8 raises the largest N from 64 to 100.               
+      91  
+      92  ### Removed
+      93  
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ I've saved the changelog entries. I found several mismatches between
+  implemented values and roadmap/doc text (feature 8's two-part ID example,
+  feature 9's missing p99 compare metric, and tech-stack.md missing the GET 
+  /time endpoint), so I'll update those docs next.
+
+⏺ User answered Claude's questions:
+  ⎿  · What else changed during feature 8 that the logs do not record, such as 
+     drift from the plan or a new finding? → Nothing else
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+⏺ Update(specs/roadmap.md)
+  ⎿  Added 1 line, removed 1 line
+       9  5. **Deploy.** The goal is the backend running on ECS Fargate b
+          ehind an ALB at my domain, deployed with CDK from the Makefile.
+           It covers B2 and N13. The status is done.
+      10  6. **Admin API.** The goal is a set of backend HTTP endpoints t
+          hat change the stream settings while the server runs, so that a
+           test of a new sample rate needs no restart. The feature has no
+           admin web page. An HTTP request sets the samples per second, t
+          he batch interval, and the maximum value, within the ranges in 
+          N11. An HTTP request can also pause and resume the generation. 
+          While paused, the server sends no batches, the batch sequence n
+          umber does not advance, and the server heartbeat keeps each con
+          nection alive. The feature sends no new events to the client an
+          d changes no client code. It covers no required item. The statu
+          s is done.
+      11  7. **Settings Display.** The goal is a client that shows the li
+          ve stream settings, the pause state, and the batches it missed.
+           The server adds one new packet type, which is the settings pac
+          ket. One settings packet holds the samples per second, the batc
+          h interval, the maximum value, and the pause state. The server 
+          sends the settings packet to a client when the client connects,
+           and to every client when a setting or the pause state changes.
+           The server has no separate init, update, or pause message. The
+           settings packet is not a batch. It carries no sequence number,
+           and the batch sequence number does not advance when the server
+           sends one. The missed batch count reads only the batch ids, so
+           a settings packet never adds to it. The server queue that drop
+          s the oldest batch for a slow client does not drop a settings p
+          acket. The side panel shows the three settings and updates them
+           when a settings packet arrives. A client that gets a settings 
+          packet with the pause on stops its 5 s watchdog, keeps the stre
+          am open, and shows Paused in the badge. A settings packet with 
+          the pause off starts the watchdog again. The client reads the b
+          atch sequence number from the id of each batch and counts the b
+          atches it missed, both inside one connection and across a recon
+          nect. When an id skips ahead, the client adds the size of the g
+          ap to the missed batch count. When an id is lower than the last
+           one, the server has restarted, and the client resets the misse
+          d batch count to 0. The side panel shows the missed batch count
+          . It covers N10 for the Paused state and N5 for the missed batc
+          h count, and no other required item. The status is done.
+      12 -8. **Latency.** The goal is a measured latency from generation 
+         -to render. The server takes a timestamp at each stage of its wo
+         -rk, from generation to send. It does not put the timestamps in 
+         -the batch data, so the data stays a JSON array of integers. It 
+         -puts them in the `id` field of the batch event, after the batch
+         - sequence number, in a form such as `<sequence number>:<epoch t
+         -ime>`. The client reads the sequence number from the first part
+         - of the id, so the missed batch count from feature 7 still work
+         -s. The client adds a timestamp at each stage of its work, from 
+         -receipt to render. The client calculates the total latency from
+         - generation to render. The side panel does not show the latency
+         -. The plan for this feature names the stages, sets the exact fo
+         -rm of the id, decides how to compare the server clock with the 
+         -client clock, and decides how I read the measured times from th
+         -e client. The feature writes docs/results.md, which gives the m
+         -easured time for each stage and compares the total with the 100
+         - ms target in N6. It covers N6. The status is done.            
+      12 +8. **Latency.** The goal is a measured latency from generation 
+         +to render. The server takes a timestamp at each stage of its wo
+         +rk, from generation to send. It does not put the timestamps in 
+         +the batch data, so the data stays a JSON array of integers. It 
+         +puts them in the `id` field of the batch event, after the batch
+         + sequence number, in the form `<sequence number>:<started>:<enc
+         +oded>:<sent>`. The client reads the sequence number from the fi
+         +rst part of the id, so the missed batch count from feature 7 st
+         +ill works. The client adds a timestamp at each stage of its wor
+         +k, from receipt to render. The client calculates the total late
+         +ncy from generation to render. The side panel does not show the
+         + latency. The plan for this feature names the stages, sets the 
+         +exact form of the id, decides how to compare the server clock w
+         +ith the client clock, and decides how I read the measured times
+         + from the client. The feature writes docs/results.md, which giv
+         +es the measured time for each stage and compares the total with
+         + the 100 ms target in N6. It covers N6. The status is done.    
+      13  9. **Load.** The goal is a measured set of limits from a load t
+          est. I change the server settings with the admin API from featu
+          re 6 while the server runs. A step of the test passes when the 
+          total latency that feature 8 measures meets the 100 ms target i
+          n N6 and the client stays at 54 fps or more. The test has three
+           parts, in this order. The first part raises the samples per se
+          cond until a step fails. The second part raises the number of c
+          lients until a step fails. The third part raises the batch inte
+          rval until a step fails. The highest samples per second that pa
+          sses becomes the new default. The feature adds the limits and t
+          he new default to docs/results.md. It covers N12. The status is
+           planned.
+      14  10. **Submission Check.** The goal is a repo that holds every d
+          ocument the submission needs, checked against the brief and the
+           project overview. I add the documents to the repo, including t
+          he write-ups for B7 and B8. The AI then checks each requirement
+           in the brief and the project overview against the repo and wri
+          tes docs/submission-checklist.md. The checklist gives each requ
+          irement, the file that meets it, and a status of met or missing
+          . The AI does not write the missing documents. It covers the ch
+          eck of B7, B8, and S1 to S7. The status is planned.
+
+⏺ Update(specs/roadmap.md)
+  ⎿  Added 1 line, removed 1 line
+      10  6. **Admin API.** The goal is a set of backend HTTP endpoints t
+          hat change the stream settings while the server runs, so that a
+           test of a new sample rate needs no restart. The feature has no
+           admin web page. An HTTP request sets the samples per second, t
+          he batch interval, and the maximum value, within the ranges in 
+          N11. An HTTP request can also pause and resume the generation. 
+          While paused, the server sends no batches, the batch sequence n
+          umber does not advance, and the server heartbeat keeps each con
+          nection alive. The feature sends no new events to the client an
+          d changes no client code. It covers no required item. The statu
+          s is done.
+      11  7. **Settings Display.** The goal is a client that shows the li
+          ve stream settings, the pause state, and the batches it missed.
+           The server adds one new packet type, which is the settings pac
+          ket. One settings packet holds the samples per second, the batc
+          h interval, the maximum value, and the pause state. The server 
+          sends the settings packet to a client when the client connects,
+           and to every client when a setting or the pause state changes.
+           The server has no separate init, update, or pause message. The
+           settings packet is not a batch. It carries no sequence number,
+           and the batch sequence number does not advance when the server
+           sends one. The missed batch count reads only the batch ids, so
+           a settings packet never adds to it. The server queue that drop
+          s the oldest batch for a slow client does not drop a settings p
+          acket. The side panel shows the three settings and updates them
+           when a settings packet arrives. A client that gets a settings 
+          packet with the pause on stops its 5 s watchdog, keeps the stre
+          am open, and shows Paused in the badge. A settings packet with 
+          the pause off starts the watchdog again. The client reads the b
+          atch sequence number from the id of each batch and counts the b
+          atches it missed, both inside one connection and across a recon
+          nect. When an id skips ahead, the client adds the size of the g
+          ap to the missed batch count. When an id is lower than the last
+           one, the server has restarted, and the client resets the misse
+          d batch count to 0. The side panel shows the missed batch count
+          . It covers N10 for the Paused state and N5 for the missed batc
+          h count, and no other required item. The status is done.
+      12  8. **Latency.** The goal is a measured latency from generation 
+          to render. The server takes a timestamp at each stage of its wo
+          rk, from generation to send. It does not put the timestamps in 
+          the batch data, so the data stays a JSON array of integers. It 
+          puts them in the `id` field of the batch event, after the batch
+           sequence number, in the form `<sequence number>:<started>:<enc
+          oded>:<sent>`. The client reads the sequence number from the fi
+          rst part of the id, so the missed batch count from feature 7 st
+          ill works. The client adds a timestamp at each stage of its wor
+          k, from receipt to render. The client calculates the total late
+          ncy from generation to render. The side panel does not show the
+           latency. The plan for this feature names the stages, sets the 
+          exact form of the id, decides how to compare the server clock w
+          ith the client clock, and decides how I read the measured times
+           from the client. The feature writes docs/results.md, which giv
+          es the measured time for each stage and compares the total with
+           the 100 ms target in N6. It covers N6. The status is done.
+      13 -9. **Load.** The goal is a measured set of limits from a load t
+         -est. I change the server settings with the admin API from featu
+         -re 6 while the server runs. A step of the test passes when the 
+         -total latency that feature 8 measures meets the 100 ms target i
+         -n N6 and the client stays at 54 fps or more. The test has three
+         - parts, in this order. The first part raises the samples per se
+         -cond until a step fails. The second part raises the number of c
+         -lients until a step fails. The third part raises the batch inte
+         -rval until a step fails. The highest samples per second that pa
+         -sses becomes the new default. The feature adds the limits and t
+         -he new default to docs/results.md. It covers N12. The status is
+         - planned.                                                      
+      13 +9. **Load.** The goal is a measured set of limits from a load t
+         +est. I change the server settings with the admin API from featu
+         +re 6 while the server runs. A step of the test passes when the 
+         +p99 of the total latency from `latency.report()` in feature 8 m
+         +eets the 100 ms target in N6 and the client stays at 54 fps or 
+         +more. The test has three parts, in this order. The first part r
+         +aises the samples per second until a step fails. The second par
+         +t raises the number of clients until a step fails. The third pa
+         +rt raises the batch interval until a step fails. The highest sa
+         +mples per second that passes becomes the new default. The featu
+         +re adds the limits and the new default to docs/results.md. It c
+         +overs N12. The status is planned.                              
+      14  10. **Submission Check.** The goal is a repo that holds every d
+          ocument the submission needs, checked against the brief and the
+           project overview. I add the documents to the repo, including t
+          he write-ups for B7 and B8. The AI then checks each requirement
+           in the brief and the project overview against the repo and wri
+          tes docs/submission-checklist.md. The checklist gives each requ
+          irement, the file that meets it, and a status of met or missing
+          . The AI does not write the missing documents. It covers the ch
+          eck of B7, B8, and S1 to S7. The status is planned.
+
+⏺ Update(specs/mission.md)
+  ⎿  Added 1 line, removed 1 line
+      44  - N3. N ranges from 1 to 100, and the default is 32. When the u
+          ser changes N, all counts reset to zero.
+      45  - N4. The color position of a cell is (count - 1) / (max - 1). 
+          A count of 1 is the blue end of the scale, #1E00FF, and the max
+           count is the red end, #FF0033. When the max count is 1, every 
+          non-empty cell is the blue end. The scale labels run from 1 to 
+          the max count.
+      46  - N5. The server sends the stream in batches, and each batch is
+           a JSON array of random integers drawn from a uniform distribut
+          ion. The server generates one shared stream, and every connecte
+          d client gets the same batches. Each batch carries a sequence n
+          umber that starts at 0 when the server starts, so a client can 
+          count the batches it missed. The client counts them and shows t
+          he count in the side panel.
+      47 -- N6. The target latency from generation to render is 100 ms.  
+      47 +- N6. The target latency from generation to render is 100 ms. T
+         +he value that I compare with the target is the p99 of the total
+         + latency over 60 s.                                            
+      48  - N7. Delivery is lossy and best effort.
+      49  - N8. The server sends a heartbeat if it sends nothing for 15 s
+          econds.
+      50  - N9. Counts stay on screen while the client reconnects.
+
+⏺ Update(specs/tech-stack.md)
+  ⎿  Added 2 lines, removed 1 line
+       9  - The web framework is FastAPI 0.142.1, with Pydantic 2.13.5.
+      10  - The ASGI server is Uvicorn 0.54.0.
+      11  - The backend sends the stream to the client with Server-Sent E
+          vents. The client sends nothing back, so the project does not u
+          se WebSockets.
+      12 -- The stream has two event types. A batch event has an `id` lin
+         -e and no event name. A settings packet has the event name `upda
+         -te` and no `id` line.                                          
+      12 +- The stream has two event types. A batch event has an `id` lin
+         +e and no event name. The `id` holds the batch sequence number a
+         +nd three server timestamps, in the form `<sequence number>:<sta
+         +rted>:<encoded>:<sent>`. A settings packet has the event name `
+         +update` and no `id` line.                                      
+      13 +- The backend has a `GET /time` endpoint that returns the serve
+         +r time. The client uses it to measure the offset between its cl
+         +ock and the server clock.                                      
+      14  - The backend has an admin API under /admin that changes the st
+          ream settings and pauses the stream. Each admin request needs a
+           bearer token, which the backend reads from the `ADMIN_TOKEN` e
+          nvironment variable.
+      15  - The backend runs locally for development, both with uv and in
+           a Docker image in Docker Desktop 4.92.0. The same image runs i
+          n the cloud.
+      16  - The tests use pytest 9.1.1. pytest-cov 7.1.0 measures coverag
+          e. The goal is 100 percent coverage, and no minimum is enforced
+          .
+
+⏺ Update(specs/tech-stack.md)
+  ⎿  Added 1 line
+      24  - Prettier 3.9.9 formats the frontend code, and `make lint` che
+          cks the format. Angular CLI 21.2.1 wrote the range ^3.8.1, and 
+          npm resolved it to 3.9.9.
+      25  - The frontend draws the grid on an HTML canvas. It applies eac
+          h batch to the counts when the batch arrives, and it redraws at
+           most once per display frame with requestAnimationFrame.
+      26  - The frontend keeps counts as 64-bit floats, so large counts d
+          o not overflow.
+      27 +- The frontend measures the latency of each batch from generati
+         +on to render. It gives the result in the browser console with `
+         +latency.report()`, and the side panel does not show it.        
+      28  - The HTML design in context/ sets the look of the client. The 
+          brief wins where the two differ. The side panel readouts and th
+          e stream badge differ from the design, because I changed their 
+          look in the feature 7 review.
+      29  - The tests use Vitest. The goal is 100 percent coverage, and n
+          o minimum is enforced.
+      30  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ User answered Claude's questions:
+  ⎿  · Features 7 and 8 each had a review step between implement and validate, 
+     and in feature 8 you found duplicate tests, filler tests, and copied 
+     constants by hand. Do you want that review to become a skill? → No skill
+
+⏺ The replan for feature 8 is done. Nothing is committed.
+
+  - specs/roadmap.md marks feature 8 as done and gives the real four-part id
+    form. Feature 9 now names the p99 of the total from latency.report() as its
+    pass value.
+  - specs/mission.md adds to N6 that the compare value is the p99 of the total
+    over 60 s.
+  - specs/tech-stack.md adds the id form, the GET /time endpoint, and the
+    console latency report.
+  - CHANGELOG.md has six Added entries and five Changed entries for feature 8.
+
+  No change in this session goes against the brief. N3 and N11 in the mission
+  file differ from your design notes, which say N to 64 and 100,000 samples per
+  second. You made those two changes in the feature 8 review.
+
+  08_latency_validate.txt is at the repo root. The other feature 8 logs are in
+  docs/logs/08-latency/, so you may want to move it there before you commit.
+
+  Clear the session before the next mode. The next one is /spec-driven plan for
+  feature 9, Load.
+✻ Crunched for 1m 58s · done 2:33 PM
+
+❯ For the next phase, make sure the stress test is limited to cloud only. No    
+  docker or test source.                                                        
+                                                                                
+  Lets do steps for the sample testing - 20k, 100k, 1mil, 10mil. 3 runs each,   
+  30s not 60s.                                                                  
+                                                                                
+  Also add a make cloud-pause, make cloud-resume, make cloud-setting-update     
+  curl command.                                                                 
+
+⏺ Update(specs/roadmap.md)
+  ⎿  Added 1 line, removed 1 line
+      10  6. **Admin API.** The goal is a set of backend HTTP endpoints t
+          hat change the stream settings while the server runs, so that a
+           test of a new sample rate needs no restart. The feature has no
+           admin web page. An HTTP request sets the samples per second, t
+          he batch interval, and the maximum value, within the ranges in 
+          N11. An HTTP request can also pause and resume the generation. 
+          While paused, the server sends no batches, the batch sequence n
+          umber does not advance, and the server heartbeat keeps each con
+          nection alive. The feature sends no new events to the client an
+          d changes no client code. It covers no required item. The statu
+          s is done.
+      11  7. **Settings Display.** The goal is a client that shows the li
+          ve stream settings, the pause state, and the batches it missed.
+           The server adds one new packet type, which is the settings pac
+          ket. One settings packet holds the samples per second, the batc
+          h interval, the maximum value, and the pause state. The server 
+          sends the settings packet to a client when the client connects,
+           and to every client when a setting or the pause state changes.
+           The server has no separate init, update, or pause message. The
+           settings packet is not a batch. It carries no sequence number,
+           and the batch sequence number does not advance when the server
+           sends one. The missed batch count reads only the batch ids, so
+           a settings packet never adds to it. The server queue that drop
+          s the oldest batch for a slow client does not drop a settings p
+          acket. The side panel shows the three settings and updates them
+           when a settings packet arrives. A client that gets a settings 
+          packet with the pause on stops its 5 s watchdog, keeps the stre
+          am open, and shows Paused in the badge. A settings packet with 
+          the pause off starts the watchdog again. The client reads the b
+          atch sequence number from the id of each batch and counts the b
+          atches it missed, both inside one connection and across a recon
+          nect. When an id skips ahead, the client adds the size of the g
+          ap to the missed batch count. When an id is lower than the last
+           one, the server has restarted, and the client resets the misse
+          d batch count to 0. The side panel shows the missed batch count
+          . It covers N10 for the Paused state and N5 for the missed batc
+          h count, and no other required item. The status is done.
+      12  8. **Latency.** The goal is a measured latency from generation 
+          to render. The server takes a timestamp at each stage of its wo
+          rk, from generation to send. It does not put the timestamps in 
+          the batch data, so the data stays a JSON array of integers. It 
+          puts them in the `id` field of the batch event, after the batch
+           sequence number, in the form `<sequence number>:<started>:<enc
+          oded>:<sent>`. The client reads the sequence number from the fi
+          rst part of the id, so the missed batch count from feature 7 st
+          ill works. The client adds a timestamp at each stage of its wor
+          k, from receipt to render. The client calculates the total late
+          ncy from generation to render. The side panel does not show the
+           latency. The plan for this feature names the stages, sets the 
+          exact form of the id, decides how to compare the server clock w
+          ith the client clock, and decides how I read the measured times
+           from the client. The feature writes docs/results.md, which giv
+          es the measured time for each stage and compares the total with
+           the 100 ms target in N6. It covers N6. The status is done.
+      13 -9. **Load.** The goal is a measured set of limits from a load t
+         -est. I change the server settings with the admin API from featu
+         -re 6 while the server runs. A step of the test passes when the 
+         -p99 of the total latency from `latency.report()` in feature 8 m
+         -eets the 100 ms target in N6 and the client stays at 54 fps or 
+         -more. The test has three parts, in this order. The first part r
+         -aises the samples per second until a step fails. The second par
+         -t raises the number of clients until a step fails. The third pa
+         -rt raises the batch interval until a step fails. The highest sa
+         -mples per second that passes becomes the new default. The featu
+         -re adds the limits and the new default to docs/results.md. It c
+         -overs N12. The status is planned.                              
+      13 +9. **Load.** The goal is a measured set of limits from a load t
+         +est. The test runs against the cloud server only. It does not u
+         +se the Docker server or the test source. I change the server se
+         +ttings with the admin API from feature 6 while the server runs.
+         + The feature adds three Makefile targets that call the admin AP
+         +I of the cloud server with curl. `make cloud-pause` pauses the 
+         +stream, `make cloud-resume` resumes it, and `make cloud-setting
+         +-update` changes the settings. The plan for this feature decide
+         +s how the three targets get the admin token and the new values.
+         + Each step of the test has 3 runs, and each run is 30 s. A run 
+         +passes when the p99 of the total latency from `latency.report()
+         +` in feature 8 meets the 100 ms target in N6 and the client sta
+         +ys at 54 fps or more. The plan decides how the 3 runs give one 
+         +result for a step. The test has three parts, in this order. The
+         + first part sets the samples per second to 20,000, then 100,000
+         +, then 1,000,000, and then 10,000,000, and it stops at the firs
+         +t step that fails. The feature raises the upper limit of sample
+         +s per second in N11 from 1,000,000 to 10,000,000, so the server
+         + accepts the last step. The second part raises the number of cl
+         +ients until a step fails. The third part raises the batch inter
+         +val until a step fails. The plan sets the steps of the second p
+         +art and the third part. The highest samples per second that pas
+         +ses becomes the new default. The feature adds the limits and th
+         +e new default to docs/results.md. It covers N12. The status is 
+         +planned.                                                       
+      14  10. **Submission Check.** The goal is a repo that holds every d
+          ocument the submission needs, checked against the brief and the
+           project overview. I add the documents to the repo, including t
+          he write-ups for B7 and B8. The AI then checks each requirement
+           in the brief and the project overview against the repo and wri
+          tes docs/submission-checklist.md. The checklist gives each requ
+          irement, the file that meets it, and a status of met or missing
+          . The AI does not write the missing documents. It covers the ch
+          eck of B7, B8, and S1 to S7. The status is planned.
+
+⏺ Update(specs/mission.md)
+  ⎿  Added 1 line, removed 1 line
+      44  - N3. N ranges from 1 to 100, and the default is 32. When the u
+          ser changes N, all counts reset to zero.
+      45  - N4. The color position of a cell is (count - 1) / (max - 1). 
+          A count of 1 is the blue end of the scale, #1E00FF, and the max
+           count is the red end, #FF0033. When the max count is 1, every 
+          non-empty cell is the blue end. The scale labels run from 1 to 
+          the max count.
+      46  - N5. The server sends the stream in batches, and each batch is
+           a JSON array of random integers drawn from a uniform distribut
+          ion. The server generates one shared stream, and every connecte
+          d client gets the same batches. Each batch carries a sequence n
+          umber that starts at 0 when the server starts, so a client can 
+          count the batches it missed. The client counts them and shows t
+          he count in the side panel.
+      47 -- N6. The target latency from generation to render is 100 ms. T
+         -he value that I compare with the target is the p99 of the total
+         - latency over 60 s.                                            
+      47 +- N6. The target latency from generation to render is 100 ms. T
+         +he value that I compare with the target is the p99 of the total
+         + latency of a run.                                             
+      48  - N7. Delivery is lossy and best effort.
+      49  - N8. The server sends a heartbeat if it sends nothing for 15 s
+          econds.
+      50  - N9. Counts stay on screen while the client reconnects.
+
+⏺ Feature 9 in specs/roadmap.md now holds all three changes. Nothing is
+  committed, and I did not touch the Makefile, because the three targets are
+  feature 9 work.
+
+  - Cloud only. The load test runs against the cloud server and does not use the
+    Docker server or the test source.
+  - Sample steps. The first part runs 20,000, then 100,000, then 1,000,000, then
+    10,000,000 samples per second, and it stops at the first step that fails.
+    Each step has 3 runs of 30 s.
+  - Makefile targets. The feature adds make cloud-pause, make cloud-resume, and
+    make cloud-setting-update as curl calls to the cloud admin API. The plan
+    decides how they get the admin token and the new values.
+
+  Three things follow from your steps.
+
+  - The server rejects 10,000,000 today, because the upper limit is 1,000,000. I
+    wrote into feature 9 that it raises the limit in N11 to 10,000,000.
+  - I applied the 3 runs of 30 s to the client part and the batch interval part
+    too. The plan sets the steps of those two parts and decides how 3 runs give
+    one result for a step. Tell me if those two parts need a different run count
+    or length.
+  - The rule that the highest passing rate becomes the new default is unchanged.
+    If 1,000,000 passes, the default becomes about 5 MB each second for each
+    client.
+
+  I also changed N6 in specs/mission.md to say "the p99 of the total latency of
+  a run", because the run is no longer 60 s.
+
+  Clear the session, then run /spec-driven plan for feature 9.
+
+✻ Crunched for 45s · done 2:39 PM
+
+※ recap: The replan for feature 8 is done, and the roadmap now holds your feature 9 load test changes, with nothing committed. Review and commit the four changed files, clear the session, then run /spec-driven plan for feature 9.
+
+❯ 10mil might be much and I am risking hitting my budget. Remove it.            
+
+⏺ Update(specs/roadmap.md)
+  ⎿  Added 1 line, removed 1 line
+      10  6. **Admin API.** The goal is a set of backend HTTP endpoints t
+          hat change the stream settings while the server runs, so that a
+           test of a new sample rate needs no restart. The feature has no
+           admin web page. An HTTP request sets the samples per second, t
+          he batch interval, and the maximum value, within the ranges in 
+          N11. An HTTP request can also pause and resume the generation. 
+          While paused, the server sends no batches, the batch sequence n
+          umber does not advance, and the server heartbeat keeps each con
+          nection alive. The feature sends no new events to the client an
+          d changes no client code. It covers no required item. The statu
+          s is done.
+      11  7. **Settings Display.** The goal is a client that shows the li
+          ve stream settings, the pause state, and the batches it missed.
+           The server adds one new packet type, which is the settings pac
+          ket. One settings packet holds the samples per second, the batc
+          h interval, the maximum value, and the pause state. The server 
+          sends the settings packet to a client when the client connects,
+           and to every client when a setting or the pause state changes.
+           The server has no separate init, update, or pause message. The
+           settings packet is not a batch. It carries no sequence number,
+           and the batch sequence number does not advance when the server
+           sends one. The missed batch count reads only the batch ids, so
+           a settings packet never adds to it. The server queue that drop
+          s the oldest batch for a slow client does not drop a settings p
+          acket. The side panel shows the three settings and updates them
+           when a settings packet arrives. A client that gets a settings 
+          packet with the pause on stops its 5 s watchdog, keeps the stre
+          am open, and shows Paused in the badge. A settings packet with 
+          the pause off starts the watchdog again. The client reads the b
+          atch sequence number from the id of each batch and counts the b
+          atches it missed, both inside one connection and across a recon
+          nect. When an id skips ahead, the client adds the size of the g
+          ap to the missed batch count. When an id is lower than the last
+           one, the server has restarted, and the client resets the misse
+          d batch count to 0. The side panel shows the missed batch count
+          . It covers N10 for the Paused state and N5 for the missed batc
+          h count, and no other required item. The status is done.
+      12  8. **Latency.** The goal is a measured latency from generation 
+          to render. The server takes a timestamp at each stage of its wo
+          rk, from generation to send. It does not put the timestamps in 
+          the batch data, so the data stays a JSON array of integers. It 
+          puts them in the `id` field of the batch event, after the batch
+           sequence number, in the form `<sequence number>:<started>:<enc
+          oded>:<sent>`. The client reads the sequence number from the fi
+          rst part of the id, so the missed batch count from feature 7 st
+          ill works. The client adds a timestamp at each stage of its wor
+          k, from receipt to render. The client calculates the total late
+          ncy from generation to render. The side panel does not show the
+           latency. The plan for this feature names the stages, sets the 
+          exact form of the id, decides how to compare the server clock w
+          ith the client clock, and decides how I read the measured times
+           from the client. The feature writes docs/results.md, which giv
+          es the measured time for each stage and compares the total with
+           the 100 ms target in N6. It covers N6. The status is done.
+      13 -9. **Load.** The goal is a measured set of limits from a load t
+         -est. The test runs against the cloud server only. It does not u
+         -se the Docker server or the test source. I change the server se
+         -ttings with the admin API from feature 6 while the server runs.
+         - The feature adds three Makefile targets that call the admin AP
+         -I of the cloud server with curl. `make cloud-pause` pauses the 
+         -stream, `make cloud-resume` resumes it, and `make cloud-setting
+         --update` changes the settings. The plan for this feature decide
+         -s how the three targets get the admin token and the new values.
+         - Each step of the test has 3 runs, and each run is 30 s. A run 
+         -passes when the p99 of the total latency from `latency.report()
+         -` in feature 8 meets the 100 ms target in N6 and the client sta
+         -ys at 54 fps or more. The plan decides how the 3 runs give one 
+         -result for a step. The test has three parts, in this order. The
+         - first part sets the samples per second to 20,000, then 100,000
+         -, then 1,000,000, and then 10,000,000, and it stops at the firs
+         -t step that fails. The feature raises the upper limit of sample
+         -s per second in N11 from 1,000,000 to 10,000,000, so the server
+         - accepts the last step. The second part raises the number of cl
+         -ients until a step fails. The third part raises the batch inter
+         -val until a step fails. The plan sets the steps of the second p
+         -art and the third part. The highest samples per second that pas
+         -ses becomes the new default. The feature adds the limits and th
+         -e new default to docs/results.md. It covers N12. The status is 
+         -planned.                                                       
+      13 +9. **Load.** The goal is a measured set of limits from a load t
+         +est. The test runs against the cloud server only. It does not u
+         +se the Docker server or the test source. I change the server se
+         +ttings with the admin API from feature 6 while the server runs.
+         + The feature adds three Makefile targets that call the admin AP
+         +I of the cloud server with curl. `make cloud-pause` pauses the 
+         +stream, `make cloud-resume` resumes it, and `make cloud-setting
+         +-update` changes the settings. The plan for this feature decide
+         +s how the three targets get the admin token and the new values.
+         + Each step of the test has 3 runs, and each run is 30 s. A run 
+         +passes when the p99 of the total latency from `latency.report()
+         +` in feature 8 meets the 100 ms target in N6 and the client sta
+         +ys at 54 fps or more. The plan decides how the 3 runs give one 
+         +result for a step. The test has three parts, in this order. The
+         + first part sets the samples per second to 20,000, then 100,000
+         +, and then 1,000,000, and it stops at the first step that fails
+         +. The second part raises the number of clients until a step fai
+         +ls. The third part raises the batch interval until a step fails
+         +. The plan sets the steps of the second part and the third part
+         +. The highest samples per second that passes becomes the new de
+         +fault. The feature adds the limits and the new default to docs/
+         +results.md. It covers N12. The status is planned.              
+      14  10. **Submission Check.** The goal is a repo that holds every d
+          ocument the submission needs, checked against the brief and the
+           project overview. I add the documents to the repo, including t
+          he write-ups for B7 and B8. The AI then checks each requirement
+           in the brief and the project overview against the repo and wri
+          tes docs/submission-checklist.md. The checklist gives each requ
+          irement, the file that meets it, and a status of met or missing
+          . The AI does not write the missing documents. It covers the ch
+          eck of B7, B8, and S1 to S7. The status is planned.
+
+⏺ The 10,000,000 step is gone from feature 9 in specs/roadmap.md. The first part
+  now runs 20,000, then 100,000, then 1,000,000 samples per second. I also
+  removed the sentence that raised the upper limit, so N11 stays at 1,000,000.
+
+  Nothing is committed. Clear the session, then run /spec-driven plan for
+  feature 9.
+
+✻ Crunched for 5s · done 2:45 PM

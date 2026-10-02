@@ -105,3 +105,7 @@ Each entry gives the date, the phase, what the AI produced, what I changed, and 
 ## 2026-10-01, implement feature 7, settings display
 
 - I made no change to the AI output during implement. Changes from my review go here.
+
+## 2026-10-01, review feature 7, settings display
+
+- The AI built the side panel readouts as the HTML design styles them, with a 15 px value above an 11 px muted label, and it put the four new readouts below Frame rate. I changed the look of the side panel during review, and the changes are cosmetic. The label is now above the value in all seven readouts. The label is 14 px with a 20 px line height in the secondary ink color, and the value is 18 px with a 24 px line height. The Grid size label now has the same style as the readout labels. The stream badge is 40 px tall, with 14 px text and a 24 px icon. I also moved Frame rate to the bottom of the panel, below Max value.

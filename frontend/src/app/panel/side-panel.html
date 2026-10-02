@@ -29,47 +29,46 @@
 <hr />
 <div class="readouts">
   <div class="md-readout">
-    <div class="md-readout-value">{{ samplesText() }}</div>
     <div class="md-readout-label">Samples received</div>
+    <div class="md-readout-value">{{ samplesText() }}</div>
   </div>
   <hr />
   <div class="md-readout">
-    <div class="md-readout-value">{{ maxText() }}</div>
     <div class="md-readout-label">Max count</div>
-  </div>
-  <hr />
-  <div class="md-readout">
-    <div class="md-readout-value">{{ store.fps() }}<span class="md-readout-unit"> fps</span></div>
-    <div class="md-readout-label">Frame rate</div>
-    @if (store.fpsWarning(); as warning) {
-      <p class="danger-text">{{ warning }}</p>
-    }
+    <div class="md-readout-value">{{ maxText() }}</div>
   </div>
   <hr />
   @if (missedText(); as missed) {
     <div class="md-readout">
-      <div class="md-readout-value">{{ missed }}</div>
       <div class="md-readout-label">Missed batches</div>
+      <div class="md-readout-value">{{ missed }}</div>
     </div>
     <hr />
   }
   @if (settingsText(); as settings) {
     <div class="md-readout">
-      <div class="md-readout-value">{{ settings.samplesPerSecond }}</div>
       <div class="md-readout-label">Samples per second</div>
+      <div class="md-readout-value">{{ settings.samplesPerSecond }}</div>
     </div>
     <hr />
     <div class="md-readout">
+      <div class="md-readout-label">Batch interval</div>
       <div class="md-readout-value">
         {{ settings.batchIntervalMs }}<span class="md-readout-unit"> ms</span>
       </div>
-      <div class="md-readout-label">Batch interval</div>
     </div>
     <hr />
     <div class="md-readout">
-      <div class="md-readout-value">{{ settings.maxValue }}</div>
       <div class="md-readout-label">Max value</div>
+      <div class="md-readout-value">{{ settings.maxValue }}</div>
     </div>
     <hr />
   }
+  <div class="md-readout">
+    <div class="md-readout-label">Frame rate</div>
+    <div class="md-readout-value">{{ store.fps() }}<span class="md-readout-unit"> fps</span></div>
+    @if (store.fpsWarning(); as warning) {
+      <p class="danger-text">{{ warning }}</p>
+    }
+  </div>
 </div>

@@ -29,10 +29,10 @@ hr {
 }
 
 .control-label {
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 600;
-  color: var(--ink);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--ink-secondary);
 }
 
 .control-row {
@@ -107,8 +107,8 @@ hr {
 }
 .md-readout-value {
   font-family: var(--font-mono);
-  font-size: 15px;
-  line-height: 20px;
+  font-size: 18px;
+  line-height: 24px;
   font-weight: 600;
   color: var(--ink);
 }
@@ -117,10 +117,10 @@ hr {
   color: var(--ink-secondary);
 }
 .md-readout-label {
-  font-size: 11px;
-  line-height: 16px;
+  font-size: 14px;
+  line-height: 20px;
   font-weight: 500;
-  color: var(--ink-muted);
+  color: var(--ink-secondary);
 }
 
 .danger-text {

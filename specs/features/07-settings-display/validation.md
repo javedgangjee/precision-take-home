@@ -71,7 +71,7 @@ These tests use a fake EventSource, fake timers, and a random value of 1.
 - After a change to the settings 100,000, 1,000, and 10,000, the three readouts show "100,000", "1,000 ms", and "10,000".
 - With a missed batch count of 0, the Missed batches readout shows "0". With a count of 1,234, it shows "1,234".
 - With no missed batch count, the panel has no Missed batches readout.
-- The readouts below Frame rate are in the order Missed batches, Samples per second, Batch interval, and Max value.
+- The seven readouts are in the order Samples received, Max count, Missed batches, Samples per second, Batch interval, Max value, and Frame rate.
 
 ### V7. The test source shows its settings
 

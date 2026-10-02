@@ -162,18 +162,18 @@ describe('SidePanel', () => {
     expect(readout('Missed batches')).toBeUndefined();
   });
 
-  it('shows the four readouts below Frame rate in order', async () => {
+  it('shows the seven readouts in order, with Frame rate last', async () => {
     status.setMissedBatches(0);
     status.setSettings({ samplesPerSecond: 5000, batchIntervalMs: 50, maxValue: 1024 });
     await render();
     expect(readoutLabels()).toEqual([
       'Samples received',
       'Max count',
-      'Frame rate',
       'Missed batches',
       'Samples per second',
       'Batch interval',
       'Max value',
+      'Frame rate',
     ]);
   });
 });

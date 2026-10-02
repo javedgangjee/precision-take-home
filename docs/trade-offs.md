@@ -1,6 +1,26 @@
 # Trade-offs
 
-Each heading gives the feature number, the feature name, and the spec-driven step. Each entry gives the choice and what it costs.
+Each heading after the summary gives the feature number, the feature name, and the spec-driven step. Each entry gives the choice and what it costs.
+
+## Summary
+
+This list gives the trade-offs that most affect the result. The sections below give every trade-off.
+
+- The stream uses Server-Sent Events instead of WebSockets, because the client sends nothing to the server. The cost is that any future client-to-server message needs a separate HTTP call.
+- The server generates one shared stream for all clients, so the server load stays flat as clients join. The cost is that clients cannot have their own settings.
+- Delivery is lossy and best effort. Each client has a queue of at most 2 batches, and a full queue drops its oldest batch. The cost is gaps in the counts on a slow client or after a reconnect.
+- The server encodes each batch to JSON once, with compact separators, and sends the same string to every client. The batch stays a plain JSON array, so the server does not use base64 or gzip. The cost is a larger payload than a packed format.
+- The generator uses a uniform distribution, because it is the simplest to test. The cost is a nearly flat heat map.
+- A change to N resets all counts to zero, so memory stays fixed. The cost is that the history is lost when N changes.
+- The client draws the grid on a canvas and redraws at most once per display frame. The cost is up to one frame of added latency, and the cells are not in the DOM.
+- The color scale sweeps 259° of hue from #1E00FF to #FF0033, so neighboring counts are easier to tell apart. The cost is that the ends are not pure blue and pure red.
+- The frame rate warning compares the reading with a fixed target of 60 fps. The cost is that a 120 Hz display running at 60 fps shows no warning.
+- The client drops a live stream after 5 s with no batch and reconnects with a backoff from 1 s up to 30 s. The cost is more code to own than the built-in EventSource retry.
+- The service runs one task in a public subnet with no NAT gateway, and the stack costs about $35 a month. The cost is about one minute of downtime on each deploy.
+- The admin API is a set of HTTP endpoints with one shared bearer token and no admin web page. The cost is that a reviewer needs a terminal to change the live settings, and the token does not rotate.
+- The client measures the clock offset with `GET /time` and compares the p99 of the total latency of a run with the 100 ms target. The cost is an error of at most half of the round trip, and the slowest 1 percent of batches can be above the target.
+- The extra clients in the load test are curl processes on my laptop. The cost is that they share one home link, and they do not parse or draw.
+- The default stays at 20,000 samples per second, although 1,000,000 passed the load test. The lower rate leaves CPU for several reviewers at once. The cost is that the default client shows a rate far below the measured limit.
 
 ## Constitution
 
@@ -184,7 +204,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - A snippet in the DevTools console times each run and reads the frame rate. The client code does not change. The cost is that the snippet has no test and lives in validation.md of the feature.
 - The extra clients of the second part are curl processes on the laptop. They need no new code. The cost is that every client shares one home link, so the link can set the limit on clients before the server does. A curl client also does not parse or draw.
 - A step passes only when all 3 runs pass. The limit is a rate that held for 90 seconds. The cost is that one slow second on the network fails a step and ends the part.
-- The second part and the third part run at 20,000 samples per second. The numbers line up with the feature 8 runs. The cost is that they do not describe the server at a higher default.
+- The second part runs at 20,000 samples per second. The numbers line up with the feature 8 runs. The cost is that they do not describe the server at a higher default.
 - The pass rule reads the p99 of the batches that arrive. The server can drop a batch for a slow client, and that batch gives no latency sample. docs/results.md gives the number of batches of each run next to the expected number, and the pass rule does not use that number.
 - The Makefile targets have no automated test. The checks are commands in validation.md that run the targets against the local server. The cost is that `make test` does not catch a broken target.
 - `make cloud-cpu` reads the standard ECS CPU metric from CloudWatch. It needs no change to the stack. The cost is one value for each minute, so a 30 second run has no value of its own, and the CPU is a clue and not a measurement of a step.
@@ -200,3 +220,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 
 - The load test has no part on the batch interval. The cost is that no run shows the client at a longer interval, and the default of 50 ms has no measurement against the other intervals.
 - The second part ran with 5 clients and with 100 clients only. The cost is that the results have three points for the number of clients, with the 1 client step of the first part, so they do not show how the p99 rises between 5 and 100.
+
+## Feature 9, Load, replan
+
+- The default stays at 20,000 samples per second. The roadmap said that the highest rate that passes becomes the default, and that rate is 1,000,000. One client uses about 6 percent of the CPU at 20,000 and 82 percent at 1,000,000, so the lower rate leaves room for several reviewers at once. The cost is that the default client shows a rate far below the measured limit.

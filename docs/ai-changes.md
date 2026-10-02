@@ -123,3 +123,9 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The AI set the largest N to 64, from my design notes. I raised it to 100, which the HTML design allows. A 100 by 100 grid has 10,000 cells, so each value has its own cell at the default max value of 10,000.
 - I removed three backend tests that the AI wrote. The two-client test for the `started` and `encoded` times and the CORS test on `GET /time` repeated tests from feature 2. The test that an update, a pause, and a resume keep the next sequence number was filler, because the pause test and the stream test for a gap in the ids cover it.
 - I removed the link styles from `styles.scss`, because the client has no links.
+- I removed the manual check that the test source has no latency report, because the automated check V10 covers the same case. The later manual checks moved up by one number.
+
+## Feature 8, Latency, validate
+
+- The AI wrote `head -c 600` in the two manual checks that read the stream with curl. At 20,000 samples per second, one batch is about 4,900 bytes, so the output showed no `id:` line. The AI found this in validate, and I approved the change to `head -c 12000`.
+- The implement runs for docs/results.md were 7 and 13 seconds. I ran both again for 60 seconds in validate, and the AI wrote the new reports into docs/results.md.

@@ -132,7 +132,7 @@ These tests use a clock that returns 100 and 103.
 
 ### M1. The local stream has the new id and the time endpoint
 
-1. Start Docker Desktop and run `make docker`. In a second terminal, run `curl -N localhost:8000/stream | head -c 600`.
+1. Start Docker Desktop and run `make docker`. In a second terminal, run `curl -N localhost:8000/stream | head -c 12000`.
 2. The expected result is a first event with `event: update` and no `id:` line. Each later event has an `id:` line with four numbers and colons between them, and a `data:` line with a JSON array of integers.
 3. Run `curl -i localhost:8000/time`.
 4. The expected result is status 200, the header `cache-control: no-store`, and a body such as `{"epoch_us":1790812800123456}`.
@@ -151,30 +151,63 @@ These tests use a clock that returns 100 and 103.
 2. The expected result is 5 requests, each with status 200. After 30 seconds, the panel shows no more.
 3. Run `latency.reset()` in the console. The expected result is 5 more requests, each with status 200.
 
-### M4. The test source has no latency report
+### M4. The console gives the report for the cloud server
 
-1. Open http://localhost:4200/?source=frontend and run `window.latency` in the console.
-2. The expected result is `undefined`. The network panel shows no `time` request.
-
-### M5. The console gives the report for the cloud server
-
-1. Run `make deploy`. Run `curl -N https://api.precision.jgangjee.com/stream | head -c 600`. The expected result is an `id:` line with four numbers in each batch event.
+1. Run `make deploy`. Run `curl -N https://api.precision.jgangjee.com/stream | head -c 12000`. The expected result is an `id:` line with four numbers in each batch event.
 2. Open http://localhost:4200 with no query. Run `latency.reset()`, wait 60 seconds, and run `copy(latency.report())`.
 3. The expected result is a report with between 1,150 and 1,200 batches and a value in every row. The check passes when the report exists. docs/results.md records whether the p99 of the total meets the 100 ms target.
 
-### M6. The missed batch count still works with the new id
+### M5. The missed batch count still works with the new id
 
-1. With M5 running, note the Missed batches readout. Turn the Wi-Fi off for 10 seconds, and turn it on again.
+1. With M4 running, note the Missed batches readout. Turn the Wi-Fi off for 10 seconds, and turn it on again.
 2. The expected result is a Reconnecting badge and then a Live badge. The Missed batches readout went up by about 20 for each second with no stream, and it does not show NaN.
 
-### M7. docs/results.md gives the measured times
+### M6. docs/results.md gives the measured times
 
 1. Open docs/results.md.
-2. The expected result is the run conditions, a table of the seven stages and the total for the cloud run, and the same table for the local run. The file gives the p99 of the total next to the 100 ms target and says whether the target is met. It gives the round trip and the error bound of the clock offset, and it says that the time from the draw call to the display is not measured. The numbers match the two reports from M2 and M5.
+2. The expected result is the run conditions, a table of the seven stages and the total for the cloud run, and the same table for the local run. The file gives the p99 of the total next to the 100 ms target and says whether the target is met. It gives the round trip and the error bound of the clock offset, and it says that the time from the draw call to the display is not measured. The numbers match the two reports from M2 and M4.
 
-### M8. The README and the logs record this feature
+### M7. The README and the logs record this feature
 
 1. Open README.md.
 2. The expected result is that it describes the four-part id, `GET /time`, the stages, and how to read the report in the console. The Specs and logs section names docs/results.md.
 3. Open docs/assumptions.md, docs/trade-offs.md, and docs/ai-changes.md.
 4. The expected result is that docs/assumptions.md and docs/trade-offs.md each have a section for feature 8. docs/ai-changes.md has a section for each step of feature 8 in which I changed the AI output.
+
+## Results, 2026-10-02
+
+Every check passes.
+
+- V1 passes. The four broadcaster tests for the two timestamps, the sequence numbers, the two subscribers, and the empty batch pass. The broadcaster tests from features 2, 6, and 7 pass.
+- V2 passes. The three new stream tests for the id, the order of the times, and three batches in a row pass in Uvicorn on a local port. The stream tests from features 2, 6, and 7 pass.
+- V3 passes. The three tests for `GET /time` pass.
+- V4 passes. The six tests that read the id pass.
+- V5 passes. The four percentile tests pass.
+- V6 passes. The three offset tests and the six clock sync tests pass.
+- V7 passes. The twelve tracker tests pass.
+- V8 passes. The three latency tests and the new missed batch test of the server source pass. The server source tests from features 4 and 7 pass.
+- V9 passes. The three latency tests of the heat map component pass.
+- V10 passes. The three app tests for the clock sync and `window.latency` pass.
+- V11 passes. The two tests for the time address pass.
+- V12 passes. `make lint` exits with 0. ruff and mypy pass on backend/ and infra/, and ESLint and Prettier pass on frontend/.
+- V13 passes. `npx ng build` exits with 0, and the initial bundle is 154.15 kB.
+- `make test` exits with 0. The backend runs 101 tests with 100 percent coverage, the frontend runs 169 tests in 24 files, and infra runs 7 tests, and all of them pass.
+- M1 passes. The AI ran the two curl commands against the Docker server that was already running. The check first used `head -c 600`, which showed no `id:` line, because one batch is about 4,900 bytes at the default settings. The command is now `head -c 12000`, here and in M4.
+- M2 passes. The report for the local server has 1,200 batches and eight rows, and the p50 of the total is 7.534 ms.
+- M3 passes. The client made 5 requests at start and 5 more on a reset.
+- M4 passes. The report for the cloud server has 1,200 batches and a value in every row, and the p99 of the total is 28.542 ms.
+- M5 passes. The Missed batches readout went up during the drop and did not show NaN.
+- M6 passes. The AI wrote the two reports from M2 and M4 into docs/results.md in this session, so the numbers match. They replace the implement runs, which were 7 and 13 seconds.
+- M7 passes. The README has the four-part id, `GET /time`, the stages, and the console steps, and the three logs have sections for feature 8.
+
+Each item in requirements.md has at least one passing check. R1 has V1, V2, and M1. R2 has V2 and M1. R3 has V2 and M1. R4 has V4, V8, and M5. R5 has V8 and V9. R6 has V7 and M2. R7 has M2. R8 has M6. R9 has V2 and the admin, health, and settings packet tests in the backend run. R10 has M7. G1 has V1, V2, V7, V8, and V9. G2 has V2, V4, and V8. G3 has V3, V6, and M3. G4 has V7, V10, and M2. G5 has M2, M4, and M6. G6 has V4, V5, V6, V7, and V11.
+
+The file had a manual check for the test source with no latency report. The user removed it before this run, because V10 covers the same case.
+
+The branch changes files that plan.md does not name. They come from the review step, and docs/ai-changes.md records each one under "Feature 8, Latency, review".
+
+- backend/app/settings.py and the tests, the specs, and the test source defaults that follow it have the new server defaults.
+- backend/tests/conftest.py holds the one copy of the default settings packet.
+- frontend/src/app/heatmap/brief-example.ts holds the one copy of the brief example.
+- frontend/src/app/heatmap/heat-map-store.ts and specs/mission.md have the largest N of 100.
+- frontend/src/styles.scss has no link styles.

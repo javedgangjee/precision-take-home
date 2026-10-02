@@ -7,10 +7,7 @@ from collections.abc import Callable
 from app.broadcaster import Batch, Broadcaster, next_tick
 from app.generator import BatchGenerator
 from app.settings import Settings
-
-DEFAULT_PACKET = (
-    '{"samples_per_second":5000,"batch_interval_ms":50,"max_value":1024,"paused":false}'
-)
+from tests.conftest import DEFAULT_PACKET
 
 
 def make() -> Broadcaster:

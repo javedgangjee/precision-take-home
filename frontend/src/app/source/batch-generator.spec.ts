@@ -7,9 +7,9 @@ function parse(batch: string | null): number[] {
 }
 
 describe('BatchGenerator', () => {
-  it('V7.1 makes a batch of 250 integers with the default settings', () => {
+  it('V7.1 makes a batch of 1,000 integers with the default settings', () => {
     const batch = parse(new BatchGenerator(DEFAULT_TEST_SOURCE_SETTINGS).next());
-    expect(batch.length).toBe(250);
+    expect(batch.length).toBe(1000);
     expect(batch.every(Number.isInteger)).toBe(true);
   });
 

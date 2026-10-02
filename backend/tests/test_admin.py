@@ -8,7 +8,7 @@ from app.main import create_app
 from app.settings import Settings
 
 AUTH = {"Authorization": "Bearer test-token"}
-DEFAULTS = {"samples_per_second": 5_000, "batch_interval_ms": 50, "max_value": 1_024}
+DEFAULTS = {"samples_per_second": 20_000, "batch_interval_ms": 50, "max_value": 10_000}
 REQUESTS = [
     ("GET", "/admin/settings", None),
     ("PATCH", "/admin/settings", {"samples_per_second": 20}),

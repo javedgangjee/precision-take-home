@@ -61,7 +61,7 @@ The stream has one more event type, which is the settings packet. It has the lin
 
 ```
 event: update
-data: {"samples_per_second":5000,"batch_interval_ms":50,"max_value":1024,"paused":false}
+data: {"samples_per_second":20000,"batch_interval_ms":50,"max_value":10000,"paused":false}
 ```
 
 - The settings packet is the first event on each connection.
@@ -82,9 +82,9 @@ The server reads these environment variables at start. When a value is out of ra
 
 | Variable | Default | Range | Meaning |
 | --- | --- | --- | --- |
-| `SAMPLES_PER_SECOND` | 5000 | 1 to 100000 | This sets how many integers the server makes each second. |
+| `SAMPLES_PER_SECOND` | 20000 | 1 to 1000000 | This sets how many integers the server makes each second. |
 | `BATCH_INTERVAL_MS` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
-| `MAX_VALUE` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
+| `MAX_VALUE` | 10000 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-separated list. The server strips a trailing slash from each origin. | These origins can call the server from a browser. |
 | `ADMIN_TOKEN` | It has no default. | It takes any string. | This is the token for the admin API. With no token, the server has no admin API. |
 
@@ -103,7 +103,7 @@ Each admin request must send the header `Authorization: Bearer <token>`. A reque
 | `POST /admin/pause` | It takes no body. | This stops the batches. |
 | `POST /admin/resume` | It takes no body. | This starts the batches again. |
 
-Each request returns the settings and the pause state as one JSON object, such as `{"samples_per_second": 5000, "batch_interval_ms": 50, "max_value": 1024, "paused": false}`.
+Each request returns the settings and the pause state as one JSON object, such as `{"samples_per_second": 20000, "batch_interval_ms": 50, "max_value": 10000, "paused": false}`.
 
 - A PATCH value must be an integer in the range in the Backend stream table. A value out of range, a value that is not an integer, or an unknown field gets status 422, and no setting changes. The PATCH cannot change `CORS_ORIGINS`.
 - A change to the batch interval starts the schedule again from the time of the change, so the server sends no burst of batches. The batch sequence number keeps going up.
@@ -191,9 +191,9 @@ With `source=frontend` in the URL query, a test source in a Web Worker makes the
 
 | Setting | Default | Range | Meaning |
 | --- | --- | --- | --- |
-| `rate` | 100000 | 1 to 100000000 | This sets how many integers the source makes each second. The range goes past the server limit, so a stress test can push the browser. |
+| `rate` | 20000 | 1 to 100000000 | This sets how many integers the source makes each second. The range goes past the server limit, so a stress test can push the browser. |
 | `interval` | 50 | 50 to 1000 | This sets the time between batches in milliseconds. |
-| `max` | 1024 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
+| `max` | 10000 | 1 to 10000 | Each integer is from 0 to this value minus 1. |
 
 The three settings readouts in the side panel show the `rate`, `interval`, and `max` values in use. The panel has no Missed batches readout, because the worker messages have no batch id.
 

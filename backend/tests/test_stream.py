@@ -8,16 +8,13 @@ import httpx2
 import pytest
 
 from app.settings import Settings
-from tests.conftest import LiveServer
+from tests.conftest import DEFAULT_PACKET, LiveServer
 
 Event = dict[str, str]
 ADMIN = Settings(admin_token="test-token")
 AUTH = {"Authorization": "Bearer test-token"}
 # Batches made before an admin change can still be on the way: 2 in the queue and 1 in the send.
 MAX_STALE = 3
-DEFAULT_PACKET = (
-    '{"samples_per_second":5000,"batch_interval_ms":50,"max_value":1024,"paused":false}'
-)
 
 
 def events(lines: Iterator[str]) -> Iterator[Event]:
@@ -89,7 +86,7 @@ def test_first_event_is_the_settings_packet_and_the_second_is_a_batch(
     assert "event" not in second
 
 
-def test_first_batch_has_250_integers(live_server: LiveServer) -> None:
+def test_first_batch_has_1000_integers(live_server: LiveServer) -> None:
     url = live_server(Settings())
     started = time.monotonic()
 
@@ -98,8 +95,8 @@ def test_first_batch_has_250_integers(live_server: LiveServer) -> None:
 
     assert time.monotonic() - started < 1
     values = json.loads(event["data"])
-    assert len(values) == 250
-    assert all(isinstance(value, int) and 0 <= value <= 1_023 for value in values)
+    assert len(values) == 1_000
+    assert all(isinstance(value, int) and 0 <= value <= 9_999 for value in values)
     assert seq(event) >= 0
 
 

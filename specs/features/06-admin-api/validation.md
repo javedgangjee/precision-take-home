@@ -9,7 +9,7 @@ The command for V1 to V6 is `make test`. The command for V7 is `make lint`.
 ### V1. The update model checks the ranges
 
 - `{"samples_per_second": 1}` is valid, and the other two fields are unset.
-- `{"samples_per_second": 100000, "batch_interval_ms": 1000, "max_value": 10000}` is valid.
+- `{"samples_per_second": 1000000, "batch_interval_ms": 1000, "max_value": 10000}` is valid.
 - `{"samples_per_second": 0}` is not valid.
 - `{"batch_interval_ms": 49}` is not valid.
 - `{"max_value": 10001}` is not valid.
@@ -36,10 +36,10 @@ The command for V1 to V6 is `make test`. The command for V7 is `make lint`.
 
 The tests run the app with `admin_token="test-token"`.
 
-- `GET /admin/settings` returns status 200 and `{"samples_per_second": 5000, "batch_interval_ms": 50, "max_value": 1024, "paused": false}`.
+- `GET /admin/settings` returns status 200 and `{"samples_per_second": 20000, "batch_interval_ms": 50, "max_value": 10000, "paused": false}`.
 - `PATCH /admin/settings` with `{"samples_per_second": 20}` returns status 200 and the object with `samples_per_second` 20. A later GET returns the same object.
 - `PATCH /admin/settings` with `{"max_value": 0}` returns status 422, and a later GET shows the settings did not change.
-- `PATCH /admin/settings` with `{"samples_per_second": 20, "max_value": 0}` returns status 422, and a later GET shows `samples_per_second` is still 5000.
+- `PATCH /admin/settings` with `{"samples_per_second": 20, "max_value": 0}` returns status 422, and a later GET shows `samples_per_second` is still 20000.
 - `PATCH /admin/settings` with `{"cors_origins": ["http://a.test"]}` returns status 422.
 - `POST /admin/pause` returns status 200 and `paused` true. A second pause returns status 200 and `paused` true.
 - `POST /admin/resume` returns status 200 and `paused` false. A second resume returns status 200 and `paused` false.

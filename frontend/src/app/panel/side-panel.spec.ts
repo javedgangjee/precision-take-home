@@ -63,12 +63,12 @@ describe('SidePanel', () => {
     expect(readoutValue('Samples received')).toBe('0');
   });
 
-  it('hides minus at N = 1 and plus at N = 64 without the disabled attribute', async () => {
+  it('hides minus at N = 1 and plus at N = 100 without the disabled attribute', async () => {
     store.setN(1);
     await render();
     expect(minus().style.visibility).toBe('hidden');
     expect(plus().style.visibility).not.toBe('hidden');
-    store.setN(64);
+    store.setN(100);
     await render();
     expect(plus().style.visibility).toBe('hidden');
     expect(minus().style.visibility).not.toBe('hidden');
@@ -76,13 +76,13 @@ describe('SidePanel', () => {
     expect(plus().hasAttribute('disabled')).toBe(false);
   });
 
-  it('hides minus after a click at N = 2 and plus after a click at N = 63', async () => {
+  it('hides minus after a click at N = 2 and plus after a click at N = 99', async () => {
     store.setN(2);
     await render();
     minus().click();
     await render();
     expect(minus().style.visibility).toBe('hidden');
-    store.setN(63);
+    store.setN(99);
     await render();
     plus().click();
     await render();
@@ -131,22 +131,22 @@ describe('SidePanel', () => {
     expect(readout('Max value')).toBeUndefined();
   });
 
-  it('shows "5,000", "50 ms", and "1,024" for the default settings', async () => {
-    status.setSettings({ samplesPerSecond: 5000, batchIntervalMs: 50, maxValue: 1024 });
+  it('shows "20,000", "50 ms", and "10,000" for the default settings', async () => {
+    status.setSettings({ samplesPerSecond: 20_000, batchIntervalMs: 50, maxValue: 10_000 });
     await render();
-    expect(readoutValue('Samples per second')).toBe('5,000');
+    expect(readoutValue('Samples per second')).toBe('20,000');
     expect(readoutValue('Batch interval')).toBe('50 ms');
-    expect(readoutValue('Max value')).toBe('1,024');
+    expect(readoutValue('Max value')).toBe('10,000');
   });
 
-  it('shows "100,000", "1,000 ms", and "10,000" after a change to the settings', async () => {
-    status.setSettings({ samplesPerSecond: 5000, batchIntervalMs: 50, maxValue: 1024 });
+  it('shows "100,000", "1,000 ms", and "1,024" after a change to the settings', async () => {
+    status.setSettings({ samplesPerSecond: 20_000, batchIntervalMs: 50, maxValue: 10_000 });
     await render();
-    status.setSettings({ samplesPerSecond: 100_000, batchIntervalMs: 1000, maxValue: 10_000 });
+    status.setSettings({ samplesPerSecond: 100_000, batchIntervalMs: 1000, maxValue: 1024 });
     await render();
     expect(readoutValue('Samples per second')).toBe('100,000');
     expect(readoutValue('Batch interval')).toBe('1,000 ms');
-    expect(readoutValue('Max value')).toBe('10,000');
+    expect(readoutValue('Max value')).toBe('1,024');
   });
 
   it('shows "0" and "1,234" in the Missed batches readout', async () => {
@@ -164,7 +164,7 @@ describe('SidePanel', () => {
 
   it('shows the seven readouts in order, with Frame rate last', async () => {
     status.setMissedBatches(0);
-    status.setSettings({ samplesPerSecond: 5000, batchIntervalMs: 50, maxValue: 1024 });
+    status.setSettings({ samplesPerSecond: 20_000, batchIntervalMs: 50, maxValue: 10_000 });
     await render();
     expect(readoutLabels()).toEqual([
       'Samples received',

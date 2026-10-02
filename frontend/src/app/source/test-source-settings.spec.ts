@@ -16,7 +16,7 @@ describe('readTestSourceSettings', () => {
   }
 
   it('uses the server defaults with no query', () => {
-    expect(readTestSourceSettings('')).toEqual({ rate: 5_000, interval: 50, max: 1024 });
+    expect(readTestSourceSettings('')).toEqual({ rate: 20_000, interval: 50, max: 10_000 });
     expect(warn).not.toHaveBeenCalled();
   });
 
@@ -29,7 +29,7 @@ describe('readTestSourceSettings', () => {
   });
 
   it.each(['0', '100000001', 'abc'])('falls back to the default rate for rate=%s', (value) => {
-    expect(readTestSourceSettings(`?rate=${value}`).rate).toBe(5_000);
+    expect(readTestSourceSettings(`?rate=${value}`).rate).toBe(20_000);
     expectWarningFor('rate');
   });
 
@@ -39,7 +39,7 @@ describe('readTestSourceSettings', () => {
   });
 
   it.each(['0', '10001'])('falls back to the default max value for max=%s', (value) => {
-    expect(readTestSourceSettings(`?max=${value}`).max).toBe(1024);
+    expect(readTestSourceSettings(`?max=${value}`).max).toBe(10_000);
     expectWarningFor('max');
   });
 });

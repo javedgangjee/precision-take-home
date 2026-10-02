@@ -29,11 +29,11 @@ describe('HeatMapStore', () => {
     expect(store.counts.n).toBe(32);
   });
 
-  it('clamps N to 1 to 64', () => {
+  it('clamps N to 1 to 100', () => {
     store.setN(0);
     expect(store.n()).toBe(1);
-    store.setN(65);
-    expect(store.n()).toBe(64);
+    store.setN(101);
+    expect(store.n()).toBe(100);
   });
 
   it('resets every count, the max, and the total when N changes', () => {

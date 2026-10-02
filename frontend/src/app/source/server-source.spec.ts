@@ -9,9 +9,9 @@ const STREAM_URL = 'http://localhost:8000/stream';
 /** The sequence number is 7, and the server times are 1,000 ms, 1,003 ms, and 1,005 ms. */
 const SHORT_ID = '7:1000000:1003000:1005000';
 const DEFAULT_PACKET = {
-  samples_per_second: 5000,
+  samples_per_second: 20_000,
   batch_interval_ms: 50,
-  max_value: 1024,
+  max_value: 10_000,
   paused: false,
 };
 
@@ -191,9 +191,9 @@ describe('ServerSource', () => {
       sources[0].open();
       sources[0].update();
       expect(status.settings()).toEqual({
-        samplesPerSecond: 5000,
+        samplesPerSecond: 20_000,
         batchIntervalMs: 50,
-        maxValue: 1024,
+        maxValue: 10_000,
       });
       expect(status.state()).toBe('live');
     });
@@ -205,7 +205,7 @@ describe('ServerSource', () => {
       expect(status.settings()).toEqual({
         samplesPerSecond: 20,
         batchIntervalMs: 1000,
-        maxValue: 1024,
+        maxValue: 10_000,
       });
     });
 

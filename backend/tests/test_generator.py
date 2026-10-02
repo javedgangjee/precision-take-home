@@ -8,8 +8,8 @@ def make(seed: int = 0, **values: int) -> BatchGenerator:
     return BatchGenerator(Settings.model_validate(values), random.Random(seed))
 
 
-def test_default_batch_holds_250_integers() -> None:
-    assert len(make().next_batch()) == 250
+def test_default_batch_holds_1000_integers() -> None:
+    assert len(make().next_batch()) == 1_000
 
 
 def test_1000_per_second_at_1000_ms_holds_1000_integers() -> None:

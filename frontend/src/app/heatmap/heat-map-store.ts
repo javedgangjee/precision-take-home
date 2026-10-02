@@ -3,7 +3,7 @@ import { EXPECTED_FPS, FrameRateMeter } from './frame-rate';
 import { GridCounts } from './grid-counts';
 
 export const MIN_N = 1;
-export const MAX_N = 64;
+export const MAX_N = 100;
 export const DEFAULT_N = 32;
 /** The panel readouts update at most this often, so text updates do not cost a frame. */
 const READOUT_INTERVAL_MS = 150;

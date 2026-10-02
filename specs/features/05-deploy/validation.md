@@ -61,7 +61,7 @@ These checks need AWS credentials. Run `aws login` first.
 ### M4. The local client goes live with the cloud server
 
 1. Run `make frontend` and open http://localhost:4200 in Chrome.
-2. The expected result is a Live badge within 2 s, a filling grid, and a samples received readout that rises by about 5,000 each second.
+2. The expected result is a Live badge within 2 s, a filling grid, and a samples received readout that rises by about 20,000 each second.
 3. In the DevTools network panel, the expected result is a `stream` request to https://api.precision.jgangjee.com/stream.
 4. Open http://127.0.0.1:4200. The expected result is a Live badge.
 

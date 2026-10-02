@@ -114,3 +114,8 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 ## Feature 8, Latency, implement
 
 - The plan set both runs for docs/results.md at 5,000 samples per second and a max value of 1,024, with a wait of 60 seconds. I ran both at 20,000 samples per second and a max value of 10,000, and I took the reports after 7 and 13 seconds. The AI read the settings packet of both servers to confirm the settings, and docs/results.md gives the real conditions.
+
+## Feature 8, Latency, review
+
+- The AI wrote the same `DEFAULT_PACKET` string in `test_stream.py` and `test_broadcaster.py`. I had it moved to `tests/conftest.py`, so the default settings packet has one copy in the backend tests.
+- I raised the server defaults to 20,000 samples per second and a max value of 10,000, and I raised the upper limit of samples per second to 1,000,000. The defaults are the settings of the runs in docs/results.md. The AI found 15 backend tests that still had the old values. It updated the tests, the specs, the README, and the test source defaults to match.

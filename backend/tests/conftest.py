@@ -9,6 +9,10 @@ from app.main import create_app
 from app.settings import Settings
 
 LiveServer = Callable[[Settings], str]
+# The settings packet that the server sends for the default settings.
+DEFAULT_PACKET = (
+    '{"samples_per_second":20000,"batch_interval_ms":50,"max_value":10000,"paused":false}'
+)
 
 
 @pytest.fixture

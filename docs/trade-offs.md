@@ -113,7 +113,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The stack builds the image as a CDK asset during `make deploy`. The cloud runs the same Dockerfile as `make docker`, and there is no separate push step. The cost is that Docker must run during the deploy, and the image lives in the CDK bootstrap ECR repo.
 - The cdk.json file still has no feature flags. Feature 1 planned to add them with the resources, but the plan for feature 5 did not name the file. The cost is the notice about unset feature flags on each synth.
 - The infra tests check only the key settings in the template, and there is no full test suite for the stack. The cost is that a change to a setting the tests do not check can pass `make test`.
-- The default rate is 5,000 samples per second instead of 100,000, so each batch holds 250 integers. A lower rate keeps the data transfer cost low while I develop against the cloud stack. The cost is a lighter load than the brief limit, and I plan to raise the default before submission.
+- The default rate is 5,000 samples per second instead of 100,000, so each batch holds 250 integers. A lower rate keeps the data transfer cost low while I develop against the cloud stack. The cost is a lighter load than the brief limit, and I plan to raise the default before submission. Feature 8 raised the default to 20,000.
 
 ## Feature 5, Deploy, replan
 
@@ -173,3 +173,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The handler of `GET /time` is async, so it reads the clock on the event loop and not in a worker thread. The response does not wait for a thread. The cost is that a busy event loop delays the response, which makes the round trip longer. The client keeps the shortest of 5 round trips, which limits that effect.
 - A batch that waits for a frame when no offset exists is dropped from the measurement and is not kept for later. The tracker needs no second list. The cost is that the batches of about the first 100 ms after the page loads give no sample.
 - The default time request uses `fetch` and has no unit test, as the default EventSource has none. The tests replace both with fakes. The cost is that the coverage of clock-sync.ts is 90 percent of the lines.
+
+## Feature 8, Latency, review
+
+- The server defaults are 20,000 samples per second and a max value of 10,000, so each batch holds 1,000 integers from 0 to 9,999. These are the settings of the runs in docs/results.md. The cost is about five times the bytes for each client, and a default 32 by 32 grid that does not fill evenly. With 10,000 values on 1,024 cells, 784 cells get 10 values each and 240 cells get 9.

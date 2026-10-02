@@ -2,7 +2,7 @@
 
 The project documents have no worked example for this feature. The brief examples stay covered by the feature 3 tests, which must still pass. The cases follow the answers to G1 to G7 in requirements.md.
 
-In the cases below, the default packet is `{"samples_per_second":5000,"batch_interval_ms":50,"max_value":1024,"paused":false}`. A request with the right token sends `Authorization: Bearer test-token`.
+In the cases below, the default packet is `{"samples_per_second":20000,"batch_interval_ms":50,"max_value":10000,"paused":false}`. A request with the right token sends `Authorization: Bearer test-token`.
 
 ## Automated checks
 
@@ -47,7 +47,7 @@ The tests run the app in Uvicorn on a free local port with `admin_token="test-to
 These tests use a fake EventSource, fake timers, and a random value of 1.
 
 - At start, the settings are unset and the missed batch count is 0.
-- After an open event and an update event with the default packet, the settings are 5,000 samples per second, a 50 ms interval, and a maximum value of 1,024, and the state is live.
+- After an open event and an update event with the default packet, the settings are 20,000 samples per second, a 50 ms interval, and a maximum value of 10,000, and the state is live.
 - A second update event with `samples_per_second` 20 and `batch_interval_ms` 1000 changes the settings to those values.
 - After an update event with `paused` true, the state is paused. After 60 s with no message, the state is still paused, the EventSource is not closed, and no new EventSource exists.
 - While paused, with N = 4, the message "[17,8]" gives cells <0,0> and <1,3> a count of 1 each. After 5 s more, the state is still paused.
@@ -67,8 +67,8 @@ These tests use a fake EventSource, fake timers, and a random value of 1.
 ### V6. The side panel shows the settings and the missed batches
 
 - With no settings, the panel has no Samples per second, Batch interval, or Max value readout.
-- With the settings 5,000, 50, and 1,024, the Samples per second readout shows "5,000", the Batch interval readout shows "50 ms", and the Max value readout shows "1,024".
-- After a change to the settings 100,000, 1,000, and 10,000, the three readouts show "100,000", "1,000 ms", and "10,000".
+- With the settings 20,000, 50, and 10,000, the Samples per second readout shows "20,000", the Batch interval readout shows "50 ms", and the Max value readout shows "10,000".
+- After a change to the settings 100,000, 1,000, and 1,024, the three readouts show "100,000", "1,000 ms", and "1,024".
 - With a missed batch count of 0, the Missed batches readout shows "0". With a count of 1,234, it shows "1,234".
 - With no missed batch count, the panel has no Missed batches readout.
 - The seven readouts are in the order Samples received, Max count, Missed batches, Samples per second, Batch interval, Max value, and Frame rate.
@@ -93,7 +93,7 @@ The local server runs in Docker for every local check. `make docker` builds the 
 ### M1. The panel shows the settings and follows a change
 
 1. Start Docker Desktop. Run `make docker` in one terminal and `make frontend` in a second terminal. Open http://localhost:4200/?server=http://localhost:8000.
-2. The expected result is a Live badge. The Missed batches readout shows 0. The three settings readouts show 5,000 samples per second, a 50 ms batch interval, and a max value of 1,024. The whole panel fits in the window with no clipped readout.
+2. The expected result is a Live badge. The Missed batches readout shows 0. The three settings readouts show 20,000 samples per second, a 50 ms batch interval, and a max value of 10,000. The whole panel fits in the window with no clipped readout.
 3. Run `curl -X PATCH localhost:8000/admin/settings -H "Authorization: Bearer local-admin-token" -H "Content-Type: application/json" -d '{"samples_per_second": 20, "batch_interval_ms": 1000}'`.
 4. The expected result is that the readouts show 20 and 1,000 ms within 1 s, with no reload. The badge stays Live.
 
@@ -113,7 +113,7 @@ The local server runs in Docker for every local check. `make docker` builds the 
 
 ### M4. The client counts the batches it missed during a drop
 
-1. With M1 running, set the settings back with a PATCH to `{"samples_per_second": 5000, "batch_interval_ms": 50}`.
+1. With M1 running, set the settings back with a PATCH to `{"samples_per_second": 20000, "batch_interval_ms": 50}`.
 2. In the DevTools network panel, set the throttling to Offline and wait 10 seconds. The expected result is a Reconnecting badge.
 3. Set the throttling to No throttling. The expected result is a Live badge within 30 s, and a Missed batches readout that went up by about 20 for each second offline.
 4. If the Offline setting does not cut the open stream, do the same check with the cloud server and turn the Wi-Fi off for 10 seconds.
@@ -126,7 +126,7 @@ The local server runs in Docker for every local check. `make docker` builds the 
 ### M6. The test source shows its own settings
 
 1. Open http://localhost:4200/?source=frontend&rate=1000000.
-2. The expected result is a Test source badge. The settings readouts show 1,000,000 samples per second, a 50 ms batch interval, and a max value of 1,024. The panel has no Missed batches readout.
+2. The expected result is a Test source badge. The settings readouts show 1,000,000 samples per second, a 50 ms batch interval, and a max value of 10,000. The panel has no Missed batches readout.
 
 ### M7. The cloud server sends the settings packet
 
@@ -138,11 +138,11 @@ The local server runs in Docker for every local check. `make docker` builds the 
 
 ### M8. The client follows a settings change on the cloud server
 
-1. With M7 running and `TOKEN` set, keep http://localhost:4200 open with no query. The readouts show 5,000 samples per second, a 50 ms batch interval, and a max value of 1,024.
+1. With M7 running and `TOKEN` set, keep http://localhost:4200 open with no query. The readouts show 20,000 samples per second, a 50 ms batch interval, and a max value of 10,000.
 2. Run `curl -X PATCH https://api.precision.jgangjee.com/admin/settings -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" -d '{"samples_per_second": 20, "batch_interval_ms": 1000, "max_value": 64}'`.
 3. The expected result is that the readouts show 20, 1,000 ms, and 64 within 1 s, with no reload. The badge stays Live, and the samples received readout goes up by 20 each second.
-4. Run the same command with the body `{"samples_per_second": 5000, "batch_interval_ms": 50, "max_value": 1024}`.
-5. The expected result is that the readouts show 5,000, 50 ms, and 1,024 within 1 s, with no reload. The badge stays Live.
+4. Run the same command with the body `{"samples_per_second": 20000, "batch_interval_ms": 50, "max_value": 10000}`.
+5. The expected result is that the readouts show 20,000, 50 ms, and 10,000 within 1 s, with no reload. The badge stays Live.
 
 ### M9. The README and the logs record this feature
 

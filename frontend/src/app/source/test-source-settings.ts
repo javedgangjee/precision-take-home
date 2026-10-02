@@ -10,9 +10,9 @@ export interface TestSourceSettings {
 
 /** The defaults match the server. */
 export const DEFAULT_TEST_SOURCE_SETTINGS: TestSourceSettings = {
-  rate: 5_000,
+  rate: 20_000,
   interval: 50,
-  max: 1024,
+  max: 10_000,
 };
 
 /** The interval and the max value have the server ranges. The rate goes past the server limit for stress tests. */

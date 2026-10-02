@@ -98,3 +98,10 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 ## Feature 7, Settings Display, review
 
 - The AI built the side panel readouts as the HTML design styles them, with a 15 px value above an 11 px muted label, and it put the four new readouts below Frame rate. I changed the look of the side panel during review, and the changes are cosmetic. The label is now above the value in all seven readouts. The label is 14 px with a 20 px line height in the secondary ink color, and the value is 18 px with a 24 px line height. The Grid size label now has the same style as the readout labels. The stream badge is 40 px tall, with 14 px text and a 24 px icon. I also moved Frame rate to the bottom of the panel, below Max value.
+
+## Feature 7, Settings Display, replan
+
+- The AI wrote each heading in the three logs with a date and a phase, and it wrote a section for a step even when I changed nothing. I asked for headings with the feature number, the feature name, and the spec-driven step, and for no empty sections.
+- The roadmap had one testing feature for the latency, the stress test, and the tuning. I split it into feature 8 for latency and feature 9 for load. The submission check is now feature 10. The older entries in this log still call the testing feature feature 8 and the submission check feature 9.
+- The roadmap had a measured latency with no method. I asked for a timestamp at each stage on the server and the client, and for a total that the client calculates. I first asked for the total in the side panel, and then I removed it. The AI wrote that the server adds its timestamps to each batch. I asked for the timestamps in the SSE `id` field with the sequence number, in a form such as `id:epoch time`.
+- I asked for a load test that raises the rate, then the number of clients, then the batch interval, each until it stops passing. The AI kept the rule that the highest rate that passes becomes the new default, and it removed the search for the batch interval with the lowest latency.

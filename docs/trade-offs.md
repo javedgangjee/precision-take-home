@@ -94,7 +94,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 ## Feature 3, Frontend, replan
 
 - The hotspot mode is removed from the roadmap. The project ends with the testing feature. The cost is that the heat map stays nearly flat under the uniform generator.
-- Feature 8 writes its findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.
+- Features 8 and 9 write their findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.
 
 ## Feature 4, Stream, implement
 
@@ -122,8 +122,8 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The badge gets a fourth state, Paused, in place of a note in the side panel. The user sees the pause where the stream state already shows. The cost is a change to N10, which named three states from my design notes.
 - Feature 6 is a set of HTTP endpoints with no admin web page. I change the settings and pause the stream with curl. The cost is that a reviewer needs a terminal to try the live settings.
 - The pause event and the Paused badge move to feature 7, with the init and update packets. Feature 6 then changes only the backend. The cost is that between feature 6 and feature 7 a pause makes each client reconnect every 5 s, because the client watchdog sees no batches.
-- Feature 8 adds a tuning step that sets the default rate to the highest rate that meets the 100 ms target and 54 fps. This replaces the plan to raise the default before submission by hand. The cost is that the default depends on one set of measurements on my laptop and one Fargate task size.
-- Feature 9 is a checklist that compares the repo with the brief and the project overview before I submit. The check catches a missing document before a reviewer does. The cost is one more feature, and the check reads only the files, so it cannot judge the quality of the write-ups.
+- Feature 9 adds a tuning step that sets the default rate to the highest rate that meets the 100 ms target and 54 fps. This replaces the plan to raise the default before submission by hand. The cost is that the default depends on one set of measurements on my laptop and one Fargate task size.
+- Feature 10 is a checklist that compares the repo with the brief and the project overview before I submit. The check catches a missing document before a reviewer does. The cost is one more feature, and the check reads only the files, so it cannot judge the quality of the write-ups.
 
 ## Feature 6, Admin API, implement
 
@@ -149,3 +149,9 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The admin response and the settings packet share one model in broadcaster.py. The two cannot drift apart. The cost is that the admin API returns the model that the broadcaster owns, so a new admin-only field needs a second model.
 - The client uses an Angular effect on N to reset the missed batch count. The heat map store needs no change and does not know about the stream. The cost is that the reset runs one pass after the counts reset and not in the same call.
 - The gap between the readouts went from 20 px to 12 px, and the panel scrolls in a short window. The seven readouts then fit in a laptop window. The cost is that the readout spacing no longer matches the HTML design.
+
+## Feature 7, Settings Display, replan
+
+- Testing is two features, which are feature 8 for latency and feature 9 for load. The load test then uses the latency measurement from feature 8 as its pass check. The cost is one more feature before the submission check.
+- The load test raises the batch interval until a step fails. It no longer looks for the batch interval with the lowest latency at the default rate. The cost is that the default interval stays at 50 ms with no measurement that shows it is the best one.
+- The server timestamps for feature 8 go in the SSE `id` field, after the batch sequence number. The batch data stays a JSON array of integers. The cost is that the id is no longer a plain number, so the client must split it before it counts the missed batches.

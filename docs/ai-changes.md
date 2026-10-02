@@ -141,3 +141,7 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The roadmap set the first part at 20,000, 100,000, and 1,000,000 samples per second, and the AI kept those steps. I had tested 100,000 before, so I changed the steps to 20,000 as a baseline, then 250,000, 500,000, and 1,000,000.
 - I added a fourth Makefile target, `make cloud-cpu`, which prints the CPU use of the cloud service from CloudWatch. The plan had no server metric, so a failed step gave no clue to its cause. The AI added the start time of each run to the console snippet, so a run matches a row of the CPU table.
 - I added a last step to the load test that pauses or destroys the cloud server, so it does not cost more than it must when I leave it overnight. The plan ended the test with the server live at its defaults.
+
+## Feature 9, Load, implement
+
+- The AI gave the CPU table of `make cloud-cpu` the heading Time (UTC) and did not check the times. I asked the AI to confirm that the times are in UTC. The AWS CLI printed them in the time zone of my laptop, which was 4 hours behind UTC, so a row did not match the `start` time of a run. The AI set `TZ=UTC` for the CloudWatch call, and the times now match the UTC clock.

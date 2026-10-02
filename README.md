@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, and the latency measurement are in place. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, the latency measurement, and the Makefile targets for the load test are in place. specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -18,7 +18,7 @@ Install these tools before you start. The versions are the ones I use.
 - You need uv 0.11.24. uv installs Python 3.13.15 for you if it is missing.
 - You need Node.js 22.22.1 and npm 11.20.0.
 - You need the AWS CDK CLI 2.1143.0 for `make synth`. Install it with `npm install -g aws-cdk@2.1143.0`.
-- You need AWS CLI 2.37.4 with credentials for `make deploy` and `make destroy`. The AWS account must be bootstrapped for CDK in the region of your AWS profile. The Deploy section gives the command.
+- You need AWS CLI 2.37.4 with credentials for `make deploy`, `make destroy`, and `make cloud-cpu`. The AWS account must be bootstrapped for CDK in the region of your AWS profile. The Deploy section gives the command.
 - You need GNU Make 3.81 or later. macOS ships with 3.81.
 - You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make docker-build`, `make docker`, and `make deploy`.
 - The client loads its icons from Google Fonts, so the browser needs the network.
@@ -40,6 +40,10 @@ Run `make install` from the repo root. It installs the backend, frontend, and in
 - `make synth` synthesizes the CDK app into infra/cdk.out/. It needs no AWS credentials.
 - `make deploy` builds the backend image and deploys the CDK stack to AWS. The Deploy section has the details.
 - `make destroy` removes the CDK stack from AWS.
+- `make cloud-pause` pauses the stream of the cloud server, and `make cloud-resume` resumes it. Both call the admin API with curl, and they read the admin token from `CLOUD_ADMIN_TOKEN` in the shell. The Deploy section shows how to set it.
+- `make cloud-setting-update` changes the settings of the cloud server. It sends each of `SAMPLES_PER_SECOND`, `BATCH_INTERVAL_MS`, and `MAX_VALUE` that is set, such as `make cloud-setting-update SAMPLES_PER_SECOND=100000`. It reads the same token.
+- These three targets print the reply of the server, and they fail when the status is not 200. They send no request when the token is not set. `CLOUD_SERVER` changes the server address, so `CLOUD_SERVER=http://localhost:8000` with the token `local-admin-token` calls the local server.
+- `make cloud-cpu` prints the CPU use of the cloud service from CloudWatch, with one row for each minute of the last 30 minutes. Each row has the time in UTC, the average, and the maximum in percent of the 0.25 vCPU of the task. `MINUTES` changes the 30. It needs AWS credentials and no admin token.
 
 ## Backend stream
 
@@ -229,11 +233,34 @@ To call the cloud admin API, read the token from the secret. The stack output `A
 ```sh
 ARN=$(aws cloudformation describe-stacks --stack-name PrecisionStack \
   --query "Stacks[0].Outputs[?OutputKey=='AdminTokenSecretArn'].OutputValue" --output text)
-TOKEN=$(aws secretsmanager get-secret-value --secret-id "$ARN" --query SecretString --output text)
-curl https://api.precision.jgangjee.com/admin/settings -H "Authorization: Bearer $TOKEN"
+export CLOUD_ADMIN_TOKEN=$(aws secretsmanager get-secret-value --secret-id "$ARN" --query SecretString --output text)
+curl https://api.precision.jgangjee.com/admin/settings -H "Authorization: Bearer $CLOUD_ADMIN_TOKEN"
+```
+
+The cloud targets of the Makefile read `CLOUD_ADMIN_TOKEN`, so they work in the same terminal after the export. The values in the third command are the defaults.
+
+```sh
+make cloud-pause
+make cloud-resume
+make cloud-setting-update SAMPLES_PER_SECOND=20000 BATCH_INTERVAL_MS=50 MAX_VALUE=10000
+make cloud-cpu
 ```
 
 Run `make destroy` to remove the stack. The hosted zone stays, because the stack only imports it.
+
+## Load test
+
+The load test measures the limits of the cloud server on the samples per second, the number of clients, and the size of a batch. It runs against the cloud server only. I change the settings between the steps with `make cloud-setting-update`, so the server needs no restart.
+
+The test has three parts, in this order.
+
+1. The first part raises the samples per second through 20,000, 250,000, 500,000, and 1,000,000, with one client and a batch interval of 50 ms.
+2. The second part raises the number of clients through 2, 5, 10, 20, 50, and 100, at 20,000 samples per second and a batch interval of 50 ms. One Chrome tab measures, and each other client is a curl process on the laptop that reads the stream and drops the data.
+3. The third part raises the batch interval through 100 ms, 500 ms, and 1 s, with one client at 20,000 samples per second. The batches hold 2,000, 10,000, and 20,000 integers.
+
+Each step has 3 runs of 30 seconds. A run passes when the p99 of the total latency from `latency.report()` is at most 100 ms and the frame rate stays at 54 fps or more. A step passes when all 3 runs pass, and a part ends at its first step that fails. After each part, `make cloud-cpu` gives the CPU use of the server, as a clue to what limits a step. The CPU is not part of the pass rule.
+
+The specs/features/09-load/validation.md file gives the method, with the console snippet that times a run and reads its frame rate. The docs/results.md file records the limits.
 
 ## Specs and logs
 
@@ -241,6 +268,6 @@ Run `make destroy` to remove the stack. The hosted zone stays, because the stack
 - The docs/assumptions.md file records the assumptions I made.
 - The docs/trade-offs.md file records the trade-offs I made.
 - The docs/ai-changes.md file records where I changed the AI output, and why.
-- The docs/results.md file gives the measured latency for each stage and compares the total with the 100 ms target.
+- The docs/results.md file gives the measured latency for each stage and compares the total with the 100 ms target. The limits from the load test go in the same file.
 - The docs/logs/ folder holds my Claude Code session logs, with one folder for each roadmap feature.
 - The context/ folder holds the brief, the HTML design, and my design notes.

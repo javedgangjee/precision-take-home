@@ -106,3 +106,10 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - Chrome rounds the client clock to 0.1 ms. The parse stage and the apply stage are shorter than that at the default settings, so they read as 0 or 0.1 ms.
 - A time request that returns a status other than 200 counts as a failed request and gives no sample. A client that connects to a server from before this feature then has no offset and no samples.
 - The report rounds each value to 0.001 ms.
+
+## Feature 9, Load, implement
+
+- A setting variable that is exported in the shell counts as set, as it does for `make docker`. `make cloud-setting-update` then sends it with no value on the command line.
+- The Makefile puts each setting value into the JSON body with no check. A value that is not a whole number gets status 422 from the server, and the target fails.
+- `make cloud-cpu` uses the AWS profile that is active in the shell, which is the profile of the deploy. It finds the service through the stack name `PrecisionStack`.
+- The times in the CPU table are in UTC, as is the `start` time of each run from the console snippet. I match the two by the minute.

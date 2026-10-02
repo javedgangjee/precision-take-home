@@ -188,3 +188,10 @@ Each heading gives the feature number, the feature name, and the spec-driven ste
 - The pass rule reads the p99 of the batches that arrive. The server can drop a batch for a slow client, and that batch gives no latency sample. docs/results.md gives the number of batches of each run next to the expected number, and the pass rule does not use that number.
 - The Makefile targets have no automated test. The checks are commands in validation.md that run the targets against the local server. The cost is that `make test` does not catch a broken target.
 - `make cloud-cpu` reads the standard ECS CPU metric from CloudWatch. It needs no change to the stack. The cost is one value for each minute, so a 30 second run has no value of its own, and the CPU is a clue and not a measurement of a step.
+
+## Feature 9, Load, implement
+
+- The three admin targets share one `define` block in the Makefile, which checks the token, sends the request, and checks the status. The rule for the token and the status has one copy. The cost is a block that is harder to read than three plain curl lines.
+- The targets hide their commands, so the output is only the reply of the server. The cost is that I do not see the curl command that ran. `make -n cloud-pause` prints it, with the name of the token variable in place of the token.
+- The targets check the status code and not only the curl exit code, so a redirect or any other status that is not 200 fails the target. The cost is three more lines of shell.
+- `make cloud-cpu` gives the start and the end of the period to the AWS CLI in Unix seconds. The recipe needs no `date` options, which differ between macOS and Linux. The cost is a command that is harder to read than one with dates.

@@ -224,5 +224,5 @@ The run differs from the method in these ways.
 - The runs have no `start` value, because the snippet that ran did not return one. The AI recorded the time of each paste and matched the steps with the CPU rows by that time.
 - The first result that the user pasted came from a server at a batch interval of 100 ms, with 300 batches in each run. It does not count. The step at 20,000 ran again at 50 ms.
 - The CPU table that the user pasted after M2 had no rows for the step at 20,000. The AI ran `make cloud-cpu MINUTES=50` after M3 and took the rows for both parts from that table.
-- The branch changes specs/roadmap.md, which plan.md does not name. The user asked for the roadmap to follow the removal of the third part.
+- The branch changes docs/specs/roadmap.md, which plan.md does not name. The user asked for the roadmap to follow the removal of the third part.
 

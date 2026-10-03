@@ -2,7 +2,7 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, the latency measurement, and the load test are in place. specs/roadmap.md shows the status of each feature.
+The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, the latency measurement, and the load test are in place. docs/specs/roadmap.md shows the status of each feature.
 
 ## Repo layout
 
@@ -259,11 +259,11 @@ The test has two parts, in this order.
 
 Each step has 3 runs of 30 seconds. A run passes when the p99 of the total latency from `latency.report()` is at most 100 ms and the frame rate stays at 54 fps or more. A step passes when all 3 runs pass, and a part ends at its first step that fails. After each part, `make cloud-cpu` gives the CPU use of the server, as a clue to what limits a step. The CPU is not part of the pass rule.
 
-The specs/features/09-load/validation.md file gives the method, with the console snippet that times a run and reads its frame rate. The docs/results.md file records the limits.
+The docs/specs/features/09-load/validation.md file gives the method, with the console snippet that times a run and reads its frame rate. The docs/results.md file records the limits.
 
 ## Specs and logs
 
-- The specs/ folder holds the mission, the tech stack, the roadmap, and a plan for each feature.
+- The docs/specs/ folder holds the mission, the tech stack, the roadmap, and a plan for each feature.
 - The docs/assumptions.md file records the assumptions I made.
 - The docs/trade-offs.md file records the trade-offs I made.
 - The docs/ai-changes.md file records where I changed the AI output, and why.

@@ -32,14 +32,14 @@ This list gives the changes that most affect the result. The sections below give
 
 - The AI proposed plain CSS for the frontend. I changed it to SCSS.
 - The AI proposed Makefile targets with no way to run both apps at once and no way to remove the stack. I added a `dev` target that runs the backend and the frontend together, and a `destroy` target next to `deploy`.
-- The AI proposed backend coverage with pytest-cov, which was not in the tech stack. I approved it and added pytest-cov 7.1.0 to specs/tech-stack.md.
+- The AI proposed backend coverage with pytest-cov, which was not in the tech stack. I approved it and added pytest-cov 7.1.0 to docs/specs/tech-stack.md.
 
 ## Feature 1, Scaffold, implement
 
-- The AI found that npm installed Angular 21.2.24 instead of the 21.2.1 in the tech stack, and it offered to pin 21.2.1. I kept 21.2.24 and had the AI update specs/tech-stack.md.
+- The AI found that npm installed Angular 21.2.24 instead of the 21.2.1 in the tech stack, and it offered to pin 21.2.1. I kept 21.2.24 and had the AI update docs/specs/tech-stack.md.
 - The AI kept the README that `ng new` made in frontend/. I deleted it, because the repo needs one README at the root.
-- The AI installed Prettier and its config in frontend/ but left it out of `make lint`, so eight files were out of format. I had the AI add `prettier --check` to the lint target and a `format` script to package.json, and it formatted the eight files. I also had the AI add Prettier 3.9.9 to specs/tech-stack.md.
-- The AI did not plan how the client at localhost:4200 reaches the backend on another origin. I found the gap and chose CORS on the backend over an Angular dev proxy, because the same code works locally and on Fargate. I had the AI add it to feature 2 in specs/roadmap.md.
+- The AI installed Prettier and its config in frontend/ but left it out of `make lint`, so eight files were out of format. I had the AI add `prettier --check` to the lint target and a `format` script to package.json, and it formatted the eight files. I also had the AI add Prettier 3.9.9 to docs/specs/tech-stack.md.
+- The AI did not plan how the client at localhost:4200 reaches the backend on another origin. I found the gap and chose CORS on the backend over an Angular dev proxy, because the same code works locally and on Fargate. I had the AI add it to feature 2 in docs/specs/roadmap.md.
 
 ## Feature 2, Backend, plan
 

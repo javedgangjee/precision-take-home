@@ -209,5 +209,5 @@ The branch changes files that plan.md does not name. They come from the review s
 - backend/app/settings.py and the tests, the specs, and the test source defaults that follow it have the new server defaults.
 - backend/tests/conftest.py holds the one copy of the default settings packet.
 - frontend/src/app/heatmap/brief-example.ts holds the one copy of the brief example.
-- frontend/src/app/heatmap/heat-map-store.ts and specs/mission.md have the largest N of 100.
+- frontend/src/app/heatmap/heat-map-store.ts and docs/specs/mission.md have the largest N of 100.
 - frontend/src/styles.scss has no link styles.

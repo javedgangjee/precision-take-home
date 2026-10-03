@@ -2,7 +2,7 @@
 
 ## Feature 8, Latency
 
-The client measures the time of each batch from generation to render. The README section Latency describes the eight timestamps, the seven stages, and the console commands. The value that I compare with the 100 ms target is the p99 of the total.
+The client measures the time of each batch from generation to render. The Latency section of system.md describes the eight timestamps, the seven stages, and the console commands. The value that I compare with the 100 ms target is the p99 of the total.
 
 ### Run conditions
 
@@ -70,7 +70,7 @@ The cloud run meets the target with 71 ms to spare. The slowest batch of the clo
 
 ## Feature 9, Load
 
-The load test measures the limits of the cloud server on the samples per second, the number of clients, and the size of a batch. The README section Load test gives the two parts, and docs/specs/features/09-load/validation.md gives the method.
+The load test measures the limits of the cloud server on the samples per second, the number of clients, and the size of a batch. The Load test section of system.md gives the two parts, and docs/specs/features/09-load/validation.md gives the method.
 
 ### Run conditions
 

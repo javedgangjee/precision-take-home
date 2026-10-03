@@ -56,7 +56,8 @@ class PrecisionStack(Stack):
             removal_policy=RemovalPolicy.DESTROY,
         )
 
-        # The admin API needs this token in each request. The README shows how to read it.
+        # The admin API needs this token in each request.
+        # The Deploy section of system.md shows how to read it.
         admin_token = secretsmanager.Secret(
             self,
             "AdminToken",

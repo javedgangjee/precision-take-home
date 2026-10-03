@@ -25,7 +25,7 @@ SETTINGS_BODY := {$(subst $(space),$(comma),$(strip $(SETTINGS)))}
 # Stop the Angular CLI from asking about usage data on the first run.
 export NG_CLI_ANALYTICS := false
 
-.PHONY: install backend frontend dev docker-build docker test test-backend test-frontend test-infra lint lint-backend lint-frontend lint-infra synth deploy destroy cloud-pause cloud-resume cloud-setting-update cloud-cpu
+.PHONY: install backend frontend client devdocker-build docker test test-backend test-frontend test-infra lint lint-backend lint-frontend lint-infra synth deploy destroy cloud-pause cloud-resume cloud-setting-update cloud-cpu
 
 install:
 	cd backend && uv sync
@@ -37,6 +37,10 @@ backend:
 
 frontend:
 	cd frontend && npx ng serve --port $(FRONTEND_PORT)
+
+# This is the quick start for a reviewer. It installs the frontend dependencies and opens the client in the browser.
+client:
+	cd frontend && npm ci && npx ng serve --port $(FRONTEND_PORT) --open
 
 dev:
 	@echo "Open $(LOCAL_CLIENT) to use the local server."
@@ -90,7 +94,7 @@ destroy:
 # It sends no request when the token is not set, and it fails when the status is not 200.
 # The shell reads the token, so make never prints it.
 define cloud_admin
-@test -n "$$CLOUD_ADMIN_TOKEN" || { echo "CLOUD_ADMIN_TOKEN is not set. The README section Deploy gives the commands."; exit 1; }
+@test -n "$$CLOUD_ADMIN_TOKEN" || { echo "CLOUD_ADMIN_TOKEN is not set. The Deploy section of docs/system.md gives the commands."; exit 1; }
 @reply=$$(curl -sS -X $(1) "$(CLOUD_SERVER)$(2)" -H "Authorization: Bearer $$CLOUD_ADMIN_TOKEN" $(3) -w '\n%{http_code}') || exit 1; \
 	status=$$(printf '%s\n' "$$reply" | tail -n 1); \
 	printf '%s\n' "$$reply" | sed '$$d'; \

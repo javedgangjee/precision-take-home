@@ -1,14 +1,12 @@
 
-
-https://github.com/user-attachments/assets/ec107d13-7232-49df-921c-b7585e2d9c1d
-
-
-
-
-
 # Bin There Done That
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
+
+**N=100, 1 million samples/s**
+https://github.com/user-attachments/assets/ec107d13-7232-49df-921c-b7585e2d9c1d
+
+
 
 ## Quick start
 

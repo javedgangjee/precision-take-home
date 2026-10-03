@@ -2,14 +2,12 @@
 
 ## Considerations
 
-- Pure server side rendering may be inefficient. Say N=100 and each page would be 0.5MB. At 30 fps, that would be 15 MBps.
-- MJPEG is a solid option but I think you would trade away front end interactions.
+- Pure server side rendering may be inefficient. At N=100 and assume each page is 0.5MB, then at 30 fps, that would be 15 MBps.
+- MJPEG is a solid option, but I think you would not be able to interact with the front end.
 
 ## Proposed Approach
 
-
 - I would propose a hybrid approach where the server does the layout and computation and the client side just paints the colours
-
 
 - The server loads the html and only updates when something fundamental needs to change such as N.
 

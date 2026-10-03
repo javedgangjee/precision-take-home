@@ -9,16 +9,16 @@
 - `/changelog`
 
 ## Method
-The project used a personal take on spec-driven development by JetBrains. This has been used numerous times on personal projects and given the best results. It depends heavily on the author being in charge of every decision.
+The project used a personal take on **spec-driven development** by JetBrains. This has been used numerous times on personal projects and given the best results. It depends heavily on the author being in charge of every decision and reviewing all code.
 
 ![Diagram of the spec-driven method, from the context and the constitution through the feature loop to the final review](../assets/spec-driven-method.png)
 
 ### Context
 The first step is the creation of the constitution based on provided context which included the following:
-- **Brief** - The main “Bin There,Done That” PDF
-- **Overview** - Jeremy’s email which sets out the requirements
-- **System Design** - My rough initial notes about how the system should work
-- **Frontend** - Standalone html built in Claude Design project. Assumed design is not the focus of this take home. See project and prompts here:
+- **Brief** - The main “Bin There,Done That” PDF.
+- **Overview** - From the email which sets out the requirements.
+- **System Design** - My rough initial notes about how the system should work.
+- **Frontend** - Standalone html built in Claude Design project. Assumed design is not the focus of this take home.
 
 
 ### Constitution
@@ -31,14 +31,14 @@ From there each feature gets the same treatment - plan, implement, a manual revi
 The order is as such:
 - `/spec-driven constitution` - generate and review the constitution files
 For each feature:
-- `/spec-driven plan`
-- `/spec-driven implement`
-- Review stage - done manually for take home
-- `/spec-driven validate`
-- Merge into main
-- `/spec-driven replan`
-- Repeat steps 2 - 7 till done all features
-- Review, cleanup
+- `/spec-driven plan` - chalk out the plan for the feature against the roadmap and requirements.
+- `/spec-driven implement` - Code generation phase
+- Review stage
+- `/spec-driven validate` - run the validation tests and report results
+- Merge into `main`
+- `/spec-driven replan` - update the changelog and roadmap to reflect the new state of the repo.
+- Repeat steps till done all features in the roadmap are complete.
+- Final review and cleanup
 
 ### Documentation
 The `docs` folder contains 3 items of interest:

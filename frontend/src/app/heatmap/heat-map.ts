@@ -52,10 +52,8 @@ export class HeatMap {
   }
 
   private start(): void {
-    // setup
     this.ctx = this.canvas().nativeElement.getContext('2d');
     this.observer = new ResizeObserver(() => this.layout()); // listens for host size changes
-    // Frame loop
     this.observer.observe(this.host.nativeElement);
     document.fonts?.ready.then(() => this.store.markDirty());
     // Runs 60 times/sec for each frame
@@ -70,11 +68,13 @@ export class HeatMap {
     this.frameId = requestAnimationFrame(loop);
   }
 
+  /** Stops the requestAnimationFrame loop and the ResizeObserver. */
   private stop(): void {
     cancelAnimationFrame(this.frameId);
     this.observer?.disconnect();
   }
 
+  /** Draws the grid and the axis labels on the canvas. */
   private draw(): void {
     if (this.ctx) {
       this.renderer.draw(this.ctx, this.store.counts, this.gridDevicePx, this.pixelRatio);

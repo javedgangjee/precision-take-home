@@ -1,10 +1,11 @@
 
 # Bin There Done That
 
-This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
+This repo is my take-home project for the Precision Neuroscience. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-**N=100, 1 million samples/s**
-https://github.com/user-attachments/assets/ec107d13-7232-49df-921c-b7585e2d9c1d
+
+https://github.com/user-attachments/assets/acb5b48f-f38e-4488-83e2-ef69b1040f33
+
 
 
 
@@ -56,6 +57,13 @@ The `docs/specs/tech-stack.md` file gives the version of each tool and the detai
 - **Latency** - from generation to render. At 20,000 samples per second and a batch interval of 50 ms. Each run held 1,200 batches over 60 seconds.
 - **Load test** - raised the samples per second with one client, and then raised the number of clients at 20,000 samples per second. Each step has 3 runs of 30 seconds. A run passes when the p99 of the total latency is at most 100 ms and the lowest frame rate is at least 54 fps. A step passes when all 3 runs pass.
 CPU was the limit in both cases
+
+**N=100, 1 million samples/s**
+
+
+https://github.com/user-attachments/assets/d935170b-931b-4b74-9634-db7d5d56a9b1
+
+
 
 ## AI toolchain
 

@@ -3,7 +3,7 @@
 ## Considerations
 
 - Pure server side rendering may be inefficient. At N=100 and assume each page is 0.5MB, then at 30 fps, that would be 15 MBps.
-- MJPEG is a solid option, but I think you would not be able to interact with the front end.
+- MJPEG is a solid option
 
 ## Proposed Approach
 
@@ -16,7 +16,7 @@
 ```
 event: update
 id: 1234
-data:{"max":10000, "colours":[0,12,255,87]}
+data:{"max_count":10000, "colours":[0,12,255,87]}
 ```
 
 - The server does generation, binning and counting. It computes the colour and just sends that in the packet with 0 meaning the cell has no hits, 255 being the max.

@@ -42,8 +42,8 @@ For each feature:
 
 ### Documentation
 The `docs` folder contains 3 items of interest:
-- `docs/specs/` is the source of truth for what to build. The `features/` folder has one folder per feature, and each one holds `requirements.md`, `plan.md`, and `validation.md`.
-- `docs/ai/` shows how I used AI on the project. `ai-changes.md` records how I changed the AI output and why.
-  - `docs/ai/logs/` holds the Claude Code session transcript for each spec-driven step, with one folder per feature.
-  - `docs/ai/skill/` holds a copy of the custom spec-driven skill.
-- `docs/bonus/` holds my answers to the bonus questions. `3d.md` covers the 3D case and `server_side_rendering.md` covers server side rendering.
+- **Specs** - `docs/specs/` is the source of truth for what to build. The `features/` folder has one folder per feature, and each one holds `requirements.md`, `plan.md`, and `validation.md`.
+- **AI usage** - `docs/ai/` shows how I used AI on the project. `ai-changes.md` records how I changed the AI output and why.
+  - **Logs** - `docs/ai/logs/` holds the Claude Code session transcript for each spec-driven step, with one folder per feature.
+  - **Skill** - `docs/ai/skill/` holds a copy of the custom spec-driven skill.
+- **Bonus** - `docs/bonus/` holds my answers to the bonus questions. `3d.md` covers the 3D case and `server_side_rendering.md` covers server side rendering.

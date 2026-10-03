@@ -4,23 +4,25 @@ Each heading after the summary gives the feature number, the feature name, and t
 
 ## Summary
 
-This list gives the trade-offs that most affect the result. The sections below give every trade-off.
+This table gives the trade-offs that most affect the result. The sections below give every trade-off.
 
-- The stream uses Server-Sent Events instead of WebSockets, because the client sends nothing to the server. The cost is that any future client-to-server message needs a separate HTTP call.
-- The server generates one shared stream for all clients, so the server load stays flat as clients join. The cost is that clients cannot have their own settings.
-- Delivery is lossy and best effort. Each client has a queue of at most 2 batches, and a full queue drops its oldest batch. The cost is gaps in the counts on a slow client or after a reconnect.
-- The server encodes each batch to JSON once, with compact separators, and sends the same string to every client. The batch stays a plain JSON array, so the server does not use base64 or gzip. The cost is a larger payload than a packed format.
-- The generator uses a uniform distribution, because it is the simplest to test. The cost is a nearly flat heat map.
-- A change to N resets all counts to zero, so memory stays fixed. The cost is that the history is lost when N changes.
-- The client draws the grid on a canvas and redraws at most once per display frame. The cost is up to one frame of added latency, and the cells are not in the DOM.
-- The color scale sweeps 259° of hue from #1E00FF to #FF0033, so neighboring counts are easier to tell apart. The cost is that the ends are not pure blue and pure red.
-- The frame rate warning compares the reading with a fixed target of 60 fps. The cost is that a 120 Hz display running at 60 fps shows no warning.
-- The client drops a live stream after 5 s with no batch and reconnects with a backoff from 1 s up to 30 s. The cost is more code to own than the built-in EventSource retry.
-- The service runs one task in a public subnet with no NAT gateway, and the stack costs about $35 a month. The cost is about one minute of downtime on each deploy.
-- The admin API is a set of HTTP endpoints with one shared bearer token and no admin web page. The cost is that a reviewer needs a terminal to change the live settings, and the token does not rotate.
-- The client measures the clock offset with `GET /time` and compares the p99 of the total latency of a run with the 100 ms target. The cost is an error of at most half of the round trip, and the slowest 1 percent of batches can be above the target.
-- The extra clients in the load test are curl processes on my laptop. The cost is that they share one home link, and they do not parse or draw.
-- The default stays at 20,000 samples per second, although 1,000,000 passed the load test. The lower rate leaves CPU for several reviewers at once. The cost is that the default client shows a rate far below the measured limit.
+| What I chose | What I did not choose | Cost |
+| --- | --- | --- |
+| Stream uses **Server-Sent Events**, because the client sends nothing to the server. | **WebSockets**, which give a two-way channel. | Any future client-to-server message needs a separate HTTP call. |
+| The server generates **one shared stream** for all clients, so the server load stays flat as clients join. | Server does not generate **a stream for each client**. | Clients cannot have their own settings. |
+| Delivery is **lossy and best effort**. Each client has a **queue of at most 2 batches**, and a full queue drops its oldest batch. | Server does not **buffer or replay** batches for a client that falls behind or disconnects. | The counts have gaps on a slow client or after a reconnect. |
+| Server encodes each batch to **JSON once**, with **compact separators**, and sends the same string to every client. The batch stays a plain JSON array. | Server does not use **base64** of packed integers or **gzip**. | The payload is larger than a packed format and not what the brief states |
+| Generator uses a **uniform distribution**, because it is the simplest to test. | Did not build the **Hotspot mode**, which looks more like an electrode array. | The heat map is nearly flat. |
+| A change to N **resets all counts** to zero, so memory stays fixed. | The client does not **keep the raw values** to bin them again at the new N. | The history is lost when N changes. |
+| The client draws the grid on a **canvas** and redraws at most **once per display frame**. | The client does not use **one DOM or SVG element per cell**, and it does not redraw **once per batch**. | The redraw adds up to one frame of latency, and the cells are not in the DOM. |
+| The color scale sweeps **259° of hue** from #1E00FF to #FF0033, so neighboring counts are easier to tell apart. | The scale does not span **240°** from pure blue to pure red. | The ends are not pure blue and pure red but provide slightly more contrast. |
+| The frame rate warning compares the reading with a **fixed target of 60 fps**. | The warning does not use the **peak since load**, which is low when the page loads under heavy load. | A 120 Hz display running at 60 fps shows no warning. |
+| The client drops a live stream after **5 s with no batch** and reconnects with a **backoff** from 1 s up to 30 s. | The client does not use the **built-in EventSource retry**, which has a fixed delay but does not retry if response is not 200. | The client has more code to own. |
+| The service runs **one task** in a **public subnet**, and the stack costs about $35 a month. | The VPC has no **NAT gateway**, which costs about $32 a month in each zone. A deploy does not run the **old and new tasks together**. | Each deploy causes about one minute of downtime. |
+| The admin API is a set of **HTTP endpoints** with **one shared bearer token**. | No**admin web page**, and the API does not use **IAM signing**. | I change live settings, and the token does not rotate. |
+| The client measures the **clock offset** with `GET /time` and compares the **p99** of the total latency of a run with the 100 ms target. | The client does not **trust both clocks**, and the check does not use the **slowest batch**. | The offset has an error of at most half of the round trip, and the slowest 1 percent of batches can be above the target. |
+| The extra clients in the load test are **curl processes** on my laptop. | I did not run the extra clients as **browser tabs** or on **other machines**. | They share one home link, and they do not parse or draw. |
+| The default stays at **20,000 samples per second**, which leaves CPU for several reviewers at once. | The default is not **1,000,000**, which is the highest rate that passed the load test. | The default client shows a rate far below the measured limit. |
 
 ## Constitution
 

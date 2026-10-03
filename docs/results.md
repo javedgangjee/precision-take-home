@@ -6,10 +6,8 @@ The client measures the time of each batch from generation to render. The README
 
 ### Run conditions
 
-- I made both runs on 2026-10-02 with the code of feature 8.
-- The cloud run used the server at https://api.precision.jgangjee.com, which is one Fargate task with 0.25 vCPU on ARM64 behind a load balancer in us-east-2.
-- The local run used the same image in Docker Desktop on the laptop, from `make docker`.
-- Both servers ran at 20,000 samples per second, a batch interval of 50 ms, and a max value of 10,000. Each batch holds 1,000 integers. These are not the settings in the plan, which were 5,000 samples per second and a max value of 1,024.
+
+- Both local and cloud servers ran at 20,000 samples per second, a batch interval of 50 ms, and a max value of 10,000. Each batch holds 1,000 integers. These are not the settings in the plan, which were 5,000 samples per second and a max value of 1,024.
 - The client ran from `make frontend` in Chrome 154 on a MacBook Air with an Apple M4 chip and a 60 Hz display, with N = 32, one client, and the tab in front.
 - Each run started with `latency.reset()` and ran for 60 seconds, so each report holds 1,200 batches.
 
@@ -100,11 +98,11 @@ Every step passes, so the part ended at its last step. The CPU rows are the minu
 
 The part used 20,000 samples per second. One Chrome tab measured, and each other client was a curl process on the laptop that read the stream and dropped the data. The row for 1 client is the first step of the first part.
 
-| Clients in total | Curl clients | p99 of the total in ms | Lowest fps | Batches | CPU average in percent | CPU maximum in percent | Result |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | 0 | 28.897, 29.058, 29.075 | 60, 60, 60 | 600, 601, 601 | 5.8 to 6.1 | 6.4 | The step passes. |
-| 5 | 4 | 24.501, 24.571, 25.102 | 60, 60, 60 | 601, 600, 601 | 9.0 to 9.2 | 9.6 | The step passes. |
-| 100 | 99 | 38.155, 37.869, 37.669 | 60, 60, 60 | 601, 601, 600 | 76.4 to 78.2 | 81.8 | The step passes. |
+| Clients in total | Curl clients | p99 of the total in ms | Batches | CPU average in percent | CPU maximum in percent | Result |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 0 | 28.897, 29.058, 29.075 | 600, 601, 601 | 5.8 to 6.1 | 6.4 | Pass |
+| 5 | 4 | 24.501, 24.571, 25.102 | 601, 600, 601 | 9.0 to 9.2 | 9.6 | Pass |
+| 100 | 99 | 38.155, 37.869, 37.669 | 601, 601, 600 | 76.4 to 78.2 | 81.8 | Pass |
 
 The plan had steps at 2, 10, 20, and 50 clients. I went from 5 clients straight to 100, and that step passes, so the other steps did not run. After each step, the number of curl clients was the number that the step started, so no curl client lost its stream.
 

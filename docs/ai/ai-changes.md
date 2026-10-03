@@ -4,26 +4,29 @@ Each heading after the summary gives the feature number, the feature name, and t
 
 ## Summary
 
-This list gives the changes that most affect the result. The sections below give every change.
+This list gives the changes that most affect the result:
 
-- The AI did not plan how the client at localhost:4200 reaches the backend on another origin. I found the gap and chose CORS on the backend over an Angular dev proxy, because the same code works locally and on Fargate.
-- The AI proposed a queue of 10 batches per client. I cut it to 2, because 10 batches add up to 0.5 s of delay against a 100 ms latency target.
-- The AI planned to let FastAPI encode each batch to JSON once for every client. I asked whether the server did any duplicate work. The AI timed the encode at 2.94 ms per batch per client, which would fill the task at about 4 clients, so the broadcaster now encodes each batch once.
-- The AI encoded each batch with the default JSON separators. I asked for a smaller payload that still works over SSE, and the compact separators cut a default batch by 20 percent and keep the JSON array.
-- The AI built the batch loop to make every missed batch in a burst after a stall. A one hour stall would make 72,000 batches that the client queues drop, so I had the loop skip the missed ticks.
-- The AI said that the lifespan type was not deprecated, because it checked only for runtime warnings. My editor flagged the type, and I had the AI change it.
-- The AI put the render loop, the drawing, and the color scale in one heat map component. I asked for thin components, so the drawing moved into a renderer class and the state lives in one store.
-- The AI closed each frame rate window on the first frame after 1 s and used the raw frame count. After a stall, 60 frames over 2 s read as 60 fps. I found the bug, and the reading now divides the count by the real window length.
-- The AI left the redraw after a resize to the next frame, so the grid went blank while I resized. I changed the code to draw at once.
-- The AI let the test source worker post batches with no limit. I asked for the same queue of 2 as the server, so a slow main thread does not build a backlog.
-- The roadmap gave feature 7 three messages, which were an init packet, an update packet, and a pause event. I asked for one settings packet that holds the full state.
-- The AI wrote that the server adds its timestamps to each batch. I asked for the timestamps in the SSE `id` field with the sequence number, so the data stays a JSON array of integers.
-- The AI labeled the times in the CPU table as UTC and did not check them. I asked the AI to confirm, and the times were 4 hours off, so a row did not match the run it belonged to.
-- I removed three backend tests that the AI wrote, because they repeated other tests or added nothing.
-- I removed the batch interval part of the load test before it ran. A longer interval adds no wait to the total latency, so the part proved nothing.
+- AI did not plan how the client at localhost:4200 reaches the backend on another origin. I found the gap and chose CORS on the backend over an Angular dev proxy, because the same code works locally and on Fargate.
+- AI proposed a queue of 10 batches per client. I cut it to 2, because 10 batches add up to 0.5 s of delay against a 100 ms latency target.
+- AI planned to let FastAPI encode each batch to JSON once for every client. I asked whether the server did any duplicate work. The AI timed the encode at 2.94 ms per batch per client, which would fill the task at about 4 clients, so the broadcaster now encodes each batch once.
+- AI encoded each batch with the default JSON separators. I asked for a smaller payload that still works over SSE, and the compact separators cut a default batch by 20 percent and keep the JSON array.
+- AI built the batch loop to make every missed batch in a burst after a stall. A one hour stall would make 72,000 batches that the client queues drop, so I had the loop skip the missed ticks.
+- AI said that the lifespan type was not deprecated, because it checked only for runtime warnings. My editor flagged the type, and I had the AI change it.
+- AI put the render loop, the drawing, and the color scale in one heat map component. I asked for thin components, so the drawing moved into a renderer class and the state lives in one store.
+- AI closed each frame rate window on the first frame after 1 s and used the raw frame count. After a stall, 60 frames over 2 s read as 60 fps. I found the bug, and the reading now divides the count by the real window length.
+- AI left the redraw after a resize to the next frame, so the grid went blank while I resized. I changed the code to draw at once.
+- AI let the test source worker post batches with no limit. I asked for the same queue of 2 as the server, so a slow main thread does not build a backlog.
+- roadmap gave feature 7 three messages, which were an init packet, an update packet, and a pause event. I asked for one settings packet that holds the full state.
+- AI wrote that the server adds its timestamps to each batch. I asked for the timestamps in the SSE `id` field with the sequence number, so the data stays a JSON array of integers.
+- AI labeled the times in the CPU table as UTC and did not check them. I asked the AI to confirm, and the times were 4 hours off, so a row did not match the run it belonged to.
+- Removed three backend tests that the AI wrote, because they repeated other tests or added nothing.
+- Removed the batch interval part of the load test before it ran. A longer interval adds no wait to the total latency, so the part proved nothing.
 
 
 ## Raw Entries
+
+The following shows every change that I made to the AI output as logged by the AI. 
+
 ### Constitution
 
 - The AI drafted a roadmap with a final write-up feature. I removed it. The README, this log, and the other logs now update during every feature, so the documents stay current with the code.

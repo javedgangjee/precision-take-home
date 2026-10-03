@@ -43,8 +43,13 @@ The `docs/specs/tech-stack.md` file gives the version of each tool and the detai
 
 ## Results
 
-- Cloud server - single Fargate task with 0.25 vCPU. 
-- Client - Chrome on a MacBook Air with a 60 Hz display, with N = 32.
+- **Cloud server** - single Fargate task with 0.25 vCPU. 
+
+- **Client** - Chrome on a MacBook Air with a 60 Hz display, with N = 32.
+- **Latency** - from generation to render. At 20,000 samples per second and a batch interval of 50 ms. Each run held 1,200 batches over 60 seconds.
+
+- **Load test** - raised the samples per second with one client, and then raised the number of clients at 20,000 samples per second. Each step has 3 runs of 30 seconds. A run passes when the p99 of the total latency is at most 100 ms and the lowest frame rate is at least 54 fps. A step passes when all 3 runs pass.
+CPU was the limit in both cases
 
 ### Latency
 
@@ -103,11 +108,15 @@ The project used a personal take on spec-driven development by JetBrains. This h
 The `docs/ai/ai-toolchain.md` file gives the skills and each step of the method.
 
 ## Documentation
-- `docs/specs/` is the source of truth for what to build. The `features/` folder has one folder per feature, and each one holds `requirements.md`, `plan.md`, and `validation.md`.
-- `docs/ai/` shows how I used AI on the project. `ai-changes.md` records how I changed the AI output and why.
-  - `docs/ai/logs/` holds the Claude Code session transcript for each spec-driven step, with one folder per feature.
-  - `docs/ai/skill/` holds a copy of the custom spec-driven skill.
-- `docs/bonus/` holds my answers to the bonus questions. `3d.md` covers the 3D case and `server_side_rendering.md` covers server side rendering.
-- `docs/assumptions.md` records the assumptions I made.
-- `docs/results.md` gives the measured latency for each stage and compares the total with the 100 ms target. It also gives the limits from the load test.
-- `docs/trade-offs.md` records the trade-offs I made.
+- **Specs** - `docs/specs/` is the source of truth for what to build. The `features/` folder has one folder per feature, and each one holds `requirements.md`, `plan.md`, and `validation.md`.
+- **AI usage** - `docs/ai/` shows how I used AI on the project. `ai-changes.md` records how I changed the AI output and why.
+  - **Logs** - `docs/ai/logs/` holds the Claude Code session transcript for each spec-driven step, with one folder per feature.
+  - **Skill** - `docs/ai/skill/` holds a copy of the custom spec-driven skill.
+- **Bonus** - `docs/bonus/` holds my answers to the bonus questions. `3d.md` covers the 3D case and `server_side_rendering.md` covers server side rendering.
+- **Assumptions** - `docs/assumptions.md` records the assumptions I made.
+- **Results** - `docs/results.md` gives the measured latency for each stage and compares the total with the 100 ms target. It also gives the limits from the load test.
+- **Trade-offs** - `docs/trade-offs.md` records the trade-offs I made.
+
+## Out of Scope 
+- **Hotspot generation** - 2-3 Gaussian peaks
+- **Admin web page** - Control settings, pause/resume

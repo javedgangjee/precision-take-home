@@ -1,0 +1,184 @@
+ ▐▛███▛█   Claude Code v2.1.288
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home/backend
+
+
+❯ /code-review do an adversarial review of the code base compared to the brief. 
+  Do not recommend unnecessary changes. Sort them by high, medium, low. Speak   
+  plainly.                                                                      
+  ⎿  Running in the background as @code-review
+
+⏺ Agent "/code-review do an adversarial review of the code…" finished · 21m 23s
+
+  Ran 3 shell commands (ctrl+o to expand)
+
+⏺ The review found no high-severity gap. Every item in the brief has working
+  code or a document. The review agent ran the tests and linters, and all pass
+  (101 backend, 178 frontend, 7 infra). I rechecked the file-level findings
+  against your current working tree. I did not rerun the two runtime experiments
+  (items 1 and 7).
+
+  High
+
+  There are none.
+
+  Medium
+
+  1. A stalled client stays subscribed after it disconnects
+     (backend/app/main.py:68). The agent opened /stream, read nothing for 15 s,
+     and reset the socket. The subscriber count stayed at 1 until a full garbage
+     collection ran, and Uvicorn logged an ERROR traceback with
+     anyio.BrokenResourceError. A laptop that sleeps with the tab open takes
+     this path, and the broadcaster keeps filling the leaked queue until a
+     restart. No test covers a disconnect. The agent tested a fix, and a yield
+     dependency that subscribes and unsubscribes cleared the stalled client
+     within 1 s.
+  2. The cloud server accepts only port 4200
+     (infra/infra/precision_stack.py:21). If a reviewer has port 4200 in use, ng
+     serve moves to another port and the browser blocks /stream and /time. The
+     badge stays on Connecting and the grid stays empty, with no error shown.
+     The stream is open to curl, so the origin list protects nothing. An
+     allow_origin_regex for any localhost port in backend/app/main.py:30 removes
+     the failure and needs one deploy.
+  3. The README no longer points to system.md (README.md:69). Your uncommitted
+     README edit removed the old wrong path, and now the README has no link to
+     the run guide at all. A reviewer cannot find the local server steps, the
+     admin API, or the latency steps from the README. Makefile:97 still prints
+     docs/system.md, and that path does not exist.
+
+  Low
+
+  4. No document says how to run the tests or the linters. make test and make 
+     lint appear only in the Makefile.
+  5. README.md:51 says "CPU was the limit in both cases". docs/results.md says
+     no step failed and calls the CPU limit an assumption. The README states a
+     measured limit that the data does not show.
+  6. The default value range of 0 to 9,999 does not divide evenly into most
+     grids (backend/app/settings.py:19). At N = 32 the bottom rows settle one
+     step cooler, and at N = 80 the map shows a red band under a green band. A
+     reviewer who changes N can read this as a binning bug. No code change is
+     necessary, and one line in system.md covers it.
+  7. system.md:31 and the docstring at backend/app/broadcaster.py:50 say a slow
+     client gets fresh data from the queue of 2. The agent stalled a client for
+     15 s and it then received about 185 old batches first, because the socket
+     and Uvicorn buffers fill before the queue drops anything. No code change is
+     necessary. The wording should say that the queue limits the server memory
+     for each client.
+  8. Five documents point to places that moved.
+     - docs/results.md:5 sends the reader to a README Latency section that no
+       longer exists.
+     - docs/assumptions.md:43 says the README lists the CDK CLI as a
+       prerequisite.
+     - CLAUDE.md:5 and docs/specs/mission.md:55 name docs/ai-changes.md, but the
+       file is docs/ai/ai-changes.md.
+     - docs/trade-offs.md:152 still describes feature 10, which the roadmap no
+       longer has.
+  9. system.md:164 reads as if make deploy works for any reader. The stack holds
+     your Route 53 hosted zone id and your domain, so a deploy from another
+     account fails at the certificate. One sentence that says so fixes it.
+  10. The Windows quick start stops at the Angular usage data question
+      (README.md:25). The Makefile sets NG_CLI_ANALYTICS=false, but the
+      PowerShell steps call npx ng serve directly. Setting analytics to false in
+      frontend/angular.json removes the question on every path.
+  11. docs/bonus/3d.md:20 has a broken sentence, "the user really wouldn't be
+      able to parse use information".
+
+  I changed no file.
+
+✻ Crunched for 46s · done 11:12 AM
+
+※ recap: The adversarial review of the code base against the brief is complete, with no high findings, 3 medium, and 8 low, and I changed no file. The next action is to fix the stalled client leak in backend/app/main.py. (disable recaps in /config)
+
+❯ I'm still cleaning up the documentation. Ignore those. What remains           
+
+⏺ Two medium findings and three low findings remain in code and config.
+
+  Medium
+
+  1. A stalled client stays subscribed after it disconnects
+     (backend/app/main.py:68). The finally block runs only when the generator is
+     garbage collected, so the broadcaster keeps filling a dead queue and
+     Uvicorn logs an ERROR traceback. A yield dependency that subscribes and
+     unsubscribes fixes it. No test covers a disconnect.
+  2. The cloud server accepts only port 4200
+     (infra/infra/precision_stack.py:21). The client fails silently on any other
+     port. An allow_origin_regex for any localhost port in
+     backend/app/main.py:30 fixes it and needs one deploy.
+
+  Low
+
+  3. Makefile:97 prints docs/system.md in its error message, and the file is at
+     the repo root.
+  4. frontend/angular.json does not set analytics to false, so the Windows quick
+     start stops at the usage data question on the first run.
+  5. The docstring at backend/app/broadcaster.py:50 says a slow client gets
+     fresh data from the queue of 2. A stalled client gets the old buffered
+     batches first, so the docstring should say that the queue limits the server
+     memory for each client.
+
+✻ Brewed for 7s · done 11:27 AM
+
+❯ I fixed 3. Set NG_CLI_ANALYTICS=false. Change the docstring in 5.             
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Update(app/broadcaster.py)
+  ⎿  Added 3 lines, removed 2 lines
+      47  class Broadcaster:
+      48      """Makes one shared stream of batches and hands each batch 
+          to every subscriber.
+      49  
+      50 -    Each subscriber has a small queue. A full queue drops its o
+         -ldest batch, so a                                              
+      51 -    slow client gets fresh data and never slows the others.    
+      50 +    Each subscriber has a small queue. A full queue drops its o
+         +ldest batch, so the                                            
+      51 +    queue limits the server memory for each client and a slow c
+         +lient never slows                                              
+      52 +    the others.                                                
+      53  
+      54      The broadcaster also keeps the settings packet. The packet 
+          never goes into a
+      55      queue, so a slow client cannot lose it. Each stream reads t
+          he packet from here
+
+⏺ Update(~/Documents/Projects/_precision/precision-take-home/README.md)
+  ⎿  Added 1 line
+      22  git clone https://github.com/javedgangjee/precision-take-home.g
+          it
+      23  cd precision-take-home\frontend
+      24  npm ci
+      25 +$env:NG_CLI_ANALYTICS = "false"                                
+      26  npx ng serve --open
+      27  ```
+      28  
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+  ⎿  Loaded ../../../../.claude/rules/python.md
+
+⏺ Both changes are in place.
+
+  - The docstring at backend/app/broadcaster.py:50 now says that the queue
+    limits the server memory for each client and that a slow client never slows
+    the others. Ruff passes on the file.
+  - The Makefile already sets NG_CLI_ANALYTICS, so I added $env:NG_CLI_ANALYTICS
+    = "false" to the Windows quick start in README.md, on the line before npx 
+    ng serve --open. That was the only path without it.
+
+  system.md:31 still has the old "fresh data" wording, so it now differs from
+  the docstring.
+
+  The two medium findings remain open. They are the stalled client leak in
+  backend/app/main.py:68 and the port 4200 origin list in
+  infra/infra/precision_stack.py:21.
+
+✻ Crunched for 30s · done 11:31 AM
+
+❯ Leaving 1 & 2. Risk is low for take home.                                     
+
+⏺ Understood. Nothing else from the review is open.
+
+  Both are deliberate choices, so they fit the project rule for
+  docs/trade-offs.md if you want them on record while you clean up the docs.
+
+✻ Baked for 4s · done 11:39 AM

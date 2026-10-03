@@ -47,8 +47,9 @@ class SettingsPacket(BaseModel):
 class Broadcaster:
     """Makes one shared stream of batches and hands each batch to every subscriber.
 
-    Each subscriber has a small queue. A full queue drops its oldest batch, so a
-    slow client gets fresh data and never slows the others.
+    Each subscriber has a small queue. A full queue drops its oldest batch, so the
+    queue limits the server memory for each client and a slow client never slows
+    the others.
 
     The broadcaster also keeps the settings packet. The packet never goes into a
     queue, so a slow client cannot lose it. Each stream reads the packet from here

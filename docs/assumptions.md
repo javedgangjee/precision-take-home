@@ -10,6 +10,7 @@ This table gives the assumptions that most affect the result. The sections below
 | --- | --- |
 | The bin index is **`(v - 1) mod N²`**. | This rule matches both brief examples and the example input (e) in the brief picture. The value 0 goes to cell `<N-1, N-1>`. |
 | **Row 0 is at the bottom** of the grid and **column 0 is at the left**. | The brief picture shows the grid this way. |
+| The default N is **32**, to match the number of electrodes on a Precision array. | A 32 by 32 grid has 1,024 cells, and the Layer 7 Cortical Interface has 1,024 electrodes. |
 | A count of 1 is **full blue** and the max count is **full red**. | The colors of the brief picture are a sketch, so a cell with 5 of 10 hits is green on the client and not yellow. |
 | Each value is a **uniform random integer** from 0 to the maximum value minus 1. | The default maximum value is 10,000.  |
 | The **reviewers are the only users**, and the client runs only on the **local machine**. | The CORS rule of the cloud server allows only `http://localhost:4200` and `http://127.0.0.1:4200`. |
@@ -26,6 +27,7 @@ This table gives the assumptions that most affect the result. The sections below
 - The bin index is (v - 1) mod N². This rule is the only one I found that matches both brief examples and the example input (e) in the brief picture.
 - Row 0 is at the bottom of the grid and column 0 is at the left, as in the brief picture.
 - The value 0 goes to cell <N-1, N-1>, because (0 - 1) mod N² is N² - 1.
+- The default N is 32, to match the number of electrodes on a Precision array. A 32 by 32 grid has 1,024 cells, and the Layer 7 Cortical Interface has 1,024 electrodes.
 - A count of 1 is full blue and the max count is full red, as in the 1 to 10 scale of the brief picture. When the max count is 1, every non-empty cell is full blue.
 - The reviewers are the only users of the system.
 - The server settings come from environment variables at start.

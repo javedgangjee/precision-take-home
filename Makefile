@@ -94,7 +94,7 @@ destroy:
 # It sends no request when the token is not set, and it fails when the status is not 200.
 # The shell reads the token, so make never prints it.
 define cloud_admin
-@test -n "$$CLOUD_ADMIN_TOKEN" || { echo "CLOUD_ADMIN_TOKEN is not set. The Deploy section of docs/system.md gives the commands."; exit 1; }
+@test -n "$$CLOUD_ADMIN_TOKEN" || { echo "CLOUD_ADMIN_TOKEN is not set. The Deploy section of system.md gives the commands."; exit 1; }
 @reply=$$(curl -sS -X $(1) "$(CLOUD_SERVER)$(2)" -H "Authorization: Bearer $$CLOUD_ADMIN_TOKEN" $(3) -w '\n%{http_code}') || exit 1; \
 	status=$$(printf '%s\n' "$$reply" | tail -n 1); \
 	printf '%s\n' "$$reply" | sed '$$d'; \

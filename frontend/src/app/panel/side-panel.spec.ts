@@ -40,8 +40,8 @@ describe('SidePanel', () => {
     await render();
   });
 
-  it('shows "32 × 32" in the N field at start', () => {
-    expect(field().value).toBe('32 × 32');
+  it('shows "32" in the N field at start', () => {
+    expect(field().value).toBe('32');
   });
 
   it('shows the stream badge above the grid size control', () => {
@@ -53,13 +53,13 @@ describe('SidePanel', () => {
     ).toBeTruthy();
   });
 
-  it('shows "33 × 33" and resets the samples received after a click on plus', async () => {
+  it('shows "33" and resets the samples received after a click on plus', async () => {
     store.applyBatch([1, 2, 3]);
     store.frame(0);
     await render();
     plus().click();
     await render();
-    expect(field().value).toBe('33 × 33');
+    expect(field().value).toBe('33');
     expect(readoutValue('Samples received')).toBe('0');
   });
 
@@ -96,6 +96,85 @@ describe('SidePanel', () => {
     expect(store.n()).toBe(43);
     field().dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
     expect(store.n()).toBe(42);
+  });
+
+  it('shows "N ranges from 1 to 100" below the N field', () => {
+    const hint = element.querySelector('#grid-size-hint');
+    expect(hint?.textContent?.trim()).toBe('N ranges from 1 to 100');
+    expect(field().getAttribute('aria-describedby')).toBe('grid-size-hint');
+    expect(field().readOnly).toBe(false);
+  });
+
+  it('sets N to the typed value on Enter', async () => {
+    field().value = '50';
+    field().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await render();
+    expect(store.n()).toBe(50);
+    expect(field().value).toBe('50');
+  });
+
+  it('sets N to the typed value on blur', async () => {
+    field().value = '40';
+    field().dispatchEvent(new Event('blur'));
+    await render();
+    expect(store.n()).toBe(40);
+    expect(field().value).toBe('40');
+  });
+
+  it('snaps a typed value above 100 to 100 and below 1 to 1', async () => {
+    field().value = '250';
+    field().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await render();
+    expect(store.n()).toBe(100);
+    expect(field().value).toBe('100');
+    field().value = '0';
+    field().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    await render();
+    expect(store.n()).toBe(1);
+    expect(field().value).toBe('1');
+  });
+
+  it('shows "100" again when N is 100 and the typed value is above 100', async () => {
+    store.setN(100);
+    await render();
+    field().value = '500';
+    field().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    expect(store.n()).toBe(100);
+    expect(field().value).toBe('100');
+  });
+
+  it('keeps text typed right after Enter', async () => {
+    field().value = '250';
+    field().dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter' }));
+    field().value = '7';
+    await render();
+    expect(field().value).toBe('7');
+  });
+
+  it('keeps N and shows it again when the typed text has no number', async () => {
+    field().value = 'abc';
+    field().dispatchEvent(new Event('blur'));
+    expect(store.n()).toBe(32);
+    expect(field().value).toBe('32');
+  });
+
+  it('keeps N and shows it again on Escape', () => {
+    field().value = '70';
+    field().dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(store.n()).toBe(32);
+    expect(field().value).toBe('32');
+  });
+
+  it('selects the whole text on focus and keeps it selected after the first mouseup', () => {
+    field().dispatchEvent(new Event('focus'));
+    expect(field().selectionStart).toBe(0);
+    expect(field().selectionEnd).toBe('32'.length);
+    const first = new MouseEvent('mouseup', { cancelable: true });
+    field().dispatchEvent(first);
+    expect(first.defaultPrevented).toBe(true);
+    const second = new MouseEvent('mouseup', { cancelable: true });
+    field().dispatchEvent(second);
+    expect(second.defaultPrevented).toBe(false);
   });
 
   it('shows "1,024" after 1,024 samples', async () => {

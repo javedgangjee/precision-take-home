@@ -85,6 +85,12 @@ This list gives the assumptions that most affect the result. The sections below 
 - The target frame rate is 60 fps. The red error line shows when the reading is below 90 percent of 60, which is 54 fps. The line hides for the first second, before the meter has a reading.
 - The test source rate goes up to 100,000,000 samples per second, so the stress test can push the browser past 10,000,000.
 
+## Feature 3, Frontend, after replan
+
+- The N field reads the first whole number in its text, so the text "50.7" sets N to 50.
+- A typed number below 1 snaps to 1, in the same way that a number above 100 snaps to 100.
+- Text with no number is a mistake, so N stays the same and the field shows it again.
+
 ## Feature 4, Stream, implement
 
 - A batch arrives at least once each second at the lowest server settings. So a live stream with no batch for 5 s counts as dropped, even when the connection does not report an error.

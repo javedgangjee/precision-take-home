@@ -70,7 +70,9 @@ hr {
   flex: 1;
   display: flex;
   align-items: center;
+  box-sizing: border-box;
   height: 32px;
+  border: 1px solid var(--border-control);
   border-radius: var(--radius-sm);
   background: var(--surface-card);
 }
@@ -90,7 +92,13 @@ hr {
   font-size: 15px;
   font-weight: 600;
   color: var(--ink);
-  cursor: default;
+}
+
+.field-note {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--ink-secondary);
 }
 
 /* The gap is smaller than the panel gap, so the seven readouts fit in a 720 px window. */

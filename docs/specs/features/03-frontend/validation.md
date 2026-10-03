@@ -86,11 +86,18 @@ The renderer tests use a fake 2D context that records each fill.
 ### V9. The side panel changes N and shows the readouts
 
 - The page header shows "Bin There, Done That".
-- The N field shows "32 × 32" at start.
-- A click on the plus button shows "33 × 33" and sets the samples received to 0.
+- The N field shows "32" at start.
+- A click on the plus button shows "33" and sets the samples received to 0.
 - The minus button is hidden at N = 1, and the plus button is hidden at N = 100. Neither button has the disabled attribute.
 - At N = 2, a click on the minus button hides it, and at N = 99, a click on the plus button hides it.
 - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and ArrowDown takes away 1.
+- The note below the N field shows "N ranges from 1 to 100", and the field is not read only.
+- The text "50" and Enter set N to 50, and the field shows "50". The text "40" and a blur set N to 40.
+- The text "250" sets N to 100, and the text "0" sets N to 1.
+- At N = 100, the text "500" keeps N at 100, and the field shows "100" again.
+- Text typed right after Enter stays in the field, and the next change detection does not erase it.
+- The text "abc" and a blur keep N at 32, and the field shows "32" again. Escape does the same for the text "70".
+- Focus selects all of the text in the field, and the first mouseup after focus does not clear the selection.
 - After 1,024 samples, the samples received readout shows "1,024".
 - The frame rate readout shows the meter value with the unit "fps".
 - When the meter reads 30, the panel shows the line "Below the expected 60 fps" below the frame rate, with the class that sets the color to --danger-text.

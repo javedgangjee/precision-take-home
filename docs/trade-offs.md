@@ -116,6 +116,10 @@ This list gives the trade-offs that most affect the result. The sections below g
 - The hotspot mode is removed from the roadmap. The project ends with the testing feature. The cost is that the heat map stays nearly flat under the uniform generator.
 - Features 8 and 9 write their findings to docs/results.md, next to the other logs. A reviewer finds the results in one place. The cost is one more file to keep current.
 
+## Feature 3, Frontend, after replan
+
+- The N field sets N on Enter or when it loses focus, and not on each key. Each change to N resets all counts, so a change on each key would reset the counts at "5" on the way to "50". The cost is that a typed number does nothing until the user presses Enter or leaves the field.
+
 ## Feature 4, Stream, implement
 
 - The Material Symbols icons load from Google Fonts, and the local subset is gone. One font serves all five icons, and a new icon needs only a change to the link. The cost is that the client needs the network for the icons, and the icons are blank until the font loads.

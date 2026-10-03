@@ -82,6 +82,11 @@ This list gives the changes that most affect the result. The sections below give
 - The AI set the test source rate limit to 10,000,000 samples per second. During the stress test, a rate of 100,000,000 fell back to the default of 100,000. I raised the limit to 100,000,000 in the code, and the AI updated the tests and the docs to match.
 - The AI compared the frame rate with the peak reading since the page loaded. I decided the client targets 60 fps in Chrome with Energy Saver off, and asked for a fixed 60 fps target instead of the peak. The AI removed the peak from the meter, kept the 90 percent margin, and hid the line until the first reading.
 
+## Feature 3, Frontend, after replan
+
+- The AI built the N field as read only, as in the HTML design, so N changed only by 1 or 10 at a time. I asked for a field that takes a typed number, so N goes to any value in one step. I also asked for the range in a note below the field, and for a number above 100 to snap to 100. The AI gave the field a border, as the design system does for a text field, so it reads as a place to type.
+- The AI kept "32 × 32" in the N field and centered the note below it with the text "1 to 100". I asked for N only in the field, so the field holds the same number that the user types. I also asked for a left-aligned note that reads "N ranges from 1 to 100".
+
 ## Feature 4, Stream, plan
 
 - The AI proposed the URL query `source=test` to run the test source from feature 3. I changed the name to `source=frontend`.

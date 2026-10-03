@@ -1,0 +1,1001 @@
+ ▐▛███▛█   Claude Code v2.1.288
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+▎ Your voice can help guide AI
+▎ Take 15 min to share your experiences with Anthropic Interviewer. Start now
+
+❯ Make the grid size label a field where I can enter the range. Put the range   
+  in a subtitle below. Snap to the max 100.                                     
+
+  Searched for 1 pattern, ran 6 shell commands (ctrl+o to expand)
+
+⏺ I am reading the grid size control and the design's text field styles. Next I
+  change the field to take typed input.
+
+  Searched for 2 patterns, ran 5 shell commands (ctrl+o to expand)
+
+⏺ I have the plan. The field will take a typed number, commit it on Enter or
+  blur, and the store already snaps values above 100 down to 100. I am writing
+  the tests first.
+
+⏺ Update(frontend/src/app/panel/side-panel.spec.ts)
+  ⎿  Added 71 lines
+       98      expect(store.n()).toBe(42);
+       99    });
+      100  
+      101 +  it('shows the range "1 to 100" below the N field', () => {  
+      102 +    const hint = element.querySelector('#grid-size-hint');    
+      103 +    expect(hint?.textContent?.trim()).toBe('1 to 100');       
+      104 +    expect(field().getAttribute('aria-describedby')).toBe('gri
+          +d-size-hint');                                                
+      105 +    expect(field().readOnly).toBe(false);                     
+      106 +  });                                                         
+      107 +                                                              
+      108 +  it('sets N to the typed value on Enter', async () => {      
+      109 +    field().value = '50';                                     
+      110 +    field().dispatchEvent(new KeyboardEvent('keydown', { key: 
+          +'Enter' }));                                                  
+      111 +    await render();                                           
+      112 +    expect(store.n()).toBe(50);                               
+      113 +    expect(field().value).toBe('50 × 50');                    
+      114 +  });                                                         
+      115 +                                                              
+      116 +  it('sets N to the typed value on blur', async () => {       
+      117 +    field().value = '40 × 40';                                
+      118 +    field().dispatchEvent(new Event('blur'));                 
+      119 +    await render();                                           
+      120 +    expect(store.n()).toBe(40);                               
+      121 +    expect(field().value).toBe('40 × 40');                    
+      122 +  });                                                         
+      123 +                                                              
+      124 +  it('snaps a typed value above 100 to 100 and below 1 to 1', 
+          +async () => {                                                 
+      125 +    field().value = '250';                                    
+      126 +    field().dispatchEvent(new KeyboardEvent('keydown', { key: 
+          +'Enter' }));                                                  
+      127 +    await render();                                           
+      128 +    expect(store.n()).toBe(100);                              
+      129 +    expect(field().value).toBe('100 × 100');                  
+      130 +    field().value = '0';                                      
+      131 +    field().dispatchEvent(new KeyboardEvent('keydown', { key: 
+          +'Enter' }));                                                  
+      132 +    await render();                                           
+      133 +    expect(store.n()).toBe(1);                                
+      134 +    expect(field().value).toBe('1 × 1');                      
+      135 +  });                                                         
+      136 +                                                              
+      137 +  it('shows "100 × 100" again when N is 100 and the typed valu
+          +e is above 100', async () => {                                
+      138 +    store.setN(100);                                          
+      139 +    await render();                                           
+      140 +    field().value = '500';                                    
+      141 +    field().dispatchEvent(new KeyboardEvent('keydown', { key: 
+          +'Enter' }));                                                  
+      142 +    expect(store.n()).toBe(100);                              
+      143 +    expect(field().value).toBe('100 × 100');                  
+      144 +  });                                                         
+      145 +                                                              
+      146 +  it('keeps N and shows it again when the typed text has no nu
+          +mber', async () => {                                          
+      147 +    field().value = 'abc';                                    
+      148 +    field().dispatchEvent(new Event('blur'));                 
+      149 +    expect(store.n()).toBe(32);                               
+      150 +    expect(field().value).toBe('32 × 32');                    
+      151 +  });                                                         
+      152 +                                                              
+      153 +  it('keeps N and shows it again on Escape', () => {          
+      154 +    field().value = '70';                                     
+      155 +    field().dispatchEvent(new KeyboardEvent('keydown', { key: 
+          +'Escape' }));                                                 
+      156 +    expect(store.n()).toBe(32);                               
+      157 +    expect(field().value).toBe('32 × 32');                    
+      158 +  });                                                         
+      159 +                                                              
+      160 +  it('selects the whole text on focus and keeps it selected af
+          +ter the first mouseup', () => {                               
+      161 +    field().dispatchEvent(new Event('focus'));                
+      162 +    expect(field().selectionStart).toBe(0);                   
+      163 +    expect(field().selectionEnd).toBe('32 × 32'.length);      
+      164 +    const first = new MouseEvent('mouseup', { cancelable: true
+          + });                                                          
+      165 +    field().dispatchEvent(first);                             
+      166 +    expect(first.defaultPrevented).toBe(true);                
+      167 +    const second = new MouseEvent('mouseup', { cancelable: tru
+          +e });                                                         
+      168 +    field().dispatchEvent(second);                            
+      169 +    expect(second.defaultPrevented).toBe(false);              
+      170 +  });                                                         
+      171 +                                                              
+      172    it('shows "1,024" after 1,024 samples', async () => {
+      173      store.applyBatch(Array.from({ length: 1024 }, (_, i) => i)
+           );
+      174      store.frame(0);
+  ⎿  Loaded ../../../../.claude/rules/typescript.md
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The 8 new tests fail as expected. Now the code.
+
+⏺ Update(frontend/src/app/panel/side-panel.html)
+  ⎿  Added 11 lines, removed 1 line
+      13        <span class="material-symbols-outlined" aria-hidden="true
+          ">remove</span>
+      14      </button>
+      15      <div class="field">
+      16 -      <input id="grid-size" type="text" readonly [value]="sizeT
+         -ext()" (keydown)="onKey($event)" />                            
+      16 +      <input                                                   
+      17 +        #sizeInput                                             
+      18 +        id="grid-size"                                         
+      19 +        type="text"                                            
+      20 +        aria-describedby="grid-size-hint"                      
+      21 +        [value]="sizeText()"                                   
+      22 +        (focus)="onFocus(sizeInput)"                           
+      23 +        (mouseup)="onMouseUp($event)"                          
+      24 +        (keydown)="onKey($event, sizeInput)"                   
+      25 +        (blur)="commit(sizeInput)"                             
+      26 +      />                                                       
+      27      </div>
+      28      <button
+      29        type="button"
+
+⏺ Update(frontend/src/app/panel/side-panel.html)
+  ⎿  Added 1 line
+      35        <span class="material-symbols-outlined" aria-hidden="true
+          ">add</span>
+      36      </button>
+      37    </div>
+      38 +  <p id="grid-size-hint" class="field-note">{{ rangeText }}</p>
+      39  </div>
+      40  <hr />
+      41  <div class="readouts">
+
+⏺ Update(frontend/src/app/panel/side-panel.ts)
+  ⎿  Added 3 lines
+      17    private readonly status = inject(StreamStatus);
+      18  
+      19    protected readonly sizeText = computed(() => `${this.store.n(
+          )} × ${this.store.n()}`);
+      20 +  protected readonly rangeText = `${MIN_N} to ${MAX_N}`;       
+      21 +  /** A mouse click that focuses the field ends with a mouseup 
+         +that would clear the selection. */                             
+      22 +  private keepSelectionOnMouseUp = false;                      
+      23    protected readonly atMin = computed(() => this.store.n() <= M
+          IN_N);
+      24    protected readonly atMax = computed(() => this.store.n() >= M
+          AX_N);
+      25    protected readonly samplesText = computed(() => numberFormat.
+          format(this.store.samples()));
+
+⏺ Update(frontend/src/app/panel/side-panel.ts)
+  ⎿  Added 35 lines, removed 2 lines
+      45      this.store.setN(this.store.n() + delta);
+      46    }
+      47  
+      48 -  /** The up and down arrow keys change N by 1, and by 10 with 
+         -Shift. */                                                      
+      49 -  protected onKey(event: KeyboardEvent): void {                
+      48 +  /** The whole text is selected on focus, so a typed value rep
+         +laces it. */                                                   
+      49 +  protected onFocus(input: HTMLInputElement): void {           
+      50 +    input.select();                                            
+      51 +    this.keepSelectionOnMouseUp = true;                        
+      52 +  }                                                            
+      53 +                                                               
+      54 +  protected onMouseUp(event: MouseEvent): void {               
+      55 +    if (this.keepSelectionOnMouseUp) {                         
+      56 +      event.preventDefault();                                  
+      57 +      this.keepSelectionOnMouseUp = false;                     
+      58 +    }                                                          
+      59 +  }                                                            
+      60 +                                                               
+      61 +  /**                                                          
+      62 +   * The up and down arrow keys change N by 1, and by 10 with S
+         +hift. Enter sets N from                                        
+      63 +   * the typed text, and Escape shows the current N again.     
+      64 +   */                                                          
+      65 +  protected onKey(event: KeyboardEvent, input: HTMLInputElement
+         +): void {                                                      
+      66      const step = event.shiftKey ? 10 : 1;
+      67      if (event.key === 'ArrowUp') {
+      68        event.preventDefault();
+     ...
+      70      } else if (event.key === 'ArrowDown') {
+      71        event.preventDefault();
+      72        this.change(-step);
+      73 +    } else if (event.key === 'Enter') {                        
+      74 +      this.commit(input);                                      
+      75 +      input.select();                                          
+      76 +    } else if (event.key === 'Escape') {                       
+      77 +      input.value = this.sizeText();                           
+      78 +      input.select();                                          
+      79      }
+      80    }
+      81 +                                                               
+      82 +  /**                                                          
+      83 +   * Sets N from the first number in the field, so "50" and "50
+         + × 50" both give 50. The store                                 
+      84 +   * snaps N to 1 to 100. Text with no number keeps N. The fiel
+         +d then shows N again, because                                  
+      85 +   * the binding does not write the same value twice.          
+      86 +   */                                                          
+      87 +  protected commit(input: HTMLInputElement): void {            
+      88 +    const match = /-?\d+/.exec(input.value);                   
+      89 +    if (match) this.store.setN(Number(match[0]));              
+      90 +    input.value = this.sizeText();                             
+      91 +  }                                                            
+      92  }
+
+⏺ Update(frontend/src/app/panel/side-panel.scss)
+  ⎿  Added 3 lines
+      66    box-shadow: var(--shadow-focus);
+      67  }
+      68  
+      69 +/* The border follows .md-input in the design system, so the fi
+         +eld reads as a place to type. */                               
+      70  .field {
+      71    flex: 1;
+      72    display: flex;
+      73    align-items: center;
+      74 +  box-sizing: border-box;                                      
+      75    height: 32px;
+      76 +  border: 1px solid var(--border-control);                     
+      77    border-radius: var(--radius-sm);
+      78    background: var(--surface-card);
+      79  }
+
+⏺ Update(frontend/src/app/panel/side-panel.scss)
+  ⎿  Added 9 lines, removed 1 line
+       93    font-size: 15px;
+       94    font-weight: 600;
+       95    color: var(--ink);
+       96 -  cursor: default;                                            
+       96  }
+       97  
+       98 +/* The note follows .md-field-note in the design system. */   
+       99 +.field-note {                                                 
+      100 +  margin: 0;                                                  
+      101 +  font-size: 11px;                                            
+      102 +  line-height: 16px;                                          
+      103 +  color: var(--ink-muted);                                    
+      104 +  text-align: center;                                         
+      105 +}                                                             
+      106 +                                                              
+      107  /* The gap is smaller than the panel gap, so the seven readout
+           s fit in a 720 px window. */
+      108  .readouts {
+      109    display: flex;
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ All 177 frontend tests pass, and lint passes. Now I update the spec, the
+  README, and the three logs.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿   README.md                                       |  2 +-
+      docs/ai-changes.md                              |  4 ++
+      docs/assumptions.md                             |  6 +++
+     … +9 lines (ctrl+o to expand)
+  ⎿  Updated README.md (+1 -1)
+      145  - Each value v goes to cell index (v - 1) mod N². The row is t
+           he index divided by N, and the column is the index mod N. On a
+            4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and
+            0 goes to cell <3,3>.
+      146  - A cell with no hits is white. A cell with hits gets a color 
+           from blue (#1E00FF) at a count of 1 through cyan, green, and y
+           ellow to red (#FF0033) at the max count.
+      147  - The color scale shows the max count at the top, the midpoint
+            in the middle, and 1 at the bottom.
+      148 -- The minus and plus buttons change N from 1 to 100. The up an
+          -d down arrow keys in the N field change N by 1, and by 10 with
+          - Shift. A change to N resets all counts to zero.              
+      148 +- The minus and plus buttons change N from 1 to 100, and a not
+          +e below the N field shows that range. You can also type a numb
+          +er in the N field. It sets N when you press Enter or leave the
+          + field. A number above 100 snaps to 100, and a number below 1 
+          +snaps to 1. Escape shows the current N again. The up and down 
+          +arrow keys in the N field change N by 1, and by 10 with Shift.
+          + A change to N resets all counts to zero.                     
+      149  - A badge at the top of the side panel shows the stream state.
+            Connecting is a white badge, and it shows from the start unti
+           l the stream opens. Live is a green badge, and it shows while 
+           batches arrive. Reconnecting is an amber badge, and it shows a
+           fter a live stream drops until the stream opens again. Paused 
+           is a white badge with a pause icon, and it shows while the ser
+           ver is paused. Test source is a white badge with no icon, and 
+           it shows while the test source runs.
+      150  - The side panel shows the samples received, the max count, an
+           d the frame rate. A red line shows below the frame rate when i
+           t falls below 90 percent of the target of 60 fps. Run the clie
+           nt in Chrome with Energy Saver off, because Energy Saver caps 
+           the frame rate at 30 fps.
+      151  - The Missed batches readout shows how many batches the client
+            did not get. The client reads the sequence number from the id
+            of each batch, and a number that skips ahead adds the size of
+            the gap to the count. The count starts at 0 when the page loa
+           ds, and it spans a reconnect. A change to N sets it to 0. A se
+           quence number lower than the last one means that the server re
+           started, and it also sets the count to 0.
+  ⎿  Updated docs/ai-changes.md (+4 -0)
+      82  - The AI set the test source rate limit to 10,000,000 samples p
+          er second. During the stress test, a rate of 100,000,000 fell b
+          ack to the default of 100,000. I raised the limit to 100,000,00
+          0 in the code, and the AI updated the tests and the docs to mat
+          ch.
+      83  - The AI compared the frame rate with the peak reading since th
+          e page loaded. I decided the client targets 60 fps in Chrome wi
+          th Energy Saver off, and asked for a fixed 60 fps target instea
+          d of the peak. The AI removed the peak from the meter, kept the
+           90 percent margin, and hid the line until the first reading.
+      84  
+      85 +## Feature 3, Frontend, after replan                           
+      86 +                                                               
+      87 +- The AI built the N field as read only, as in the HTML design,
+         + so N changed only by 1 or 10 at a time. I asked for a field th
+         +at takes a typed number, so N goes to any value in one step. I 
+         +also asked for the range in a note below the field, and for a n
+         +umber above 100 to snap to 100. The AI gave the field a border,
+         + as the design system does for a text field, so it reads as a p
+         +lace to type.                                                  
+      88 +                                                               
+      89  ## Feature 4, Stream, plan
+      90  
+      91  - The AI proposed the URL query `source=test` to run the test s
+          ource from feature 3. I changed the name to `source=frontend`.
+  ⎿  Updated docs/assumptions.md (+6 -0)
+      85  - The target frame rate is 60 fps. The red error line shows whe
+          n the reading is below 90 percent of 60, which is 54 fps. The l
+          ine hides for the first second, before the meter has a reading.
+      86  - The test source rate goes up to 100,000,000 samples per secon
+          d, so the stress test can push the browser past 10,000,000.
+      87  
+      88 +## Feature 3, Frontend, after replan                           
+      89 +                                                               
+      90 +- The N field reads the first whole number in its text, so "50"
+         +, "50 × 50", and "50x50" all set N to 50. The text "50.7" sets 
+         +N to 50.                                                       
+      91 +- A typed number below 1 snaps to 1, in the same way that a num
+         +ber above 100 snaps to 100.                                    
+      92 +- Text with no number is a mistake, so N stays the same and the
+         + field shows it again.                                         
+      93 +                                                               
+      94  ## Feature 4, Stream, implement
+      95  
+      96  - A batch arrives at least once each second at the lowest serve
+          r settings. So a live stream with no batch for 5 s counts as dr
+          opped, even when the connection does not report an error.
+  ⎿  Updated docs/specs/features/03-frontend/requirements.md (+1 -1)
+      37  - G5. **Agreed.** The axis label step is 1 when N is 16 or less
+          , 2 when N is 17 to 32, and 4 when N is 33 to 100. The client l
+          abels each row and column whose number is a multiple of the ste
+          p, so a 100 by 100 grid shows 25 labels on each axis. The clien
+          t draws the labels on the same canvas as the cells, so they sta
+          y lined up with the cells at any size.
+      38  - G6. **Agreed.** The frame rate is the number of requestAnimat
+          ionFrame callbacks in the last full second. The loop runs on ev
+          ery frame, and it draws the grid only when the counts or the si
+          ze changed. When the main thread is too busy to keep up, the fr
+          ame rate drops, which is what the stress test must show.
+      39  - G7. **Agreed with a change.** The panel readouts update at mo
+          st once every 150 ms, as the HTML design does, so text updates 
+          do not cost a frame. The grid itself redraws on each frame that
+           has new data. **Added by the user:** A red error line shows be
+          low the frame rate readout when the frame rate drops below the 
+          expected rate. The expected rate is a fixed 60 fps, as the user
+           changed it during validate. The client runs in Chrome with Ene
+          rgy Saver off. The line shows when the reading is below 90 perc
+          ent of 60, and its text is "Below the expected 60 fps". The lin
+          e stays hidden until the first one-second reading. The line use
+          s the design token --danger-text, which is #B33A3A and has a co
+          ntrast ratio of 5.9 to 1 on the white panel. That passes WCAG A
+          A for small text. The line hides again when the reading is back
+           at or above 90 percent of 60. It follows the same 150 ms updat
+          e as the readouts.
+      40 -- G8. **Agreed with a change.** The N control follows the HTML 
+         -design. It has a minus button, a read-only field that shows "32
+         - × 32", and a plus button. The user asked that a button hide in
+         -stead of going disabled. The minus button is hidden at 1, and t
+         -he plus button is hidden at 100. A hidden button uses `visibili
+         -ty: hidden`, so it cannot be clicked or reached with Tab, and i
+         -t keeps its space so the field does not move. The up and down a
+         -rrow keys in the field change N by 1, and with Shift by 10.    
+      40 +- G8. **Agreed with a change.** The N control follows the HTML 
+         +design. It has a minus button, a read-only field that shows "32
+         + × 32", and a plus button. The user asked that a button hide in
+         +stead of going disabled. The minus button is hidden at 1, and t
+         +he plus button is hidden at 100. A hidden button uses `visibili
+         +ty: hidden`, so it cannot be clicked or reached with Tab, and i
+         +t keeps its space so the field does not move. The up and down a
+         +rrow keys in the field change N by 1, and with Shift by 10. **C
+         +hanged by the user after the replan:** The field takes a typed 
+         +number and is no longer read only. It has a border, so it reads
+         + as a place to type. A note below the field shows the range "1 
+         +to 100". The field sets N from the first whole number in its te
+         +xt when the user presses Enter or leaves the field. A number ab
+         +ove 100 snaps to 100, and a number below 1 snaps to 1. Text wit
+         +h no number keeps N. Escape shows the current N again. The fiel
+         +d selects all of its text on focus, so a typed number replaces 
+         +it.                                                            
+      41  - G9. **Agreed with a change.** The fonts are Red Hat Display, 
+          Libre Franklin, and IBM Plex Mono, as in the HTML design. The i
+          mplement step extracts the six woff2 files from the design bund
+          le into frontend/public/fonts/, so the client needs no network 
+          for fonts. The client uses the light theme only. The repo is pr
+          ivate and will not be released, so it has no license files for 
+          the fonts, as the user asked.
+      42  - G10. **Agreed with a change.** The user asked for thin compon
+          ents, with the heat map state in its own unit, and for the grid
+           to be drawn on a canvas. The heat map state lives in one injec
+          table service, the store. It owns N, the counts, the frame rate
+           meter, the dirty flag, and the readout signals. It is the only
+           code that changes them. The drawing lives in a plain renderer 
+          class with no Angular code, which draws the cells and the axis 
+          labels on a 2D canvas context. The components only bind signals
+           from the store and forward user events to it. The heat map com
+          ponent hosts the canvas, watches its size, and runs the request
+          AnimationFrame loop that calls the store and the renderer. The 
+          color scale component shows the bar and its labels. The side pa
+          nel component shows the N control and the readouts. The new cod
+          e lives in frontend/src/app/ in three folders. The heatmap/ fol
+          der holds the binning, the counts, the color map, the layout, t
+          he frame rate meter, the store, the renderer, the heat map comp
+          onent, and the color scale component. The panel/ folder holds t
+          he side panel component. The source/ folder holds the test sour
+          ce settings, the batch generator, the worker, and the service t
+          hat starts the worker.
+  ⎿  Updated docs/specs/features/03-frontend/validation.md (+6 -0)
+       91  - The minus button is hidden at N = 1, and the plus button is 
+           hidden at N = 100. Neither button has the disabled attribute.
+       92  - At N = 2, a click on the minus button hides it, and at N = 9
+           9, a click on the plus button hides it.
+       93  - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and A
+           rrowDown takes away 1.
+       94 +- The note below the N field shows "1 to 100", and the field i
+          +s not read only.                                              
+       95 +- The text "50" and Enter set N to 50, and the field shows "50
+          + × 50". The text "40 × 40" and a blur set N to 40.            
+       96 +- The text "250" sets N to 100, and the text "0" sets N to 1. 
+       97 +- At N = 100, the text "500" keeps N at 100, and the field sho
+          +ws "100 × 100" again.                                         
+       98 +- The text "abc" and a blur keep N at 32, and the field shows 
+          +"32 × 32" again. Escape does the same for the text "70".      
+       99 +- Focus selects all of the text in the field, and the first mo
+          +useup after focus does not clear the selection.               
+      100  - After 1,024 samples, the samples received readout shows "1,0
+           24".
+      101  - The frame rate readout shows the meter value with the unit "
+           fps".
+      102  - When the meter reads 30, the panel shows the line "Below the
+            expected 60 fps" below the frame rate, with the class that se
+           ts the color to --danger-text.
+  ⎿  … 1 more file changed
+
+⏺ Docs are done. Now I check the field in the real app.
+
+⏺ Skill(run)
+  ⎿  Successfully loaded skill
+
+  Ran 4 shell commands (ctrl+o to expand)
+
+⏺ Your ng serve for this repo already runs on port 4200, so I use it and leave
+  it running. I drive it with a headless Chrome from the scratchpad.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The click-outside step shows "100 × 100" where I expected "7 × 7". I check
+  what happened.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The trace shows the expected result, "7 × 7" after blur. I rerun the first
+  script to see if its odd result repeats.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The rerun confirms a real race: after Enter, Angular's change detection
+  overwrites the field a few milliseconds later, erasing any keystroke that
+  lands first—too fast for a human but not a script. I'll write a test exposing
+  this race, then fix it.
+⏺ Update(frontend/src/app/panel/side-panel.spec.ts)
+  ⎿  Added 8 lines
+      143      expect(field().value).toBe('100 × 100');
+      144    });
+      145  
+      146 +  it('keeps text typed right after Enter', async () => {      
+      147 +    field().value = '250';                                    
+      148 +    field().dispatchEvent(new KeyboardEvent('keydown', { key: 
+          +'Enter' }));                                                  
+      149 +    field().value = '7';                                      
+      150 +    await render();                                           
+      151 +    expect(field().value).toBe('7');                          
+      152 +  });                                                         
+      153 +                                                              
+      154    it('keeps N and shows it again when the typed text has no nu
+           mber', async () => {
+      155      field().value = 'abc';
+      156      field().dispatchEvent(new Event('blur'));
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The test reproduces the race. Now the fix: run change detection at once in the
+  commit, so the binding writes before the next key.
+
+⏺ Update(frontend/src/app/panel/side-panel.ts)
+  ⎿  Added 4 lines, removed 2 lines
+      81  
+      82    /**
+      83     * Sets N from the first number in the field, so "50" and "50
+           × 50" both give 50. The store
+      84 -   * snaps N to 1 to 100. Text with no number keeps N. The fiel
+         -d then shows N again, because                                  
+      85 -   * the binding does not write the same value twice.          
+      84 +   * snaps N to 1 to 100. Text with no number keeps N.         
+      85     */
+      86    protected commit(input: HTMLInputElement): void {
+      87      const match = /-?\d+/.exec(input.value);
+      88      if (match) this.store.setN(Number(match[0]));
+      89 +    // The binding writes a new N now. A later write would eras
+         +e a key typed right after Enter.                               
+      90 +    this.changeDetector.detectChanges();                       
+      91 +    // The binding does not write the same value twice, so a ke
+         +pt N needs this write.                                         
+      92      input.value = this.sizeText();
+      93    }
+      94  }
+
+⏺ Update(frontend/src/app/panel/side-panel.ts)
+  ⎿  Added 1 line
+      15  export class SidePanel {
+      16    protected readonly store = inject(HeatMapStore);
+      17    private readonly status = inject(StreamStatus);
+      18 +  private readonly changeDetector = inject(ChangeDetectorRef); 
+      19  
+      20    protected readonly sizeText = computed(() => `${this.store.n(
+          )} × ${this.store.n()}`);
+      21    protected readonly rangeText = `${MIN_N} to ${MAX_N}`;
+
+⏺ Update(frontend/src/app/panel/side-panel.ts)
+  ⎿  Added 1 line, removed 1 line
+      1 -import { Component, computed, inject } from '@angular/core';    
+      1 +import { ChangeDetectorRef, Component, computed, inject } from '
+        +@angular/core';                                                 
+      2  import { HeatMapStore, MAX_N, MIN_N } from '../heatmap/heat-map-
+         store';
+      3  import { StreamStatus } from '../source/stream-status';
+      4  import { StreamBadge } from './stream-badge';
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+⏺ Five runs in a row pass in Chrome. Now I look at the screenshots.
+
+  Read 3 files (ctrl+o to expand)
+
+⏺ The control looks right in Chrome, and there are no console errors. I add the
+  new race test to the validation list.
+
+⏺ Update(docs/specs/features/03-frontend/validation.md)
+  ⎿  Added 1 line
+       95  - The text "50" and Enter set N to 50, and the field shows "50
+            × 50". The text "40 × 40" and a blur set N to 40.
+       96  - The text "250" sets N to 100, and the text "0" sets N to 1.
+       97  - At N = 100, the text "500" keeps N at 100, and the field sho
+           ws "100 × 100" again.
+       98 +- Text typed right after Enter stays in the field, and the nex
+          +t change detection does not erase it.                         
+       99  - The text "abc" and a blur keep N at 32, and the field shows 
+           "32 × 32" again. Escape does the same for the text "70".
+      100  - Focus selects all of the text in the field, and the first mo
+           useup after focus does not clear the selection.
+      101  - After 1,024 samples, the samples received readout shows "1,0
+           24".
+
+⏺ The grid size field now takes a typed number, and the range "1 to 100" shows
+  below it. A number above 100 snaps to 100.
+
+  I read "enter the range" as typing one value inside that range.
+
+  How the field works:
+  - The field still shows "32 × 32". When you click it, all the text is
+    selected, so what you type replaces it.
+  - N changes when you press Enter or leave the field. N does not change on each
+    key, because each change to N resets the counts. If N changed on each key,
+    typing "50" would reset the counts at "5" first.
+  - The field reads the first whole number in the text. So "50", "50 × 50" and
+    "50x50" all set N to 50.
+  - A number below 1 snaps to 1. You only asked about 100, but I made the low
+    end work the same way.
+  - If the text has no number, N stays the same. Escape also puts the current N
+    back.
+  - I gave the field a border, like the design system's text input, so it looks
+    like a place to type. You did not ask for this, so say if you want it
+    removed.
+
+  A bug I found and fixed. When I tested in Chrome, a key typed right after
+  Enter was sometimes erased. Angular wrote the new value to the field a few
+  milliseconds late and overwrote the key. A person cannot type that fast, but
+  an automated test can. The fix runs Angular's update at once when N is set
+  (frontend/src/app/panel/side-panel.ts). A new test reproduced the bug before
+  the fix.
+
+  Checks:
+  - All 178 frontend tests pass, and lint passes.
+  - I ran the field five times in headless Chrome against your running ng serve.
+    Typing 250 and pressing Enter gave "100 × 100" each time. Typing 7 and
+    clicking outside gave "7 × 7" each time. There were no console errors.
+  - To drive Chrome, I installed playwright-core in the scratchpad. If you want
+    this browser check to be repeatable, run /run-skill-generator to save it as
+    a project skill.
+
+  Docs:
+  - I updated the README, G8 in the frontend requirements and V9 in the frontend
+    validation.
+  - The three logs have a new section called "Feature 3, Frontend, after
+    replan".
+  - In docs/ai-changes.md, I wrote your reason as "so N goes to any value in one
+    step." That reason is my guess, so change it if it is wrong.
+  - CHANGELOG.md line 29 still says N goes from 1 to 64. That line was already
+    out of date before this change, and I did not edit it.
+
+  Nothing is committed.
+
+✻ Cogitated for 6m 55s · done 8:34 PM
+
+❯ Left align the subtitle call it 'N ranges from 1 to 100'. Only include N in   
+  the field not NxN                                                             
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ I update the tests first, then the code.
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  ⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+      FAIL   frontend  src/app/panel/side-panel.spec.ts > SidePanel > shows
+      "32" in the N field at start
+     … +25 lines (ctrl+o to expand)
+  ⎿  Updated frontend/src/app/panel/side-panel.spec.ts (+16 -16)
+      40      await render();
+      41    });
+      42  
+      43 -  it('shows "32 × 32" in the N field at start', () => {        
+      44 -    expect(field().value).toBe('32 × 32');                     
+      43 +  it('shows "32" in the N field at start', () => {             
+      44 +    expect(field().value).toBe('32');                          
+      45    });
+      46  
+      47    it('shows the stream badge above the grid size control', () =
+          > {
+     ...
+      53      ).toBeTruthy();
+      54    });
+      55  
+      56 -  it('shows "33 × 33" and resets the samples received after a c
+         -lick on plus', async () => {                                   
+      56 +  it('shows "33" and resets the samples received after a click 
+         +on plus', async () => {                                        
+      57      store.applyBatch([1, 2, 3]);
+      58      store.frame(0);
+      59      await render();
+      60      plus().click();
+      61      await render();
+      62 -    expect(field().value).toBe('33 × 33');                     
+      62 +    expect(field().value).toBe('33');                          
+      63      expect(readoutValue('Samples received')).toBe('0');
+      64    });
+      65  
+     ...
+       98      expect(store.n()).toBe(42);
+       99    });
+      100  
+      101 -  it('shows the range "1 to 100" below the N field', () => {  
+      101 +  it('shows "N ranges from 1 to 100" below the N field', () =>
+          + {                                                            
+      102      const hint = element.querySelector('#grid-size-hint');
+      103 -    expect(hint?.textContent?.trim()).toBe('1 to 100');       
+      103 +    expect(hint?.textContent?.trim()).toBe('N ranges from 1 to
+          + 100');                                                       
+      104      expect(field().getAttribute('aria-describedby')).toBe('gri
+           d-size-hint');
+      105      expect(field().readOnly).toBe(false);
+      106    });
+     ...
+      110      field().dispatchEvent(new KeyboardEvent('keydown', { key: 
+           'Enter' }));
+      111      await render();
+      112      expect(store.n()).toBe(50);
+      113 -    expect(field().value).toBe('50 × 50');                    
+     … 62 more lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+⏺ The 10 changed tests fail as expected. Now the code.
+
+⏺ Bash(cd /Users/javedgangjee/Documents/Projects/_precision/precision-take-home/
+      frontend/src/app/panel && python3 - <<'EOF'
+      import pathlib…)
+  ⎿   Test Files  24 passed (24)
+           Tests  178 passed (178)
+     All files pass linting.
+     All matched files use Prettier code style!
+  ⎿  Updated frontend/src/app/panel/side-panel.scss (+0 -1)
+      101    font-size: 11px;
+      102    line-height: 16px;
+      103    color: var(--ink-muted);
+      104 -  text-align: center;                                         
+      104  }
+      105  
+      106  /* The gap is smaller than the panel gap, so the seven readout
+           s fit in a 720 px window. */
+  ⎿  Updated frontend/src/app/panel/side-panel.ts (+4 -4)
+      17    private readonly status = inject(StreamStatus);
+      18    private readonly changeDetector = inject(ChangeDetectorRef);
+      19  
+      20 -  protected readonly sizeText = computed(() => `${this.store.n(
+         -)} × ${this.store.n()}`);                                      
+      21 -  protected readonly rangeText = `${MIN_N} to ${MAX_N}`;       
+      20 +  protected readonly sizeText = computed(() => String(this.stor
+         +e.n()));                                                       
+      21 +  protected readonly rangeText = `N ranges from ${MIN_N} to ${M
+         +AX_N}`;                                                        
+      22    /** A mouse click that focuses the field ends with a mouseup 
+          that would clear the selection. */
+      23    private keepSelectionOnMouseUp = false;
+      24    protected readonly atMin = computed(() => this.store.n() <= M
+          IN_N);
+     ...
+      81    }
+      82  
+      83    /**
+      84 -   * Sets N from the first number in the field, so "50" and "50
+         - × 50" both give 50. The store                                 
+      85 -   * snaps N to 1 to 100. Text with no number keeps N.         
+      84 +   * Sets N from the first whole number in the field. The store
+         + snaps N to 1 to 100. Text with                                
+      85 +   * no number keeps N.                                        
+      86     */
+      87    protected commit(input: HTMLInputElement): void {
+      88      const match = /-?\d+/.exec(input.value);
+  ⎿  (timeout 6m 40s)
+
+⏺ All 178 tests and lint pass. Now the docs.
+
+⏺ Bash(python3 - <<'EOF'
+      import pathlib…)
+  ⎿  docs/ai-changes.md:88:- The AI kept "32 × 32" in the N field and cente
+     red the note below it with the text "1 to 100". I asked for N only in
+     the field, so the field holds the same number that the user types. I a
+     … +18 lines (ctrl+o to expand)
+  ⎿  Updated README.md (+1 -1)
+      145  - Each value v goes to cell index (v - 1) mod N². The row is t
+           he index divided by N, and the column is the index mod N. On a
+            4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and
+            0 goes to cell <3,3>.
+      146  - A cell with no hits is white. A cell with hits gets a color 
+           from blue (#1E00FF) at a count of 1 through cyan, green, and y
+           ellow to red (#FF0033) at the max count.
+      147  - The color scale shows the max count at the top, the midpoint
+            in the middle, and 1 at the bottom.
+      148 -- The minus and plus buttons change N from 1 to 100, and a not
+          -e below the N field shows that range. You can also type a numb
+          -er in the N field. It sets N when you press Enter or leave the
+          - field. A number above 100 snaps to 100, and a number below 1 
+          -snaps to 1. Escape shows the current N again. The up and down 
+          -arrow keys in the N field change N by 1, and by 10 with Shift.
+          - A change to N resets all counts to zero.                     
+      148 +- The minus and plus buttons change N from 1 to 100, and the n
+          +ote "N ranges from 1 to 100" shows below the N field. The N fi
+          +eld shows N only, such as "32". You can also type a number in 
+          +the N field. It sets N when you press Enter or leave the field
+          +. A number above 100 snaps to 100, and a number below 1 snaps 
+          +to 1. Escape shows the current N again. The up and down arrow 
+          +keys in the N field change N by 1, and by 10 with Shift. A cha
+          +nge to N resets all counts to zero.                           
+      149  - A badge at the top of the side panel shows the stream state.
+            Connecting is a white badge, and it shows from the start unti
+           l the stream opens. Live is a green badge, and it shows while 
+           batches arrive. Reconnecting is an amber badge, and it shows a
+           fter a live stream drops until the stream opens again. Paused 
+           is a white badge with a pause icon, and it shows while the ser
+           ver is paused. Test source is a white badge with no icon, and 
+           it shows while the test source runs.
+      150  - The side panel shows the samples received, the max count, an
+           d the frame rate. A red line shows below the frame rate when i
+           t falls below 90 percent of the target of 60 fps. Run the clie
+           nt in Chrome with Energy Saver off, because Energy Saver caps 
+           the frame rate at 30 fps.
+      151  - The Missed batches readout shows how many batches the client
+            did not get. The client reads the sequence number from the id
+            of each batch, and a number that skips ahead adds the size of
+            the gap to the count. The count starts at 0 when the page loa
+           ds, and it spans a reconnect. A change to N sets it to 0. A se
+           quence number lower than the last one means that the server re
+           started, and it also sets the count to 0.
+  ⎿  Updated docs/ai-changes.md (+1 -0)
+      85  ## Feature 3, Frontend, after replan
+      86  
+      87  - The AI built the N field as read only, as in the HTML design,
+           so N changed only by 1 or 10 at a time. I asked for a field th
+          at takes a typed number, so N goes to any value in one step. I 
+          also asked for the range in a note below the field, and for a n
+          umber above 100 to snap to 100. The AI gave the field a border,
+           as the design system does for a text field, so it reads as a p
+          lace to type.
+      88 +- The AI kept "32 × 32" in the N field and centered the note be
+         +low it with the text "1 to 100". I asked for N only in the fiel
+         +d, so the field holds the same number that the user types. I al
+         +so asked for a left-aligned note that reads "N ranges from 1 to
+         + 100".                                                         
+      89  
+      90  ## Feature 4, Stream, plan
+      91  
+  ⎿  Updated docs/assumptions.md (+1 -1)
+      87  
+      88  ## Feature 3, Frontend, after replan
+      89  
+      90 -- The N field reads the first whole number in its text, so "50"
+         -, "50 × 50", and "50x50" all set N to 50. The text "50.7" sets 
+         -N to 50.                                                       
+      90 +- The N field reads the first whole number in its text, so the 
+         +text "50.7" sets N to 50.                                      
+      91  - A typed number below 1 snaps to 1, in the same way that a num
+          ber above 100 snaps to 100.
+      92  - Text with no number is a mistake, so N stays the same and the
+           field shows it again.
+      93  
+  ⎿  Updated docs/specs/features/03-frontend/requirements.md (+1 -1)
+      37  - G5. **Agreed.** The axis label step is 1 when N is 16 or less
+          , 2 when N is 17 to 32, and 4 when N is 33 to 100. The client l
+          abels each row and column whose number is a multiple of the ste
+          p, so a 100 by 100 grid shows 25 labels on each axis. The clien
+          t draws the labels on the same canvas as the cells, so they sta
+          y lined up with the cells at any size.
+      38  - G6. **Agreed.** The frame rate is the number of requestAnimat
+          ionFrame callbacks in the last full second. The loop runs on ev
+          ery frame, and it draws the grid only when the counts or the si
+          ze changed. When the main thread is too busy to keep up, the fr
+          ame rate drops, which is what the stress test must show.
+      39  - G7. **Agreed with a change.** The panel readouts update at mo
+          st once every 150 ms, as the HTML design does, so text updates 
+          do not cost a frame. The grid itself redraws on each frame that
+           has new data. **Added by the user:** A red error line shows be
+          low the frame rate readout when the frame rate drops below the 
+          expected rate. The expected rate is a fixed 60 fps, as the user
+           changed it during validate. The client runs in Chrome with Ene
+          rgy Saver off. The line shows when the reading is below 90 perc
+          ent of 60, and its text is "Below the expected 60 fps". The lin
+          e stays hidden until the first one-second reading. The line use
+          s the design token --danger-text, which is #B33A3A and has a co
+          ntrast ratio of 5.9 to 1 on the white panel. That passes WCAG A
+          A for small text. The line hides again when the reading is back
+           at or above 90 percent of 60. It follows the same 150 ms updat
+          e as the readouts.
+      40 -- G8. **Agreed with a change.** The N control follows the HTML 
+         -design. It has a minus button, a read-only field that shows "32
+         - × 32", and a plus button. The user asked that a button hide in
+         -stead of going disabled. The minus button is hidden at 1, and t
+         -he plus button is hidden at 100. A hidden button uses `visibili
+         -ty: hidden`, so it cannot be clicked or reached with Tab, and i
+         -t keeps its space so the field does not move. The up and down a
+         -rrow keys in the field change N by 1, and with Shift by 10. **C
+         -hanged by the user after the replan:** The field takes a typed 
+         -number and is no longer read only. It has a border, so it reads
+         - as a place to type. A note below the field shows the range "1 
+         -to 100". The field sets N from the first whole number in its te
+         -xt when the user presses Enter or leaves the field. A number ab
+         -ove 100 snaps to 100, and a number below 1 snaps to 1. Text wit
+         -h no number keeps N. Escape shows the current N again. The fiel
+         -d selects all of its text on focus, so a typed number replaces 
+         -it.                                                            
+      40 +- G8. **Agreed with a change.** The N control follows the HTML 
+         +design. It has a minus button, a read-only field that shows "32
+         + × 32", and a plus button. The user asked that a button hide in
+         +stead of going disabled. The minus button is hidden at 1, and t
+         +he plus button is hidden at 100. A hidden button uses `visibili
+         +ty: hidden`, so it cannot be clicked or reached with Tab, and i
+         +t keeps its space so the field does not move. The up and down a
+         +rrow keys in the field change N by 1, and with Shift by 10. **C
+         +hanged by the user after the replan:** The field takes a typed 
+         +number and is no longer read only. It shows N only, such as "32
+         +", in place of "32 × 32". It has a border, so it reads as a pla
+         +ce to type. A left-aligned note below the field reads "N ranges
+         + from 1 to 100". The field sets N from the first whole number i
+         +n its text when the user presses Enter or leaves the field. A n
+         +umber above 100 snaps to 100, and a number below 1 snaps to 1. 
+         +Text with no number keeps N. Escape shows the current N again. 
+         +The field selects all of its text on focus, so a typed number r
+         +eplaces it.                                                    
+      41  - G9. **Agreed with a change.** The fonts are Red Hat Display, 
+          Libre Franklin, and IBM Plex Mono, as in the HTML design. The i
+          mplement step extracts the six woff2 files from the design bund
+          le into frontend/public/fonts/, so the client needs no network 
+          for fonts. The client uses the light theme only. The repo is pr
+          ivate and will not be released, so it has no license files for 
+          the fonts, as the user asked.
+      42  - G10. **Agreed with a change.** The user asked for thin compon
+          ents, with the heat map state in its own unit, and for the grid
+           to be drawn on a canvas. The heat map state lives in one injec
+          table service, the store. It owns N, the counts, the frame rate
+           meter, the dirty flag, and the readout signals. It is the only
+           code that changes them. The drawing lives in a plain renderer 
+          class with no Angular code, which draws the cells and the axis 
+          labels on a 2D canvas context. The components only bind signals
+           from the store and forward user events to it. The heat map com
+          ponent hosts the canvas, watches its size, and runs the request
+          AnimationFrame loop that calls the store and the renderer. The 
+          color scale component shows the bar and its labels. The side pa
+          nel component shows the N control and the readouts. The new cod
+          e lives in frontend/src/app/ in three folders. The heatmap/ fol
+          der holds the binning, the counts, the color map, the layout, t
+          he frame rate meter, the store, the renderer, the heat map comp
+          onent, and the color scale component. The panel/ folder holds t
+          he side panel component. The source/ folder holds the test sour
+          ce settings, the batch generator, the worker, and the service t
+          hat starts the worker.
+  ⎿  Updated docs/specs/features/03-frontend/validation.md (+6 -6)
+       86  ### V9. The side panel changes N and shows the readouts
+       87  
+       88  - The page header shows "Bin There, Done That".
+       89 -- The N field shows "32 × 32" at start.                       
+       90 -- A click on the plus button shows "33 × 33" and sets the samp
+          -les received to 0.                                            
+       89 +- The N field shows "32" at start.                            
+       90 +- A click on the plus button shows "33" and sets the samples r
+          +eceived to 0.                                                 
+       91  - The minus button is hidden at N = 1, and the plus button is 
+           hidden at N = 100. Neither button has the disabled attribute.
+       92  - At N = 2, a click on the minus button hides it, and at N = 9
+           9, a click on the plus button hides it.
+       93  - In the N field, ArrowUp adds 1, Shift+ArrowUp adds 10, and A
+           rrowDown takes away 1.
+       94 -- The note below the N field shows "1 to 100", and the field i
+          -s not read only.                                              
+       95 -- The text "50" and Enter set N to 50, and the field shows "50
+          - × 50". The text "40 × 40" and a blur set N to 40.            
+       94 +- The note below the N field shows "N ranges from 1 to 100", a
+          +nd the field is not read only.                                
+       95 +- The text "50" and Enter set N to 50, and the field shows "50
+          +". The text "40" and a blur set N to 40.                      
+       96  - The text "250" sets N to 100, and the text "0" sets N to 1.
+       97 -- At N = 100, the text "500" keeps N at 100, and the field sho
+          -ws "100 × 100" again.                                         
+       97 +- At N = 100, the text "500" keeps N at 100, and the field sho
+          +ws "100" again.                                               
+       98  - Text typed right after Enter stays in the field, and the nex
+           t change detection does not erase it.
+       99 -- The text "abc" and a blur keep N at 32, and the field shows 
+          -"32 × 32" again. Escape does the same for the text "70".      
+       99 +- The text "abc" and a blur keep N at 32, and the field shows 
+          +"32" again. Escape does the same for the text "70".           
+      100  - Focus selects all of the text in the field, and the first mo
+           useup after focus does not clear the selection.
+      101  - After 1,024 samples, the samples received readout shows "1,0
+           24".
+      102  - The frame rate readout shows the meter value with the unit "
+           fps".
+
+⏺ Those two remaining "32 × 32" mentions record the old behavior on purpose. Now
+  I check the look in Chrome.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+⏺ The field now shows only N, such as "32". The note below it is left aligned
+  and reads "N ranges from 1 to 100".
+
+  All 178 frontend tests pass, and lint passes. In headless Chrome, the field
+  starts at "32". Typing 250 and pressing Enter gives "100". Typing 7 and
+  clicking outside gives "7". There were no console errors.
+
+  The field still accepts text like "50 × 50" and reads the first number in it.
+  The field just never shows that form now.
+
+  I updated the README, the frontend requirements and validation specs,
+  docs/assumptions.md and docs/ai-changes.md. In docs/ai-changes.md, the reason
+  I wrote for this change is "so the field holds the same number that the user
+  types." That reason is my guess, so change it if it is wrong.
+
+  Nothing is committed.
+
+✻ Churned for 1m 10s · done 8:35 PM

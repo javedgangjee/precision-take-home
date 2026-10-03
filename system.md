@@ -204,7 +204,7 @@ Run **`make destroy`** to remove the stack. The hosted zone stays, because the s
 The load test measures the limits of the **cloud server**. I change the settings between the steps with `make cloud-setting-update`, so the server needs no restart.
 
 1. The first part raises the **samples per second** through 20,000, 250,000, 500,000, and 1,000,000, with one client and a batch interval of 50 ms.
-2. The second part raises the **number of clients** through 2, 5, 10, 20, 50, and 100, at 20,000 samples per second. One Chrome tab measures, and each other client is a curl process on the laptop that reads the stream and drops the data.
+2. The second part raises the **number of clients** through 1, 5 and 100, at 20,000 samples per second. One Chrome tab measures, and each other client is a curl process on the laptop that reads the stream and drops the data.
 
 Each step has **3 runs of 30 seconds**. A run passes when the p99 of the total latency is **at most 100 ms** and the frame rate stays at **54 fps or more**. A step passes when all 3 runs pass, and a part ends at its first step that fails. After each part, `make cloud-cpu` gives the CPU use of the server.
 

@@ -37,28 +37,46 @@ npx ng serve --open
 
 - The backend is a **Python 3.13 server** built with **FastAPI**. It sends batches of random integers to the client over Server-Sent Events.
 - The frontend is an **Angular 21 client** that runs on the local machine and draws the grid on an HTML canvas.
-- The backend runs in a Docker image on **AWS ECS Fargate**, behind an Application Load Balancer. **AWS CDK** in Python defines the infrastructure.
+- The backend runs in a Docker image on **AWS ECS Fargate** 0.25 vCPU, behind an ALB. **AWS CDK** in Python defines infrastructure.
 - The tests use pytest for the backend and the infrastructure, and Vitest for the frontend.
 - A Makefile runs the common tasks, which include the local servers, the tests, the linters, and the deploy.
+- Includes a local test source on frontend to test frame rate
+- Includes a local docker build to test image before deploy.
 
 The `docs/specs/tech-stack.md` file gives the version of each tool and the details of each part.
 
 ## Repo layout
 
-- The `backend/` folder holds the FastAPI server. It is a uv project.
-- The `frontend/` folder holds the Angular client.
-- The `infra/` folder holds the AWS CDK app in Python. Separate uv project.
+- `backend/` folder holds the FastAPI server. It is a uv project.
+- `frontend/` folder holds the Angular client.
+- `infra/` folder holds the AWS CDK app in Python. Separate uv project.
 
 ## Results
 
-- **Cloud server** - single Fargate task with 0.25 vCPU. 
+All runs used the cloud server, which is 1 Fargate task with 0.25 vCPU. 
 
-- **Client** - Chrome on a MacBook Air with a 60 Hz display, with N = 32.
-- **Latency** - from generation to render. At 20,000 samples per second and a batch interval of 50 ms. Each run held 1,200 batches over 60 seconds.
-- **Load test** - raised the samples per second with one client, and then raised the number of clients at 20,000 samples per second. Each step has 3 runs of 30 seconds. A run passes when the p99 of the total latency is at most 100 ms and the lowest frame rate is at least 54 fps. A step passes when all 3 runs pass.
-CPU was the limit in both cases
+### Latency
 
-**N=100, 1 million samples/s**
+Client measures each batch from generation to render, with a clock sync between the server and the client. 
+
+**Target**: p99 of the total latency of at most 100 ms.
+
+**Finding**: 
+At 20,000 samples/s and a 50 ms batch interval, p99 of the total was **28 to 29 ms with 1 client** and **about 38 ms with 100 clients**.
+
+### Load test
+
+**Target**: A run passes when the p99 of the total latency is at most 100 ms and the lowest frame rate is at least 54 fps.
+
+The first part raised the samples per second with 1 client. The second part raised the number of clients at 20,000 samples/s. Each step had 3 runs of 30 seconds. 
+  - **Every step passed.** No run lost a batch, and the frame rate stayed at 60 fps.
+  - At **1 million samples/s with 1 client**, the p99 was **about 55 ms** and the CPU was at **82%**.
+  - At **20,000 samples/s with 100 clients**, the p99 was **about 38 ms** and the CPU was at **76 to 78%**.
+
+**CPU is the closest limit.** A straight line through CPU values reaches 100% at about 1.2 million samples/s with 1 client, or at about 130 clients at 20,000 samples/s.
+
+The `docs/results.md` file has the full tables and the limits of the measurement.
+
 
 
 https://github.com/user-attachments/assets/d935170b-931b-4b74-9634-db7d5d56a9b1

@@ -29,15 +29,16 @@ Constitution includes the main `mission.md`, a `roadmap.md` which determines the
 From there each feature gets the same treatment - plan, implement, a manual review, validate, then merge it back into main, where I run a replan to make sure I’m on the right track.
 
 The order is as such:
-`/spec-driven constitution`
-`/spec-driven plan`
-`/spec-driven implement`
-Review stage - done manually for take home
-`/spec-driven validate`
-Merge into main
-`/spec-driven replan`
-Repeat steps 2 - 7 till done all features
-Review, cleanup
+- `/spec-driven constitution` - generate and review the constitution files
+For each feature:
+- `/spec-driven plan`
+- `/spec-driven implement`
+- Review stage - done manually for take home
+- `/spec-driven validate`
+- Merge into main
+- `/spec-driven replan`
+- Repeat steps 2 - 7 till done all features
+- Review, cleanup
 
 ### Documentation
 The `docs` folder contains 3 items of interest:

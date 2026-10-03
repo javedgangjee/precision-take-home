@@ -2,8 +2,6 @@
 
 This repo is my take-home project for the Precision Neuroscience full-stack role. A cloud server streams nonnegative integers to a web client. The client bins each number into an N by N grid and paints each cell on a blue-to-red heat map in real time.
 
-The project is in progress. The scaffold, the backend stream, the heat map client, the client connection to the server, the cloud deploy, the admin API, the settings display, the latency measurement, and the load test are in place. docs/specs/roadmap.md shows the status of each feature.
-
 ## Quick start
 
 The quick start needs Git, Node.js 22, and npm. The client reads the stream from the cloud server, so you do not need to run the backend.
@@ -27,16 +25,15 @@ npm ci
 npx ng serve --open
 ```
 
-
 ## Tech stack
 
-- The backend is a Python 3.13 server built with FastAPI. It sends batches of random integers to the client over Server-Sent Events.
-- The frontend is an Angular 21 client that runs on the local machine and draws the grid on an HTML canvas.
-- The backend runs in a Docker image on AWS ECS Fargate, behind an Application Load Balancer. AWS CDK in Python defines the infrastructure.
+- The backend is a **Python 3.13 server** built with **FastAPI**. It sends batches of random integers to the client over Server-Sent Events.
+- The frontend is an **Angular 21 client** that runs on the local machine and draws the grid on an HTML canvas.
+- The backend runs in a Docker image on **AWS ECS Fargate**, behind an Application Load Balancer. **AWS CDK** in Python defines the infrastructure.
 - The tests use pytest for the backend and the infrastructure, and Vitest for the frontend.
 - A Makefile runs the common tasks, which include the local servers, the tests, the linters, and the deploy.
 
-The docs/specs/tech-stack.md file gives the version of each tool and the details of each part.
+The `docs/specs/tech-stack.md` file gives the version of each tool and the details of each part.
 
 ## Repo layout
 
@@ -58,7 +55,7 @@ The project used a personal take on spec-driven development by JetBrains. This h
 
 ![Diagram of the spec-driven method, from the context and the constitution through the feature loop to the final review](docs/assets/spec-driven-method.png)
 
-The docs/ai/ai-toolchain.md file gives the skills and each step of the method.
+The `docs/ai/ai-toolchain.md` file gives the skills and each step of the method.
 
 ## Documentation
 

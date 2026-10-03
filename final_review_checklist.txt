@@ -1,0 +1,218 @@
+ ▐▛███▛█   Claude Code v2.1.288
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /spec-driven remove step 10 in the roadmap. I will check my docs manually     
+
+  Read 1 file, listed 1 directory, ran 3 shell commands, recalled 1 memory (ctrl+o to expand)
+
+⏺ Update(docs/specs/roadmap.md)
+  ⎿  Removed 1 line
+      11  7. **Settings Display.** The goal is a client that shows the li
+          ve stream settings, the pause state, and the batches it missed.
+           The server adds one new packet type, which is the settings pac
+          ket. One settings packet holds the samples per second, the batc
+          h interval, the maximum value, and the pause state. The server 
+          sends the settings packet to a client when the client connects,
+           and to every client when a setting or the pause state changes.
+           The server has no separate init, update, or pause message. The
+           settings packet is not a batch. It carries no sequence number,
+           and the batch sequence number does not advance when the server
+           sends one. The missed batch count reads only the batch ids, so
+           a settings packet never adds to it. The server queue that drop
+          s the oldest batch for a slow client does not drop a settings p
+          acket. The side panel shows the three settings and updates them
+           when a settings packet arrives. A client that gets a settings 
+          packet with the pause on stops its 5 s watchdog, keeps the stre
+          am open, and shows Paused in the badge. A settings packet with 
+          the pause off starts the watchdog again. The client reads the b
+          atch sequence number from the id of each batch and counts the b
+          atches it missed, both inside one connection and across a recon
+          nect. When an id skips ahead, the client adds the size of the g
+          ap to the missed batch count. When an id is lower than the last
+           one, the server has restarted, and the client resets the misse
+          d batch count to 0. The side panel shows the missed batch count
+          . It covers N10 for the Paused state and N5 for the missed batc
+          h count, and no other required item. The status is done.
+      12  8. **Latency.** The goal is a measured latency from generation 
+          to render. The server takes a timestamp at each stage of its wo
+          rk, from generation to send. It does not put the timestamps in 
+          the batch data, so the data stays a JSON array of integers. It 
+          puts them in the `id` field of the batch event, after the batch
+           sequence number, in the form `<sequence number>:<started>:<enc
+          oded>:<sent>`. The client reads the sequence number from the fi
+          rst part of the id, so the missed batch count from feature 7 st
+          ill works. The client adds a timestamp at each stage of its wor
+          k, from receipt to render. The client calculates the total late
+          ncy from generation to render. The side panel does not show the
+           latency. The plan for this feature names the stages, sets the 
+          exact form of the id, decides how to compare the server clock w
+          ith the client clock, and decides how I read the measured times
+           from the client. The feature writes docs/results.md, which giv
+          es the measured time for each stage and compares the total with
+           the 100 ms target in N6. It covers N6. The status is done.
+      13  9. **Load.** The goal is a measured set of limits from a load t
+          est. The test runs against the cloud server only. It does not u
+          se the Docker server or the test source. I change the server se
+          ttings with the admin API from feature 6 while the server runs.
+           The feature adds four Makefile targets for the cloud server. `
+          make cloud-pause` pauses the stream, `make cloud-resume` resume
+          s it, and `make cloud-setting-update` changes the settings. The
+          se three targets call the admin API with curl, and they read th
+          e admin token from `CLOUD_ADMIN_TOKEN` in the shell. `make clou
+          d-cpu` prints the CPU use of the service from CloudWatch. Each 
+          step of the test has 3 runs, and each run is 30 s. A run passes
+           when the p99 of the total latency from `latency.report()` in f
+          eature 8 meets the 100 ms target in N6 and the client stays at 
+          54 fps or more. A step passes when all 3 runs pass. The test ha
+          s two parts, in this order. The first part sets the samples per
+           second to 20,000, then 250,000, then 500,000, and then 1,000,0
+          00, with one client. The second part sets the number of clients
+           to 5 and then to 100, at 20,000 samples per second. Every step
+           passes, so the test did not find the point where the server br
+          eaks. The default stays at 20,000 samples per second, which I d
+          ecided in the replan. docs/results.md gives the limits. It cove
+          rs N12. The status is done.
+      14 -10. **Submission Check.** The goal is a repo that holds every d
+         -ocument the submission needs, checked against the brief and the
+         - project overview. I add the documents to the repo, including t
+         -he write-ups for B7 and B8. The AI then checks each requirement
+         - in the brief and the project overview against the repo and wri
+         -tes docs/submission-checklist.md. The checklist gives each requ
+         -irement, the file that meets it, and a status of met or missing
+         -. The AI does not write the missing documents. It covers the ch
+         -eck of B7, B8, and S1 to S7. The status is planned.            
+
+  Read 2 files (ctrl+o to expand)
+
+⏺ Step 10 is out of the roadmap. I am now recording the removal in the two logs.
+
+⏺ Update(docs/ai/ai-changes.md)
+  ⎿  Added 4 lines
+      178  - The plan had a third part that raised the batch interval thr
+           ough 100 ms, 500 ms, and 1 s. I removed it before it ran, beca
+           use it proves nothing. The total latency starts when the serve
+           r makes a batch, so a longer interval adds no wait to it, and 
+           the first part already passes with a larger batch. The AI remo
+           ved the part from the roadmap, the feature specs, and the READ
+           ME.
+      179  - The plan had the client steps in rising order, at 2, 5, 10, 
+           20, 50, and 100. The step at 5 clients passed with a p99 of ab
+           out 25 ms, which was far below the limit, so I went straight t
+           o 100. That step passed, and the steps at 2, 10, 20, and 50 di
+           d not run.
+      180  - The AI reported the results of each part with no statement o
+           f what limits the server. I read the CPU table and asked the A
+           I to record that the 0.25 vCPU of the task is the limit, as an
+            assumption.
+      181 +                                                              
+      182 +### Feature 9, Load, replan                                   
+      183 +                                                              
+      184 +- The roadmap had feature 10, Submission Check, in which the A
+          +I checks the repo against the brief and the project overview a
+          +nd writes docs/submission-checklist.md. I removed the feature,
+          + because I check my documents by hand. The older entries in th
+          +is log still name the submission check.                       
+
+⏺ Update(docs/trade-offs.md)
+  ⎿  Added 1 line
+      228  ## Feature 9, Load, replan
+      229  
+      230  - The default stays at 20,000 samples per second. The roadmap 
+           said that the highest rate that passes becomes the default, an
+           d that rate is 1,000,000. One client uses about 6 percent of t
+           he CPU at 20,000 and 82 percent at 1,000,000, so the lower rat
+           e leaves room for several reviewers at once. The cost is that 
+           the default client shows a rate far below the measured limit.
+      231 +- The roadmap has no submission check feature. I check the doc
+          +uments against the brief and the project overview by hand. The
+          + cost is that the repo has no checklist file that shows a revi
+          +ewer the result of the check.                                 
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ Feature 10, Submission Check, is out of docs/specs/roadmap.md. The roadmap now
+  ends at feature 9, and every feature in it has the status done.
+
+  - I added one entry to docs/ai/ai-changes.md under a new "Feature 9, Load,
+    replan" section. It records the removal and your reason.
+  - I added one entry to docs/trade-offs.md under the existing "Feature 9, Load,
+    replan" section. It gives the cost, which is that the repo has no checklist
+    file.
+  - The README, mission.md, and tech-stack.md had no reference to the feature,
+    so they did not change. mission.md already says that you write B7 and B8
+    outside the roadmap.
+  - The older log entries that name the submission check stay, because they are
+    history. They are in docs/trade-offs.md at lines 150 and 179 and in
+    docs/ai/ai-changes.md at lines 114 and 132. The session transcripts in
+    docs/ai/logs/ also stay as they are.
+
+  Nothing is committed.
+
+✻ Crunched for 57s · done 12:53 AM
+
+❯ Remove the trade offs entry.                                                  
+
+⏺ Update(docs/trade-offs.md)
+  ⎿  Removed 1 line
+      228  ## Feature 9, Load, replan
+      229  
+      230  - The default stays at 20,000 samples per second. The roadmap 
+           said that the highest rate that passes becomes the default, an
+           d that rate is 1,000,000. One client uses about 6 percent of t
+           he CPU at 20,000 and 82 percent at 1,000,000, so the lower rat
+           e leaves room for several reviewers at once. The cost is that 
+           the default client shows a rate far below the measured limit.
+      231 -- The roadmap has no submission check feature. I check the doc
+          -uments against the brief and the project overview by hand. The
+          - cost is that the repo has no checklist file that shows a revi
+          -ewer the result of the check.                                 
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ The trade-offs entry is gone, and docs/trade-offs.md matches the last commit
+  again. The two files with changes are docs/specs/roadmap.md and
+  docs/ai/ai-changes.md.
+
+✻ Brewed for 8s · done 12:53 AM
+
+❯ Remove it from ai changes as well                                             
+
+⏺ Update(docs/ai/ai-changes.md)
+  ⎿  Removed 4 lines
+      178  - The plan had a third part that raised the batch interval thr
+           ough 100 ms, 500 ms, and 1 s. I removed it before it ran, beca
+           use it proves nothing. The total latency starts when the serve
+           r makes a batch, so a longer interval adds no wait to it, and 
+           the first part already passes with a larger batch. The AI remo
+           ved the part from the roadmap, the feature specs, and the READ
+           ME.
+      179  - The plan had the client steps in rising order, at 2, 5, 10, 
+           20, 50, and 100. The step at 5 clients passed with a p99 of ab
+           out 25 ms, which was far below the limit, so I went straight t
+           o 100. That step passed, and the steps at 2, 10, 20, and 50 di
+           d not run.
+      180  - The AI reported the results of each part with no statement o
+           f what limits the server. I read the CPU table and asked the A
+           I to record that the 0.25 vCPU of the task is the limit, as an
+            assumption.
+      181 -                                                              
+      182 -### Feature 9, Load, replan                                   
+      183 -                                                              
+      184 -- The roadmap had feature 10, Submission Check, in which the A
+          -I checks the repo against the brief and the project overview a
+          -nd writes docs/submission-checklist.md. I removed the feature,
+          - because I check my documents by hand. The older entries in th
+          -is log still name the submission check.                       
+
+  Ran 1 shell command, wrote 1 memory (ctrl+o to expand)
+
+⏺ The entry is gone from docs/ai/ai-changes.md, and the file matches the last
+  commit again. The only change left is the removal of feature 10 from
+  docs/specs/roadmap.md.
+
+  I also updated my memory note, so I add no log entry when a planned feature
+  leaves the roadmap unless you ask for one.
+
+✻ Churned for 13s · done 12:54 AM

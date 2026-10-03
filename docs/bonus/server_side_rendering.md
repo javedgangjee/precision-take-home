@@ -13,7 +13,7 @@
 
 - The server calculates the colour array and just sends that in the packet with 0 meaning the cell has no hits, 255 being the max.
 
-- The server loads the HTML and only updates when something fundamental needs to change such as N. After that, use a packet such as:
+- The server only sends the HTML when something fundamental needs to change. After that, use a packet such as:
 
 ```
 event: colours

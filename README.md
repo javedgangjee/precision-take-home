@@ -42,7 +42,7 @@ npx ng serve --open
 - Default N is **32**. to match 1,024 electrodes on Layer 7. Max=100
 - Each value is a **uniform random integer** from 0 to the maximum value minus 1, and the default maximum value is 10,000.
 - Cloud server accepts requests only from `http://localhost:4200` and `http://127.0.0.1:4200`.
-- The client runs in **Chrome** with **Energy Saver off**, and the target frame rate is **60 fps**. Energy Saver caps the frame rate at 30 fps.
+- Target frame rate is **60 fps**. Energy Saver caps the frame rate at 30 fps.
 - Latency numbers assume that the request and the response of `GET /time` take **about the same time** on the network
 
 ### Out of Scope 
@@ -63,6 +63,16 @@ npx ng serve --open
 
 The `docs/specs/tech-stack.md` file gives the version of each tool and the details of each part.
 
+## Trade-offs
+
+- **SSE** in place of WebSockets, because the client sends nothing to the server.
+- **1 shared stream** for all clients
+- Delivery is **lossy**. A slow client gets fresh data, and its counts have gaps.
+- **Plain JSON array**, as the brief suggests, which the server encodes once for all clients.
+- Client draws on a **canvas** at most once per display frame. 
+
+The `docs/trade-offs.md` file gives every trade-off by feature.
+
 ## Repo layout
 
 - `backend/` folder holds the FastAPI server. It is a uv project.
@@ -71,7 +81,7 @@ The `docs/specs/tech-stack.md` file gives the version of each tool and the detai
 
 ## Results
 
-All runs used the cloud server, which is 1 Fargate task with 0.25 vCPU. 
+The latency and load runs used the cloud server, which is 1 Fargate task with 0.25 vCPU. 
 
 ### Latency
 
@@ -92,6 +102,10 @@ The first part raised the samples per second with 1 client. The second part rais
   - At **20,000 samples/s with 100 clients**, with 99 curl processes, the p99 was **about 38 ms** and the CPU was at **76 to 78%**.
 
 CPU is the closest limit. A straight line through CPU values reaches 100% at about 1.2 million samples/s with 1 client, or at about 130 clients at 20,000 samples/s.
+
+### Browser limit
+
+Test source feeds the client direcctly, at N = 64. The frame rate stayed at **60 fps up to 10 million samples/s**, limit was near **40 million samples/s**.
 
 The `docs/results.md` file has the full tables and the limits of the measurement.
 

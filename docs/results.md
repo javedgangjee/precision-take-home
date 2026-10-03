@@ -1,5 +1,9 @@
 # Results
 
+## Feature 3, Frontend
+
+The browser stress test ran the client on the test source in the browser, with no server. It ran in Chrome with Energy Saver off at N = 64, which was the largest N at that time. The frame rate was 60 fps at 100,000, 5,000,000, and 10,000,000 samples per second, and it was 23 fps at 100,000,000. I found the limit near 40,000,000 samples per second. The docs/specs/features/03-frontend/validation.md file gives the method.
+
 ## Feature 8, Latency
 
 The client measures the time of each batch from generation to render. The Latency section of system.md describes the eight timestamps, the seven stages, and the console commands. The value that I compare with the 100 ms target is the p99 of the total.

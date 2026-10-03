@@ -1,7 +1,7 @@
 # AI Toolchain
 ## Tools
-- Claude Code run in terminal in VSCode with Opus 5.5 as the primary model
-- Claude Design has the first design prototype seen here:
+- **Claude Code** run in terminal in VSCode with **Opus 5.5** as the primary model
+- **Claude Design** was used for the first design prototype with my custom design system.
 - Github Copilot inline suggestions
 
 ## Skills
@@ -11,6 +11,7 @@
 ## Method
 The project used a personal take on spec-driven development by JetBrains. This has been used numerous times on personal projects and given the best results. It depends heavily on the author being in charge of every decision.
 
+![Diagram of the spec-driven method, from the context and the constitution through the feature loop to the final review](../assets/spec-driven-method.png)
 
 ### Context
 The first step is the creation of the constitution based on provided context which included the following:

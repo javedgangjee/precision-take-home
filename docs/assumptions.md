@@ -6,7 +6,7 @@ Each heading after the summary gives the feature number, the feature name, and t
 
 This list gives the assumptions that most affect the result. The sections below give every assumption.
 
-- The bin index is (v - 1) mod N². This rule matches both brief examples and the example input (e) in the brief picture. The value 0 goes to cell <N-1, N-1>.
+- The bin index is `(v - 1) mod N²`. This rule matches both brief examples and the example input (e) in the brief picture. The value 0 goes to cell`<N-1, N-1>`.
 - Row 0 is at the bottom of the grid and column 0 is at the left, as in the brief picture.
 - A count of 1 is full blue and the max count is full red. The colors of the brief picture are a sketch, so a cell with 5 of 10 hits is green on the client and not yellow.
 - Where the HTML design differs from the brief or the specs, the client follows the brief and the specs.

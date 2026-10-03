@@ -41,6 +41,51 @@ The `docs/specs/tech-stack.md` file gives the version of each tool and the detai
 - The `frontend/` folder holds the Angular client.
 - The `infra/` folder holds the AWS CDK app in Python. Separate uv project.
 
+## Results
+
+- Cloud server - single Fargate task with 0.25 vCPU. 
+- Client - Chrome on a MacBook Air with a 60 Hz display, with N = 32.
+
+### Latency
+
+The client measures each batch from generation to render in 7 stages. 
+Both runs used the default settings, which are 20,000 samples per second and a batch interval of 50 ms. 
+Each run held 1,200 batches over 60 seconds. 
+**Both runs meet the target.**
+
+| Run | p50 of the total | p99 of the total | Max of the total |
+| --- | --- | --- | --- |
+| Cloud server | 27.2 ms | **28.5 ms** | 43.6 ms |
+| Local server in Docker | 7.5 ms | **21.6 ms** | 23.9 ms |
+
+- The **network** is the largest stage of the cloud run, with a p50 of **15.0 ms**. The wait for the next **animation frame** is the second largest, with a p50 of **10.9 ms**.
+- The **server** makes and queues a batch in **less than 0.4 ms** at the p99.
+- The error of the **clock offset** is at most 11.85 ms in the cloud run. With the full error added, the p99 of the cloud total is **40 ms**, which still meets the target.
+- The measurement stops when the canvas draw call returns. The time from the draw call to the light on the **display** is not measured, and it is about one frame, which is 16.7 ms.
+
+### Load test
+
+The load test raised the samples per second with one client, and then it raised the number of clients at 20,000 samples per second. Each step has 3 runs of 30 seconds. A run passes when the p99 of the total latency is at most 100 ms and the lowest frame rate is at least 54 fps. A step passes when all 3 runs pass.
+
+| Samples per second | Clients | Integers in a batch | Highest p99 of the total | CPU maximum |
+| --- | --- | --- | --- | --- |
+| 20,000 | 1 | 1,000 | **29.1 ms** | 6.4% |
+| 250,000 | 1 | 12,500 | **23.9 ms** | 24.4% |
+| 500,000 | 1 | 25,000 | **34.5 ms** | 43.7% |
+| 1,000,000 | 1 | 50,000 | **55.5 ms** | 82.7% |
+| 20,000 | 5 | 1,000 | **25.1 ms** | 9.6% |
+| 20,000 | 100 | 1,000 | **38.2 ms** | 81.8% |
+
+The CPU values are a share of the 0.25 vCPU of the task.
+
+- **Every step passes**, so the test did not find the point where the server breaks.
+- **No run lost a batch**, and the frame rate stayed at **60 fps** in every run.
+- The largest batch that passes holds **50,000 integers**, which is about 244 KB.
+- The **CPU** of the task is the first limit that the numbers point at, and this is an assumption. A straight line through the CPU values reaches 100% at about **1,200,000 samples per second** with one client, and at about **130 clients** at 20,000 samples per second.
+- The extra clients were **curl processes** on the same laptop, which read the stream and dropped the data. I did not test many clients at a high rate.
+
+The `docs/results.md` file gives the table of each stage and the limits of each measurement. The `docs/system.md` file describes how to run both tests.
+
 ## AI toolchain
 
 ### Tools
@@ -58,10 +103,6 @@ The project used a personal take on spec-driven development by JetBrains. This h
 The `docs/ai/ai-toolchain.md` file gives the skills and each step of the method.
 
 ## Documentation
-
-The `docs` folder contains 7 items of interest:
-
-- `docs/system.md` describes how to set up the system and how it works. It covers the prerequisites, the install, the backend stream, the admin API, the client, the deploy, and the load test.
 - `docs/specs/` is the source of truth for what to build. The `features/` folder has one folder per feature, and each one holds `requirements.md`, `plan.md`, and `validation.md`.
 - `docs/ai/` shows how I used AI on the project. `ai-changes.md` records how I changed the AI output and why.
   - `docs/ai/logs/` holds the Claude Code session transcript for each spec-driven step, with one folder per feature.

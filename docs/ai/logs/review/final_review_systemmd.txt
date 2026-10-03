@@ -1,0 +1,1392 @@
+ ▐▛███▛█   Claude Code v2.1.288
+▝▜██████▀  Opus 5.5 · Claude Max
+ ▝▝   ▝▝   ~/Documents/Projects/_precision/precision-take-home
+
+
+❯ /clear                                                                        
+
+❯ The system file is verbose as the contents were built over the course of the  
+  development of the repo. Write plainly in ASD-STE100 Technical English. Do    
+  not repeat sections. Pair it down to essentials                               
+
+  Searched for 2 patterns, read 2 files, listed 1 directory, ran 2 shell commands (ctrl+o to expand)
+
+⏺ The target is docs/system.md. I have checked its facts against the code and
+  the specs, and I am writing the shorter version now.
+
+⏺ Write(docs/system.md)
+  ⎿  Added 91 lines, removed 115 lines
+       1  # System
+       2  
+       3 -## Prerequisites                                               
+       3 +This file tells you how to run the system and how each part beh
+         +aves. The folders in docs/specs/features/ give the full require
+         +ments of each feature.                                         
+       4  
+       5 -Install these tools before you start. The versions are the ones
+         - I use.                                                        
+       5 +## Setup                                                       
+       6  
+       7 -- You need uv 0.11.24. uv installs Python 3.13.15 for you if it
+         - is missing.                                                   
+       8 -- You need Node.js 22.22.1 and npm 11.20.0.                    
+       9 -- You need the AWS CDK CLI 2.1143.0 for `make synth`. Install i
+         -t with `npm install -g aws-cdk@2.1143.0`.                      
+      10 -- You need AWS CLI 2.37.4 with credentials for `make deploy`, `
+         -make destroy`, and `make cloud-cpu`. The AWS account must be bo
+         -otstrapped for CDK in the region of your AWS profile. The Deplo
+         -y section gives the command.                                   
+      11 -- You need GNU Make 3.81 or later. macOS ships with 3.81.      
+      12 -- You need Docker Desktop 4.92.0 with Docker 29.8.0 for `make d
+         -ocker-build`, `make docker`, and `make deploy`.                
+      13 -- The client loads its icons from Google Fonts, so the browser 
+         -needs the network.                                             
+       7 +Install these tools. The versions are the ones I use.          
+       8  
+      15 -## Install                                                     
+       9 +- uv 0.11.24 runs the backend and the infra. It installs Python
+         + 3.13.15 if it is missing.                                     
+      10 +- Node.js 22.22.1 and npm 11.20.0 run the client.              
+      11 +- GNU Make 3.81 or later runs the tasks. macOS ships with 3.81.
+      12 +- Docker Desktop 4.92.0 is necessary for `make docker` and `mak
+         +e deploy`.                                                     
+      13 +- AWS CDK CLI 2.1143.0 is necessary for `make synth`, `make dep
+         +loy`, and `make destroy`. Install it with `npm install -g aws-c
+         +dk@2.1143.0`.                                                  
+      14 +- AWS CLI 2.37.4 with credentials is necessary for `make deploy
+         +`, `make destroy`, and `make cloud-cpu`.                       
+      15  
+      16  Run `make install` from the repo root. It installs the backend,
+           frontend, and infra dependencies from their lock files.
+      17  
+      19 -## Backend stream                                              
+      18 +## Run                                                         
+      19  
+      21 -`GET /stream` sends the stream as Server-Sent Events. Each even
+         -t holds one batch as a compact JSON array of random integers in
+         - its `data` field, with no spaces. The server generates one sha
+         -red stream, so every client gets the same batches. When the ser
+         -ver sends nothing for 15 seconds, it sends the comment `: ping`
+         -.                                                              
+      20 +| Command | Effect |                                           
+      21 +| --- | --- |                                                  
+      22 +| `make frontend` | It starts the client at http://localhost:42
+         +00. |                                                          
+      23 +| `make backend` | It starts the local server at http://localho
+         +st:8000. |                                                     
+      24 +| `make dev` | It starts the local server and the client togeth
+         +er. |                                                          
+      25 +| `make docker` | It builds the backend image and runs it at ht
+         +tp://localhost:8000. |                                         
+      26  
+      23 -The `id` field of a batch holds four whole numbers with a colon
+         - between them, in the form `<sequence number>:<started>:<encode
+         -d>:<sent>`.                                                    
+      27 +The client reads the stream from the cloud server at https://ap
+         +i.precision.jgangjee.com. To use the local server, open http://
+         +localhost:4200/?server=http://localhost:8000. The browser needs
+         + the network, because the client loads its icons from Google Fo
+         +nts.                                                           
+      28  
+      29 +## Stream                                                      
+      30 +                                                               
+      31 +`GET /stream` sends Server-Sent Events. The server makes one sh
+         +ared stream, so every client gets the same batches. The server 
+         +keeps a queue of 2 batches for each client and drops the oldest
+         + batch when a client is slow. When the server sends nothing for
+         + 15 seconds, it sends the comment `: ping`.                    
+      32 +                                                               
+      33 +The stream has two event types. A batch event holds the integer
+         +s as a compact JSON array in `data`. Its `id` has the form `<se
+         +quence number>:<started>:<encoded>:<sent>`.                    
+      34 +                                                               
+      35  ```
+      36  data: [794,29,619,38]
+      37  id: 1234:1790812800123456:1790812800123541:1790812800123702
+      38  ```
+      39  
+      30 -- The sequence number starts at 0 when the server starts and go
+         -es up by 1 for each batch. A gap in the sequence numbers shows 
+         -that the client missed batches.                                
+      31 -- The three times are server timestamps in microseconds since t
+         -he Unix epoch. The Latency section tells what each one means.  
+      32 -- Every client gets the same `started` and `encoded` times for 
+         -a batch. Each client has its own `sent` time.                  
+      33 -- The times are not in the data, so the data stays a JSON array
+         - of integers.                                                  
+      40 +- The sequence number starts at 0 when the server starts and go
+         +es up by 1 for each batch. A gap shows that the client missed b
+         +atches.                                                        
+      41 +- The three times are server timestamps in microseconds since t
+         +he Unix epoch. The Latency section defines them. Each client ha
+         +s its own `sent` time.                                         
+      42  
+      35 -The stream has one more event type, which is the settings packe
+         -t. It has the line `event: update`, and its `data` field holds 
+         -the three stream settings and the pause state as one compact JS
+         -ON object.                                                     
+      43 +A settings packet has the line `event: update` and no `id`. Its
+         + `data` holds the three stream settings and the pause state.   
+      44  
+      45  ```
+      46  event: update
+      47  data: {"samples_per_second":20000,"batch_interval_ms":50,"max_v
+          alue":10000,"paused":false}
+      48  ```
+      49  
+      42 -- The settings packet is the first event on each connection.   
+      43 -- The server sends it again to every client after each `PATCH /
+         -admin/settings` that returns status 200, and after a pause or a
+         - resume that changes the pause state.                          
+      44 -- The settings packet is not a batch. It has no `id` line, and 
+         -the batch sequence number does not advance when the server send
+         -s one.                                                         
+      45 -- The server keeps one current packet and does not put it in th
+         -e client queue, so the queue that drops the oldest batch for a 
+         -slow client never drops a settings packet. When two changes hap
+         -pen before a client reads the first one, the client gets one pa
+         -cket with the newest values.                                   
+      46 -- Batches that the server made before a change can still arrive
+         - after the packet.                                             
+      50 +- The server sends the packet first on each connection. It send
+         +s the packet again to every client after each change to the set
+         +tings or the pause state.                                      
+      51 +- The packet does not go into the client queue, so the server n
+         +ever drops it.                                                 
+      52 +- Batches that the server made before a change can arrive after
+         + the packet.                                                   
+      53  
+      48 -Run `make backend`, and then run this command in another termin
+         -al to see the stream.                                          
+      54 +`GET /time` returns the server time, such as `{"epoch_us":17908
+         +12800123456}`. The client uses it to compare its clock with the
+         + server clock.                                                 
+      55  
+      50 -```sh                                                          
+      51 -curl -N localhost:8000/stream | head -c 300                    
+      52 -```                                                            
+      53 -                                                               
+      54 -`GET /time` returns the server time in microseconds since the U
+         -nix epoch, such as `{"epoch_us":1790812800123456}`. The client 
+         -uses it to compare its clock with the server clock. The respons
+         -e has the header `Cache-Control: no-store`, and the request nee
+         -ds no token.                                                   
+      55 -                                                               
+      56  The server reads these environment variables at start. When a v
+          alue is out of range or not a number, the server logs a warning
+           and uses the default.
+      57  
+      58  | Variable | Default | Range | Meaning |
+     ...
+      60  | `SAMPLES_PER_SECOND` | 20000 | 1 to 1000000 | This sets how m
+          any integers the server makes each second. |
+      61  | `BATCH_INTERVAL_MS` | 50 | 50 to 1000 | This sets the time be
+          tween batches in milliseconds. |
+      62  | `MAX_VALUE` | 10000 | 1 to 10000 | Each integer is from 0 to 
+          this value minus 1. |
+      63 -| `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-s
+         -eparated list. The server strips a trailing slash from each ori
+         -gin. | These origins can call the server from a browser. |     
+      64 -| `ADMIN_TOKEN` | It has no default. | It takes any string. | T
+         -his is the token for the admin API. With no token, the server h
+         -as no admin API. |                                             
+      63 +| `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-s
+         +eparated list. | These origins can call the server from a brows
+         +er. |                                                          
+      64 +| `ADMIN_TOKEN` | It has no default. | It takes any string. | T
+         +his is the token for the admin API. |                          
+      65  
+      66 -For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make
+         - backend` sends one batch of 20 integers each second. The same 
+         -variables work with `make docker`.                             
+      66 +For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make
+         + backend` sends one batch of 20 integers each second. The same 
+         +variables work with `make docker`. To see the stream, run this 
+         +command in another terminal.                                   
+      67  
+      68 +```sh                                                          
+      69 +curl -N localhost:8000/stream | head -c 300                    
+      70 +```                                                            
+      71 +                                                               
+      72  ## Admin API
+      73  
+      70 -The admin API changes the stream settings and pauses the stream
+         - while the server runs, so a test of a new rate needs no restar
+         -t. Every client gets the change at once, because the server kee
+         -ps one shared stream. The server also sends each client a setti
+         -ngs packet with the new state, as the Backend stream section de
+         -scribes. The changes live in memory only. A restart or a deploy
+         - sets the settings back to the environment values and ends the 
+         -pause.                                                         
+      74 +The admin API changes the stream settings and pauses the stream
+         + while the server runs. The changes live in memory only. A rest
+         +art or a deploy sets the settings back to the environment value
+         +s and ends the pause.                                          
+      75  
+      72 -Each admin request must send the header `Authorization: Bearer 
+         -<token>`. A request with a missing or wrong token gets status 4
+         -01. When `ADMIN_TOKEN` is not set, every admin path returns sta
+         -tus 404. The local token from `make backend`, `make dev`, and `
+         -make docker` is `local-admin-token`. The Deploy section shows h
+         -ow to read the cloud token.                                    
+      76 +Each request must send the header `Authorization: Bearer <token
+         +>`. A missing or wrong token gets status 401. When `ADMIN_TOKEN
+         +` is not set, every admin path returns status 404. The local to
+         +ken is `local-admin-token`. The Deploy section shows how to rea
+         +d the cloud token.                                             
+      77  
+      78  | Request | Body | Effect |
+      79  | --- | --- | --- |
+     ...
+      82  | `POST /admin/pause` | It takes no body. | This stops the batc
+          hes. |
+      83  | `POST /admin/resume` | It takes no body. | This starts the ba
+          tches again. |
+      84  
+      81 -Each request returns the settings and the pause state as one JS
+         -ON object, such as `{"samples_per_second": 20000, "batch_interv
+         -al_ms": 50, "max_value": 10000, "paused": false}`.             
+      85 +Each request returns a JSON object with the same fields as the 
+         +settings packet.                                               
+      86  
+      83 -- A PATCH value must be an integer in the range in the Backend 
+         -stream table. A value out of range, a value that is not an inte
+         -ger, or an unknown field gets status 422, and no setting change
+         -s. The PATCH cannot change `CORS_ORIGINS`.                     
+      84 -- A change to the batch interval starts the schedule again from
+         - the time of the change, so the server sends no burst of batche
+         -s. The batch sequence number keeps going up.                   
+      85 -- While paused, the server sends no batches, and the batch sequ
+         -ence number does not advance. The `: ping` heartbeat keeps each
+         - connection open. A resume starts the schedule again and does n
+         -ot send the batches that the pause skipped. A settings change d
+         -uring a pause applies when the stream resumes.                 
+      86 -- A pause while paused and a resume while running return status
+         - 200 and change nothing.                                       
+      87 -- The server logs each change.                                 
+      87 +- A PATCH value must be an integer in the range in the Stream t
+         +able. A bad value or an unknown field gets status 422, and no s
+         +etting changes.                                                
+      88 +- A change to the batch interval starts the schedule again from
+         + the time of the change, so the server sends no burst of batche
+         +s.                                                             
+      89 +- While paused, the server sends no batches, and the sequence n
+         +umber does not advance. A resume does not send the batches that
+         + the pause skipped.                                            
+      90 +- A settings change during a pause applies when the stream resu
+         +mes.                                                           
+      91  
+      89 -Run `make backend`, and then run these commands in another term
+         -inal.                                                          
+      90 -                                                               
+      92  ```sh
+      93  TOKEN=local-admin-token
+      94  curl localhost:8000/admin/settings -H "Authorization: Bearer $T
+          OKEN"
+     ...
+      100  
+      101  ## Client
+      102  
+      102 -Run `make frontend` and open http://localhost:4200. The page s
+          -hows the heat map, a color scale, and a side panel. The client
+          - reads the stream from the cloud server at https://api.precisi
+          -on.jgangjee.com and applies each batch to the counts.         
+      103 +The page shows the heat map, a color scale, and a side panel. 
+      104  
+      104 -To use the local server, run `make dev` or `make docker`, and 
+          -open http://localhost:4200/?server=http://localhost:8000. With
+          - `make docker`, also run `make frontend` in another terminal. 
+      105 +- The grid has N by N cells, and N is 32 at start. Row 0 is at
+          + the bottom, and column 0 is at the left.                     
+      106 +- Each value v goes to cell index (v - 1) mod N². The row is t
+          +he index divided by N, and the column is the index mod N. On a
+          + 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and
+          + 0 goes to cell <3,3>.                                        
+      107 +- A cell with no hits is white. A cell with hits gets a color 
+          +from blue (#1E00FF) at a count of 1 through cyan, green, and y
+          +ellow to red (#FF0033) at the max count.                      
+      108 +- The N field and its minus and plus buttons set N from 1 to 1
+          +00. A change to N resets all counts to zero.                  
+      109 +- A badge shows the stream state, which is Connecting, Live, R
+          +econnecting, Paused, or Test source.                          
+      110 +- The side panel shows the samples received, the max count, th
+          +e frame rate, the missed batches, and the three stream setting
+          +s from the settings packet.                                   
+      111 +- A red line shows below the frame rate when it falls below 90
+          + percent of 60 fps. Use Chrome with Energy Saver off, because 
+          +Energy Saver caps the frame rate at 30 fps.                   
+      112 +- The Missed batches readout adds the size of each gap in the 
+          +sequence numbers. A change to N or a server restart sets it to
+          + 0.                                                           
+      113  
+      106 -The client reads these settings from the URL query. When a val
+          -ue is bad, the client logs a warning to the console and uses t
+          -he default.                                                   
+      114 +The client reads these settings from the URL query. When a val
+          +ue is bad, the client logs a warning to the console and uses t
+          +he default. A change to the query needs a reload.             
+      115  
+      116  | Setting | Default | Meaning |
+      117  | --- | --- | --- |
+      110 -| `source` | `server` | The value `server` reads the stream fr
+          -om the server. The value `frontend` runs the test source in th
+          -e browser instead. Only one source runs at a time. |          
+      111 -| `server` | `https://api.precision.jgangjee.com` | This is th
+          -e server address, which must be an http or https URL. The clie
+          -nt strips a trailing slash and connects to the address plus `/
+          -stream`. |                                                    
+      118 +| `source` | `server` | The value `frontend` runs the test sou
+          +rce in the browser in place of the server. |                  
+      119 +| `server` | `https://api.precision.jgangjee.com` | This is th
+          +e server address, which must be an http or https URL. |       
+      120 +| `rate` | 20000 | This sets how many integers the test source
+          + makes each second, from 1 to 100000000. |                    
+      121 +| `interval` | 50 | This sets the time between batches of the 
+          +test source in milliseconds, from 50 to 1000. |               
+      122 +| `max` | 10000 | Each integer of the test source is from 0 to
+          + this value minus 1. The range is 1 to 10000. |               
+      123  
+      113 -For example, http://localhost:4200/?server=http://localhost:80
+          -00 connects to the local server.                              
+      124 +### Reconnect and pause                                       
+      125  
+      115 -- The grid has N by N cells, and N is 32 at start. Row 0 is at
+          - the bottom, and column 0 is at the left. Row numbers run up t
+          -he left side and column numbers run along the bottom. When N i
+          -s above 16, every 2nd row and column has a label, and when N i
+          -s above 32, every 4th one has a label.                        
+      116 -- Each value v goes to cell index (v - 1) mod N². The row is t
+          -he index divided by N, and the column is the index mod N. On a
+          - 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and
+          - 0 goes to cell <3,3>.                                        
+      117 -- A cell with no hits is white. A cell with hits gets a color 
+          -from blue (#1E00FF) at a count of 1 through cyan, green, and y
+          -ellow to red (#FF0033) at the max count.                      
+      118 -- The color scale shows the max count at the top, the midpoint
+          - in the middle, and 1 at the bottom.                          
+      119 -- The minus and plus buttons change N from 1 to 100, and the n
+          -ote "N ranges from 1 to 100" shows below the N field. The N fi
+          -eld shows N only, such as "32". You can also type a number in 
+          -the N field. It sets N when you press Enter or leave the field
+          -. A number above 100 snaps to 100, and a number below 1 snaps 
+          -to 1. Escape shows the current N again. The up and down arrow 
+          -keys in the N field change N by 1, and by 10 with Shift. A cha
+          -nge to N resets all counts to zero.                           
+      120 -- A badge at the top of the side panel shows the stream state.
+          - Connecting is a white badge, and it shows from the start unti
+          -l the stream opens. Live is a green badge, and it shows while 
+          -batches arrive. Reconnecting is an amber badge, and it shows a
+          -fter a live stream drops until the stream opens again. Paused 
+          -is a white badge with a pause icon, and it shows while the ser
+          -ver is paused. Test source is a white badge with no icon, and 
+          -it shows while the test source runs.                          
+      121 -- The side panel shows the samples received, the max count, an
+          -d the frame rate. A red line shows below the frame rate when i
+          -t falls below 90 percent of the target of 60 fps. Run the clie
+          -nt in Chrome with Energy Saver off, because Energy Saver caps 
+          -the frame rate at 30 fps.                                     
+      122 -- The Missed batches readout shows how many batches the client
+          - did not get. The client reads the sequence number from the id
+          - of each batch, and a number that skips ahead adds the size of
+          - the gap to the count. The count starts at 0 when the page loa
+          -ds, and it spans a reconnect. A change to N sets it to 0. A se
+          -quence number lower than the last one means that the server re
+          -started, and it also sets the count to 0.                     
+      123 -- The Samples per second, Batch interval, and Max value readou
+          -ts show the settings of the stream. The client reads them from
+          - the settings packet, so they change within a second of an adm
+          -in change, with no reload. They do not show until the first se
+          -ttings packet arrives.                                        
+      124 -- In a short window the side panel scrolls.                   
+      126 +When the stream drops, the client tries again after a delay. T
+          +he first delay is 1 second, and each failed attempt doubles it
+          + up to 30 seconds. A random factor from 0.5 to 1 spreads out t
+          +he clients after a server restart. The client also counts the 
+          +stream as dropped when no batch arrives for 5 seconds. The cou
+          +nts stay on screen during a reconnect. Batches that the server
+          + sends during the drop are lost, and the Missed batches readou
+          +t counts them.                                                
+      127  
+      126 -### Reconnect                                                 
+      128 +When a settings packet says that the server is paused, the cli
+          +ent shows Paused and keeps the stream open. It stops the 5 sec
+          +ond check until the pause ends. The grid and the readouts keep
+          + their values.                                                
+      129  
+      128 -When the stream drops, the client closes it and tries again af
+          -ter a delay. The first delay is 1 second, and each failed atte
+          -mpt doubles it up to 30 seconds. A random factor from 0.5 to 1
+          - spreads out the clients after a server restart. The delay goe
+          -s back to 1 second after the stream opens. The browser hides t
+          -he `: ping` heartbeat from the client, so the client also coun
+          -ts a live stream as dropped when no batch arrives for 5 second
+          -s. The counts stay on screen during a reconnect. Only a change
+          - to N resets them. Batches that the server sends during the dr
+          -op are lost, and the Missed batches readout counts them.      
+      130 +### Test source                                               
+      131  
+      130 -One limit stays in the missed batch count. After a server rest
+          -art, the count gets a false gap when the first new sequence nu
+          -mber is higher than the last one the client saw. This needs a 
+          -server that ran for less time than the client took to reconnec
+          -t.                                                            
+      132 +With `source=frontend`, a Web Worker makes the data in the bro
+          +wser. It makes uniform random integers and has the same queue 
+          +of 2 batches as the server. The `rate` range goes past the ser
+          +ver limit, so a stress test can push the browser. The panel ha
+          +s no Missed batches readout, because the worker messages have 
+          +no batch id.                                                  
+      133  
+      132 -### Pause                                                     
+      134 +For a stress test, run `make frontend`, open http://localhost:
+          +4200/?source=frontend&rate=1000000&interval=50&max=10000, set 
+          +N to 100, and watch the frame rate.                           
+      135  
+      134 -When a settings packet says that the server is paused, the cli
+          -ent shows Paused, keeps the stream open, and stops the 5 secon
+          -d check, because the server sends no batches during a pause. T
+          -he grid and the readouts keep their values. A settings packet 
+          -with the pause off sets the state to Live and starts the check
+          - again. The badge shows Live when the stream opens, so a clien
+          -t that connects during a pause shows Live for a moment before 
+          -it shows Paused. When the stream drops during a pause, the cli
+          -ent shows Reconnecting and tries again with the same delays.  
+      136 +## Latency                                                    
+      137  
+      136 -### Latency                                                   
+      138 +The client measures each batch from generation to render with 
+          +eight timestamps. The server takes the first three on its cloc
+          +k and sends them in the batch id. The client takes the other f
+          +ive on its clock.                                             
+      139  
+      138 -The client measures the time of each batch from generation to 
+          -render. The measurement has eight timestamps. The server takes
+          - the first three on its clock and sends them in the batch id. 
+          -The client takes the other five on its clock.                 
+      139 -                                                              
+      140  - `started` is the time just before the server makes the value
+           s of the batch.
+      141  - `encoded` is the time when the JSON text exists and the batc
+           h goes into the client queues.
+      142 -- `sent` is the time when the stream route takes the batch fro
+          -m the queue of that client and hands the event to the web serv
+          -er.                                                           
+      142 +- `sent` is the time when the stream route hands the event to 
+          +the web server.                                               
+      143  - `received` is the time when the message handler of the clien
+           t starts.
+      144  - `parsed` is the time when the client has the array of intege
+           rs.
+      145  - `applied` is the time when the counts hold the batch.
+      146  - `frame` is the time when the animation frame callback that d
+           raws the batch starts.
+      147  - `drawn` is the time when the canvas draw call returns.
+      148  
+      149 -Each stage runs from one timestamp to the next. The seven stag
+          -es are generate, queue, network, parse, apply, frame wait, and
+          - draw, in that order. The total runs from `started` to `drawn`
+          -. The network stage holds the write by Uvicorn, the load balan
+          -cer, the network, and the browser. The measurement stops at `d
+          -rawn`, so it does not hold the time from the draw call to the 
+          -light on the display.                                         
+      149 +Each stage runs from one timestamp to the next. The seven stag
+          +es are generate, queue, network, parse, apply, frame wait, and
+          + draw. The network stage holds the write by Uvicorn, the load 
+          +balancer, the network, and the browser. The total runs from `s
+          +tarted` to `drawn`, so it does not hold the time from the draw
+          + call to the light on the display.                            
+      150  
+      151 -The network stage and the total cross the two clocks, so the c
+          -lient measures the difference between them. It makes 5 request
+          -s to `GET /time`, one after the other, and keeps the offset fr
+          -om the request with the shortest round trip. The error of the 
+          -offset is at most half of that round trip. The client measures
+          - the offset when the page loads and on each `latency.reset()`,
+          - and it sends no time requests in the background. The two cloc
+          -ks can drift by 1 to 3 ms each minute, so start each run with 
+          -a reset.                                                      
+      151 +The network stage and the total cross the two clocks, so the c
+          +lient measures the offset between them. It makes 5 requests to
+          + `GET /time` and keeps the offset from the request with the sh
+          +ortest round trip. The error of the offset is at most half of 
+          +that round trip. The client measures the offset when the page 
+          +loads and on each `latency.reset()`. The clocks can drift by 1
+          + to 3 ms each minute, so start each run with a reset.         
+      152  
+      153 -To read the latency, open the Chrome DevTools console and keep
+          - the tab in front, because a hidden tab draws no frames.      
+      153 +To read the latency, open the Chrome DevTools console. Keep th
+          +e tab in front, because a hidden tab draws no frames.         
+      154  
+      155  1. Run `latency.reset()`. It drops the samples and measures th
+           e clock offset again.
+      156  2. Wait 60 seconds.
+      157 -3. Run `latency.report()`. It prints a table with one row for 
+          -each stage and one row for the total. The columns are the p50,
+          - the p95, the p99, and the max in milliseconds.               
+      157 +3. Run `latency.report()`. It prints the p50, the p95, the p99
+          +, and the max of each stage and of the total, in milliseconds.
+      158  
+      159 -The report also returns the same values as an object, with the
+          - number of batches, the clock offset, and the round trip. Run 
+          -`copy(latency.report())` to put them on the clipboard as JSON.
+          - The client keeps the last 1,200 batches, which is 60 seconds 
+          -at the default settings. The side panel does not show the late
+          -ncy. The test source has no server times, so `latency` does no
+          -t exist with `source=frontend`.                               
+      159 +Run `copy(latency.report())` to put the values on the clipboar
+          +d as JSON. The client keeps the last 1,200 batches, which is 6
+          +0 seconds at the default settings. The test source has no serv
+          +er times, so `latency` does not exist with `source=frontend`. 
+          +The docs/results.md file gives the measured times.            
+      160  
+      161 -The docs/results.md file gives the measured times and compares
+          - the p99 of the total with the 100 ms target.                 
+      162 -                                                              
+      163 -### Test source                                               
+      164 -                                                              
+      165 -With `source=frontend` in the URL query, a test source in a We
+          -b Worker makes the data in the browser in place of the server.
+          - It makes uniform random integers as the server does, and it p
+          -osts each batch as a JSON string. It has the same queue of 2 b
+          -atches as the server. When the main thread falls behind, the w
+          -orker drops the oldest waiting batch. The client reads the set
+          -tings from the URL query. When a value is out of range or not 
+          -a whole number, the client logs a warning to the console and u
+          -ses the default.                                              
+      166 -                                                              
+      167 -| Setting | Default | Range | Meaning |                       
+      168 -| --- | --- | --- | --- |                                     
+      169 -| `rate` | 20000 | 1 to 100000000 | This sets how many integer
+          -s the source makes each second. The range goes past the server
+          - limit, so a stress test can push the browser. |              
+      170 -| `interval` | 50 | 50 to 1000 | This sets the time between ba
+          -tches in milliseconds. |                                      
+      171 -| `max` | 10000 | 1 to 10000 | Each integer is from 0 to this 
+          -value minus 1. |                                              
+      172 -                                                              
+      173 -The three settings readouts in the side panel show the `rate`,
+          - `interval`, and `max` values in use. The panel has no Missed 
+          -batches readout, because the worker messages have no batch id.
+      174 -                                                              
+      175 -A change to the query needs a reload, which also resets the co
+          -unts. For a stress test, run `make frontend`, open http://loca
+          -lhost:4200/?source=frontend&rate=1000000&interval=50&max=10000
+          -, set N to 100, and watch the frame rate.                     
+      176 -                                                              
+      161  ## Deploy
+      162  
+      179 -The backend runs on AWS ECS Fargate at https://api.precision.j
+          -gangjee.com. The CDK app in infra/ defines the stack. The stac
+          -k names no account or region, so a deploy uses the ones in you
+          -r AWS profile at the time.                                    
+      163 +The backend runs on AWS ECS Fargate at https://api.precision.j
+          +gangjee.com. The CDK app in infra/ defines the stack. The stac
+          +k names no account or region, so a deploy uses the ones in you
+          +r AWS profile.                                                
+      164  
+      181 -The stack makes these resources.                              
+      165 +- One Fargate task with 0.25 vCPU and 512 MiB on ARM64 runs th
+          +e image from backend/Dockerfile. `make docker` runs the same i
+          +mage.                                                         
+      166 +- An Application Load Balancer serves HTTPS on port 443, redir
+          +ects port 80 to HTTPS, and checks `GET /health`.              
+      167 +- The VPC has public subnets in 2 availability zones and no NA
+          +T gateway.                                                    
+      168 +- An ACM certificate and an A record give the load balancer th
+          +e name api.precision.jgangjee.com. The stack imports the Route
+          + 53 hosted zone for precision.jgangjee.com.                   
+      169 +- A CloudWatch log group keeps the container logs for one week
+          +.                                                             
+      170 +- A Secrets Manager secret holds a random 32-character value, 
+          +which the task gets as `ADMIN_TOKEN`.                         
+      171 +- The task sets `CORS_ORIGINS` to `http://localhost:4200,http:
+          +//127.0.0.1:4200`, so the local client can read the cloud stre
+          +am.                                                           
+      172  
+      183 -- It imports the Route 53 hosted zone for precision.jgangjee.c
+          -om by its id. Cloudflare hosts jgangjee.com and delegates that
+          - zone to Route 53.                                            
+      184 -- It makes an ACM certificate for api.precision.jgangjee.com t
+          -hat validates by DNS, and an A record that points the name at 
+          -the load balancer.                                            
+      185 -- It makes a VPC with public subnets in 2 availability zones a
+          -nd no NAT gateway.                                            
+      186 -- It runs one Fargate task with 0.25 vCPU and 512 MiB on ARM64
+          -. The task runs the image that backend/Dockerfile builds, the 
+          -same image as `make docker`.                                  
+      187 -- It puts an Application Load Balancer in front of the task. T
+          -he load balancer serves HTTPS on port 443 and redirects port 8
+          -0 to HTTPS. It checks `GET /health`.                          
+      188 -- It sends the container logs to a CloudWatch log group that k
+          -eeps them for one week.                                       
+      189 -- It makes a Secrets Manager secret with a random 32-character
+          - value, and passes it to the task as `ADMIN_TOKEN`.           
+      173 +A deploy stops the old task before it starts the new one, so t
+          +he stream is down for about a minute.                         
+      174  
+      191 -The task sets `CORS_ORIGINS` to `http://localhost:4200,http://
+          -127.0.0.1:4200`, so the local client can read the cloud stream
+          -.                                                             
+      192 -                                                              
+      193 -A deploy stops the old task before it starts the new one, so t
+          -wo streams never run at once. The stream is down for about a m
+          -inute, and the client shows Reconnecting until the new task is
+          - live.                                                        
+      194 -                                                              
+      195 -To deploy, follow these steps.                                
+      196 -                                                              
+      175  1. Run `aws login`, or set up AWS credentials another way.
+      198 -2. Bootstrap the account for CDK in the region of your profile
+          - once. Run `cdk bootstrap` from infra/.                       
+      199 -3. Start Docker Desktop. CDK builds the image with Docker and 
+          -pushes it to the bootstrap ECR repo.                          
+      200 -4. Run `make deploy` and approve the security changes in the t
+          -erminal. The outputs give the service URL, the cluster name, t
+          -he service name, and the ARN of the admin token secret.       
+      176 +2. Run `cdk bootstrap` from infra/ one time for the account an
+          +d region of your profile.                                     
+      177 +3. Start Docker Desktop. CDK builds the image with Docker.    
+      178 +4. Run `make deploy` and approve the security changes in the t
+          +erminal.                                                      
+      179  
+      202 -To call the cloud admin API, read the token from the secret. T
+          -he stack output `AdminTokenSecretArn` names the secret. Run th
+          -ese commands with the same AWS profile as the deploy.         
+      180 +To call the cloud admin API, read the token from the secret. R
+          +un these commands with the same AWS profile as the deploy.    
+      181  
+      182  ```sh
+      183  ARN=$(aws cloudformation describe-stacks --stack-name Precisio
+           nStack \
+     ...
+      199  
+      200  ## Load test
+      201  
+      224 -The load test measures the limits of the cloud server on the s
+          -amples per second, the number of clients, and the size of a ba
+          -tch. It runs against the cloud server only. I change the setti
+          -ngs between the steps with `make cloud-setting-update`, so the
+          - server needs no restart.                                     
+      202 +The load test measures the limits of the cloud server. I chang
+          +e the settings between the steps with `make cloud-setting-upda
+          +te`, so the server needs no restart.                          
+      203  
+      226 -The test has two parts, in this order.                        
+      204 +1. The first part raises the samples per second through 20,000
+          +, 250,000, 500,000, and 1,000,000, with one client and a batch
+          + interval of 50 ms.                                           
+      205 +2. The second part raises the number of clients through 2, 5, 
+          +10, 20, 50, and 100, at 20,000 samples per second. One Chrome 
+          +tab measures, and each other client is a curl process on the l
+          +aptop that reads the stream and drops the data.               
+      206  
+      228 -1. The first part raises the samples per second through 20,000
+          -, 250,000, 500,000, and 1,000,000, with one client and a batch
+          - interval of 50 ms. The batches hold 1,000, 12,500, 25,000, an
+          -d 50,000 integers.                                            
+      229 -2. The second part raises the number of clients through 2, 5, 
+          -10, 20, 50, and 100, at 20,000 samples per second and a batch 
+          -interval of 50 ms. One Chrome tab measures, and each other cli
+          -ent is a curl process on the laptop that reads the stream and 
+          -drops the data.                                               
+      207 +Each step has 3 runs of 30 seconds. A run passes when the p99 
+          +of the total latency is at most 100 ms and the frame rate stay
+          +s at 54 fps or more. A step passes when all 3 runs pass, and a
+          + part ends at its first step that fails. After each part, `mak
+          +e cloud-cpu` gives the CPU use of the server.                 
+      208  
+      231 -Each step has 3 runs of 30 seconds. A run passes when the p99 
+          -of the total latency from `latency.report()` is at most 100 ms
+          - and the frame rate stays at 54 fps or more. A step passes whe
+          -n all 3 runs pass, and a part ends at its first step that fail
+          -s. After each part, `make cloud-cpu` gives the CPU use of the 
+          -server, as a clue to what limits a step. The CPU is not part o
+          -f the pass rule.                                              
+      232 -                                                              
+      233 -The docs/specs/features/09-load/validation.md file gives the m
+          -ethod, with the console snippet that times a run and reads its
+          - frame rate. The docs/results.md file records the limits.     
+      209 +The docs/specs/features/09-load/validation.md file gives the m
+          +ethod and the console snippet that times a run. The docs/resul
+          +ts.md file records the limits.                                
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Update(docs/system.md)
+  ⎿  Added 3 lines, removed 2 lines
+      168  - An ACM certificate and an A record give the load balancer th
+           e name api.precision.jgangjee.com. The stack imports the Route
+            53 hosted zone for precision.jgangjee.com.
+      169  - A CloudWatch log group keeps the container logs for one week
+           .
+      170  - A Secrets Manager secret holds a random 32-character value, 
+           which the task gets as `ADMIN_TOKEN`.
+      171 -- The task sets `CORS_ORIGINS` to `http://localhost:4200,http:
+          -//127.0.0.1:4200`, so the local client can read the cloud stre
+          -am.                                                           
+      171  
+      173 -A deploy stops the old task before it starts the new one, so t
+          -he stream is down for about a minute.                         
+      172 +The task sets `CORS_ORIGINS` to `http://localhost:4200,http://
+          +127.0.0.1:4200`, so the local client can read the cloud stream
+          +. A deploy stops the old task before it starts the new one, so
+          + the stream is down for about a minute.                       
+      173  
+      174 +To deploy, do these steps.                                    
+      175 +                                                              
+      176  1. Run `aws login`, or set up AWS credentials another way.
+      177  2. Run `cdk bootstrap` from infra/ one time for the account an
+           d region of your profile.
+      178  3. Start Docker Desktop. CDK builds the image with Docker.
+
+⏺ Update(docs/system.md)
+  ⎿  Added 1 line, removed 1 line
+      160  
+      161  ## Deploy
+      162  
+      163 -The backend runs on AWS ECS Fargate at https://api.precision.j
+          -gangjee.com. The CDK app in infra/ defines the stack. The stac
+          -k names no account or region, so a deploy uses the ones in you
+          -r AWS profile.                                                
+      163 +The backend runs on AWS ECS Fargate at https://api.precision.j
+          +gangjee.com. The CDK app in infra/ defines the stack. The stac
+          +k names no account or region, so a deploy uses the ones in you
+          +r AWS profile. The stack makes these resources.               
+      164  
+      165  - One Fargate task with 0.25 vCPU and 512 MiB on ARM64 runs th
+           e image from backend/Dockerfile. `make docker` runs the same i
+           mage.
+      166  - An Application Load Balancer serves HTTPS on port 443, redir
+           ects port 80 to HTTPS, and checks `GET /health`.
+
+⏺ Update(docs/system.md)
+  ⎿  Added 2 lines
+      89  - While paused, the server sends no batches, and the sequence n
+          umber does not advance. A resume does not send the batches that
+           the pause skipped.
+      90  - A settings change during a pause applies when the stream resu
+          mes.
+      91  
+      92 +Run `make backend`, and then run these commands in another term
+         +inal.                                                          
+      93 +                                                               
+      94  ```sh
+      95  TOKEN=local-admin-token
+      96  curl localhost:8000/admin/settings -H "Authorization: Bearer $T
+          OKEN"
+
+⏺ Update(docs/system.md)
+  ⎿  Removed 1 line
+      49  
+      50  - The server sends the packet first on each connection. It send
+          s the packet again to every client after each change to the set
+          tings or the pause state.
+      51  - The packet does not go into the client queue, so the server n
+          ever drops it.
+      52 -- Batches that the server made before a change can arrive after
+         - the packet.                                                   
+      52  
+      53  `GET /time` returns the server time, such as `{"epoch_us":17908
+          12800123456}`. The client uses it to compare its clock with the
+           server clock.
+      54  
+
+⏺ Update(docs/system.md)
+  ⎿  Added 1 line, removed 1 line
+      62  | `CORS_ORIGINS` | `http://localhost:4200` | It takes a comma-s
+          eparated list. | These origins can call the server from a brows
+          er. |
+      63  | `ADMIN_TOKEN` | It has no default. | It takes any string. | T
+          his is the token for the admin API. |
+      64  
+      65 -For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make
+         - backend` sends one batch of 20 integers each second. The same 
+         -variables work with `make docker`. To see the stream, run this 
+         -command in another terminal.                                   
+      65 +For example, `SAMPLES_PER_SECOND=20 BATCH_INTERVAL_MS=1000 make
+         + backend` sends one batch of 20 integers each second. The same 
+         +variables work with `make docker`. To see the stream, run `make
+         + backend`, and then run this command in another terminal.      
+      66  
+      67  ```sh
+      68  curl -N localhost:8000/stream | head -c 300
+
+  Ran 1 shell command (ctrl+o to expand)
+
+⏺ I rewrote docs/system.md. It went from 3,672 words to 2,544, and about a third
+  of what remains is code blocks and tables. I did not commit.
+
+  I took "the system file" to mean docs/system.md.
+
+  Repeats that I merged
+
+  - The run commands were in four sections. They are now in one Run table.
+  - The settings packet was described in four sections. It is now described one
+    time, in Stream.
+  - The test source had its own settings table. Its three settings are now rows
+    in the client URL table.
+  - The Reconnect and Pause sections are now one section, and the pause rules of
+    the server stay in Admin API only.
+  - The "logs a warning and uses the default" sentence appeared three times and
+    now appears two times, for the server and for the client.
+
+  Details that I cut
+
+  Each of these is still in the specs or in docs/trade-offs.md.
+
+  - I cut the N field keyboard rules, the axis label spacing, the color scale
+    labels, and the badge colors.
+  - I cut the false gap in the missed batch count after a server restart, and
+    the short Live state before Paused.
+  - I cut the Cache-Control header of GET /time, the trailing slash rule for
+    origins, and the status 200 for a repeated pause or resume.
+  - I shortened the list of stack resources and dropped the Cloudflare
+    delegation note.
+
+  Changes to check
+
+  - Two headings changed. "Backend stream" is now "Stream", and "Latency" is now
+    a top-level section. The Makefile pointer to the Deploy section still
+    works, and so does the README pointer.
+  - I added make deploy and make destroy to the CDK CLI prerequisite, because
+    both targets call cdk. The old text named make synth only.
+  - I added one sentence to Stream that states the server queue of 2 batches,
+    because Test source refers to it.
+
+  Found outside this file, not changed
+
+  - docs/results.md line 5 says "The README section Latency describes the eight
+    timestamps". That text is now in docs/system.md.
+  - The .PHONY line of the Makefile has devdocker-build, which needs a space
+    after dev.
+
+  I added no entry to docs/ai/ai-changes.md, because the earlier README and docs
+  cleanups have none.
+
+✻ Baked for 3m 11s · done 12:04 AM
+
+※ recap: The goal was to cut docs/system.md to its essentials in plain technical English, and that rewrite is done and not committed. Next, review the diff and confirm that the cut details can stay out. (disable recaps in /config)
+
+❯ Better, now bold important words that make it easy to scan                    
+
+⏺ Write(docs/system.md)
+  ⎿  Added 63 lines, removed 63 lines
+       6  
+       7  Install these tools. The versions are the ones I use.
+       8  
+       9 -- uv 0.11.24 runs the backend and the infra. It installs Python
+         - 3.13.15 if it is missing.                                     
+      10 -- Node.js 22.22.1 and npm 11.20.0 run the client.              
+      11 -- GNU Make 3.81 or later runs the tasks. macOS ships with 3.81.
+      12 -- Docker Desktop 4.92.0 is necessary for `make docker` and `mak
+         -e deploy`.                                                     
+      13 -- AWS CDK CLI 2.1143.0 is necessary for `make synth`, `make dep
+         -loy`, and `make destroy`. Install it with `npm install -g aws-c
+         -dk@2.1143.0`.                                                  
+      14 -- AWS CLI 2.37.4 with credentials is necessary for `make deploy
+         -`, `make destroy`, and `make cloud-cpu`.                       
+       9 +- **uv 0.11.24** runs the backend and the infra. It installs Py
+         +thon 3.13.15 if it is missing.                                 
+      10 +- **Node.js 22.22.1** and **npm 11.20.0** run the client.      
+      11 +- **GNU Make 3.81** or later runs the tasks. macOS ships with 3
+         +.81.                                                           
+      12 +- **Docker Desktop 4.92.0** is necessary for `make docker` and 
+         +`make deploy`.                                                 
+      13 +- **AWS CDK CLI 2.1143.0** is necessary for `make synth`, `make
+         + deploy`, and `make destroy`. Install it with `npm install -g a
+         +ws-cdk@2.1143.0`.                                              
+      14 +- **AWS CLI 2.37.4** with credentials is necessary for `make de
+         +ploy`, `make destroy`, and `make cloud-cpu`.                   
+      15  
+      16 -Run `make install` from the repo root. It installs the backend,
+         - frontend, and infra dependencies from their lock files.       
+      16 +Run **`make install`** from the repo root. It installs the back
+         +end, frontend, and infra dependencies from their lock files.   
+      17  
+      18  ## Run
+      19  
+     ...
+      24  | `make dev` | It starts the local server and the client togeth
+          er. |
+      25  | `make docker` | It builds the backend image and runs it at ht
+          tp://localhost:8000. |
+      26  
+      27 -The client reads the stream from the cloud server at https://ap
+         -i.precision.jgangjee.com. To use the local server, open http://
+         -localhost:4200/?server=http://localhost:8000. The browser needs
+         - the network, because the client loads its icons from Google Fo
+         -nts.                                                           
+      27 +The client reads the stream from the **cloud server** at https:
+         +//api.precision.jgangjee.com. To use the **local server**, open
+         + http://localhost:4200/?server=http://localhost:8000. The brows
+         +er needs the network, because the client loads its icons from G
+         +oogle Fonts.                                                   
+      28  
+      29  ## Stream
+      30  
+      31 -`GET /stream` sends Server-Sent Events. The server makes one sh
+         -ared stream, so every client gets the same batches. The server 
+         -keeps a queue of 2 batches for each client and drops the oldest
+         - batch when a client is slow. When the server sends nothing for
+         - 15 seconds, it sends the comment `: ping`.                    
+      31 +`GET /stream` sends **Server-Sent Events**. The server makes **
+         +one shared stream**, so every client gets the same batches. The
+         + server keeps a **queue of 2 batches** for each client and drop
+         +s the oldest batch when a client is slow. When the server sends
+         + nothing for 15 seconds, it sends the comment `: ping`.        
+      32  
+      33 -The stream has two event types. A batch event holds the integer
+         -s as a compact JSON array in `data`. Its `id` has the form `<se
+         -quence number>:<started>:<encoded>:<sent>`.                    
+      33 +The stream has two event types. A **batch event** holds the int
+         +egers as a compact JSON array in `data`. Its `id` has the form 
+         +`<sequence number>:<started>:<encoded>:<sent>`.                
+      34  
+      35  ```
+      36  data: [794,29,619,38]
+      37  id: 1234:1790812800123456:1790812800123541:1790812800123702
+      38  ```
+      39  
+      40 -- The sequence number starts at 0 when the server starts and go
+         -es up by 1 for each batch. A gap shows that the client missed b
+         -atches.                                                        
+      41 -- The three times are server timestamps in microseconds since t
+         -he Unix epoch. The Latency section defines them. Each client ha
+         -s its own `sent` time.                                         
+      40 +- The **sequence number** starts at 0 when the server starts an
+         +d goes up by 1 for each batch. A gap shows that the client **mi
+         +ssed batches**.                                                
+      41 +- The three times are server timestamps in **microseconds** sin
+         +ce the Unix epoch. The Latency section defines them. Each clien
+         +t has its own `sent` time.                                     
+      42  
+      43 -A settings packet has the line `event: update` and no `id`. Its
+         - `data` holds the three stream settings and the pause state.   
+      43 +A **settings packet** has the line `event: update` and no `id`.
+         + Its `data` holds the three stream settings and the pause state
+         +.                                                              
+      44  
+      45  ```
+      46  event: update
+      47  data: {"samples_per_second":20000,"batch_interval_ms":50,"max_v
+          alue":10000,"paused":false}
+      48  ```
+      49  
+      50 -- The server sends the packet first on each connection. It send
+         -s the packet again to every client after each change to the set
+         -tings or the pause state.                                      
+      51 -- The packet does not go into the client queue, so the server n
+         -ever drops it.                                                 
+      50 +- The server sends the packet **first on each connection**. It 
+         +sends the packet again to every client **after each change** to
+         + the settings or the pause state.                              
+      51 +- The packet does not go into the client queue, so the server *
+         +*never drops it**.                                             
+      52  
+      53 -`GET /time` returns the server time, such as `{"epoch_us":17908
+         -12800123456}`. The client uses it to compare its clock with the
+         - server clock.                                                 
+      53 +**`GET /time`** returns the server time, such as `{"epoch_us":1
+         +790812800123456}`. The client uses it to compare its clock with
+         + the server clock.                                             
+      54  
+      55 -The server reads these environment variables at start. When a v
+         -alue is out of range or not a number, the server logs a warning
+         - and uses the default.                                         
+      55 +The server reads these **environment variables** at start. When
+         + a value is out of range or not a number, the server logs a war
+         +ning and uses the default.                                     
+      56  
+      57  | Variable | Default | Range | Meaning |
+      58  | --- | --- | --- | --- |
+     ...
+      70  
+      71  ## Admin API
+      72  
+      73 -The admin API changes the stream settings and pauses the stream
+         - while the server runs. The changes live in memory only. A rest
+         -art or a deploy sets the settings back to the environment value
+         -s and ends the pause.                                          
+      73 +The admin API changes the stream settings and pauses the stream
+         + **while the server runs**. The changes live **in memory only**
+         +. A restart or a deploy sets the settings back to the environme
+         +nt values and ends the pause.                                  
+      74  
+      75 -Each request must send the header `Authorization: Bearer <token
+         ->`. A missing or wrong token gets status 401. When `ADMIN_TOKEN
+         -` is not set, every admin path returns status 404. The local to
+         -ken is `local-admin-token`. The Deploy section shows how to rea
+         -d the cloud token.                                             
+      75 +Each request must send the header `Authorization: Bearer <token
+         +>`. A missing or wrong token gets **status 401**. When `ADMIN_T
+         +OKEN` is not set, every admin path returns **status 404**. The 
+         +local token is **`local-admin-token`**. The Deploy section show
+         +s how to read the cloud token.                                 
+      76  
+      77  | Request | Body | Effect |
+      78  | --- | --- | --- |
+     ...
+      83  
+      84  Each request returns a JSON object with the same fields as the 
+          settings packet.
+      85  
+      86 -- A PATCH value must be an integer in the range in the Stream t
+         -able. A bad value or an unknown field gets status 422, and no s
+         -etting changes.                                                
+      87 -- A change to the batch interval starts the schedule again from
+         - the time of the change, so the server sends no burst of batche
+         -s.                                                             
+      88 -- While paused, the server sends no batches, and the sequence n
+         -umber does not advance. A resume does not send the batches that
+         - the pause skipped.                                            
+      89 -- A settings change during a pause applies when the stream resu
+         -mes.                                                           
+      86 +- A PATCH value must be an integer in the range in the Stream t
+         +able. A bad value or an unknown field gets **status 422**, and 
+         +no setting changes.                                            
+      87 +- A change to the **batch interval** starts the schedule again 
+         +from the time of the change, so the server sends no burst of ba
+         +tches.                                                         
+      88 +- While **paused**, the server sends no batches, and the sequen
+         +ce number does not advance. A resume does not send the batches 
+         +that the pause skipped.                                        
+      89 +- A **settings change during a pause** applies when the stream 
+         +resumes.                                                       
+      90  
+      91  Run `make backend`, and then run these commands in another term
+          inal.
+      92  
+     ...
+      103  
+      104  The page shows the heat map, a color scale, and a side panel.
+      105  
+      106 -- The grid has N by N cells, and N is 32 at start. Row 0 is at
+          - the bottom, and column 0 is at the left.                     
+      107 -- Each value v goes to cell index (v - 1) mod N². The row is t
+          -he index divided by N, and the column is the index mod N. On a
+          - 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>, and
+          - 0 goes to cell <3,3>.                                        
+      108 -- A cell with no hits is white. A cell with hits gets a color 
+          -from blue (#1E00FF) at a count of 1 through cyan, green, and y
+          -ellow to red (#FF0033) at the max count.                      
+      109 -- The N field and its minus and plus buttons set N from 1 to 1
+          -00. A change to N resets all counts to zero.                  
+      110 -- A badge shows the stream state, which is Connecting, Live, R
+          -econnecting, Paused, or Test source.                          
+      111 -- The side panel shows the samples received, the max count, th
+          -e frame rate, the missed batches, and the three stream setting
+          -s from the settings packet.                                   
+      112 -- A red line shows below the frame rate when it falls below 90
+          - percent of 60 fps. Use Chrome with Energy Saver off, because 
+          -Energy Saver caps the frame rate at 30 fps.                   
+      113 -- The Missed batches readout adds the size of each gap in the 
+          -sequence numbers. A change to N or a server restart sets it to
+          - 0.                                                           
+      106 +- The **grid** has N by N cells, and **N is 32** at start. Row
+          + 0 is at the bottom, and column 0 is at the left.             
+      107 +- Each value v goes to **cell index (v - 1) mod N²**. The row 
+          +is the index divided by N, and the column is the index mod N. 
+          +On a 4 by 4 grid, 17 goes to cell <0,0>, 8 goes to cell <1,3>,
+          + and 0 goes to cell <3,3>.                                    
+      108 +- A cell with no hits is **white**. A cell with hits gets a co
+          +lor from **blue** (#1E00FF) at a count of 1 through cyan, gree
+          +n, and yellow to **red** (#FF0033) at the max count.          
+      109 +- The N field and its minus and plus buttons set **N from 1 to
+          + 100**. A change to N **resets all counts** to zero.          
+      110 +- A **badge** shows the stream state, which is Connecting, Liv
+          +e, Reconnecting, Paused, or Test source.                      
+      111 +- The **side panel** shows the samples received, the max count
+          +, the frame rate, the missed batches, and the three stream set
+          +tings from the settings packet.                               
+      112 +- A **red line** shows below the frame rate when it falls belo
+          +w 90 percent of 60 fps. Use Chrome with **Energy Saver off**, 
+          +because Energy Saver caps the frame rate at 30 fps.           
+      113 +- The **Missed batches** readout adds the size of each gap in 
+          +the sequence numbers. A change to N or a server restart sets i
+          +t to 0.                                                       
+      114  
+      115 -The client reads these settings from the URL query. When a val
+          -ue is bad, the client logs a warning to the console and uses t
+          -he default. A change to the query needs a reload.             
+      115 +The client reads these settings from the **URL query**. When a
+          + value is bad, the client logs a warning to the console and us
+          +es the default. A change to the query **needs a reload**.     
+      116  
+      117  | Setting | Default | Meaning |
+      118  | --- | --- | --- |
+     ...
+      124  
+      125  ### Reconnect and pause
+      126  
+      127 -When the stream drops, the client tries again after a delay. T
+          -he first delay is 1 second, and each failed attempt doubles it
+          - up to 30 seconds. A random factor from 0.5 to 1 spreads out t
+          -he clients after a server restart. The client also counts the 
+          -stream as dropped when no batch arrives for 5 seconds. The cou
+          -nts stay on screen during a reconnect. Batches that the server
+          - sends during the drop are lost, and the Missed batches readou
+          -t counts them.                                                
+      127 +When the stream drops, the client **tries again after a delay*
+          +*. The first delay is **1 second**, and each failed attempt do
+          +ubles it up to **30 seconds**. A random factor from 0.5 to 1 s
+          +preads out the clients after a server restart. The client also
+          + counts the stream as dropped when **no batch arrives for 5 se
+          +conds**. The **counts stay on screen** during a reconnect. Bat
+          +ches that the server sends during the drop are lost, and the M
+          +issed batches readout counts them.                            
+      128  
+      129 -When a settings packet says that the server is paused, the cli
+          -ent shows Paused and keeps the stream open. It stops the 5 sec
+          -ond check until the pause ends. The grid and the readouts keep
+          - their values.                                                
+      129 +When a settings packet says that the server is paused, the cli
+          +ent shows **Paused** and keeps the stream open. It stops the 5
+          + second check until the pause ends. The grid and the readouts 
+          +keep their values.                                            
+      130  
+      131  ### Test source
+      132  
+      133 -With `source=frontend`, a Web Worker makes the data in the bro
+          -wser. It makes uniform random integers and has the same queue 
+          -of 2 batches as the server. The `rate` range goes past the ser
+          -ver limit, so a stress test can push the browser. The panel ha
+          -s no Missed batches readout, because the worker messages have 
+          -no batch id.                                                  
+      133 +With **`source=frontend`**, a **Web Worker** makes the data in
+          + the browser. It makes uniform random integers and has the sam
+          +e queue of 2 batches as the server. The `rate` range goes past
+          + the server limit, so a stress test can push the browser. The 
+          +panel has **no Missed batches readout**, because the worker me
+          +ssages have no batch id.                                      
+      134  
+      135 -For a stress test, run `make frontend`, open http://localhost:
+          -4200/?source=frontend&rate=1000000&interval=50&max=10000, set 
+          -N to 100, and watch the frame rate.                           
+      135 +For a **stress test**, run `make frontend`, open http://localh
+          +ost:4200/?source=frontend&rate=1000000&interval=50&max=10000, 
+          +set N to 100, and watch the frame rate.                       
+      136  
+      137  ## Latency
+      138  
+      139 -The client measures each batch from generation to render with 
+          -eight timestamps. The server takes the first three on its cloc
+          -k and sends them in the batch id. The client takes the other f
+          -ive on its clock.                                             
+      139 +The client measures each batch from generation to render with 
+          +**eight timestamps**. The **server** takes the first three on 
+          +its clock and sends them in the batch id. The **client** takes
+          + the other five on its clock.                                 
+      140  
+      141  - `started` is the time just before the server makes the value
+           s of the batch.
+      142  - `encoded` is the time when the JSON text exists and the batc
+           h goes into the client queues.
+     ...
+      147  - `frame` is the time when the animation frame callback that d
+           raws the batch starts.
+      148  - `drawn` is the time when the canvas draw call returns.
+      149  
+      150 -Each stage runs from one timestamp to the next. The seven stag
+          -es are generate, queue, network, parse, apply, frame wait, and
+          - draw. The network stage holds the write by Uvicorn, the load 
+          -balancer, the network, and the browser. The total runs from `s
+          -tarted` to `drawn`, so it does not hold the time from the draw
+          - call to the light on the display.                            
+      150 +Each stage runs from one timestamp to the next. The **seven st
+          +ages** are generate, queue, network, parse, apply, frame wait,
+          + and draw. The network stage holds the write by Uvicorn, the l
+          +oad balancer, the network, and the browser. The **total** runs
+          + from `started` to `drawn`, so it does not hold the time from 
+          +the draw call to the light on the display.                    
+      151  
+      152 -The network stage and the total cross the two clocks, so the c
+          -lient measures the offset between them. It makes 5 requests to
+          - `GET /time` and keeps the offset from the request with the sh
+          -ortest round trip. The error of the offset is at most half of 
+          -that round trip. The client measures the offset when the page 
+          -loads and on each `latency.reset()`. The clocks can drift by 1
+          - to 3 ms each minute, so start each run with a reset.         
+      152 +The network stage and the total cross the two clocks, so the c
+          +lient measures the **offset** between them. It makes 5 request
+          +s to `GET /time` and keeps the offset from the request with th
+          +e shortest round trip. The **error of the offset** is at most 
+          +half of that round trip. The client measures the offset when t
+          +he page loads and on each `latency.reset()`. The clocks can dr
+          +ift by 1 to 3 ms each minute, so **start each run with a reset
+          +**.                                                           
+      153  
+      154 -To read the latency, open the Chrome DevTools console. Keep th
+          -e tab in front, because a hidden tab draws no frames.         
+      154 +To read the latency, open the **Chrome DevTools console**. Kee
+          +p the **tab in front**, because a hidden tab draws no frames. 
+      155  
+      156 -1. Run `latency.reset()`. It drops the samples and measures th
+          -e clock offset again.                                         
+      157 -2. Wait 60 seconds.                                           
+      158 -3. Run `latency.report()`. It prints the p50, the p95, the p99
+          -, and the max of each stage and of the total, in milliseconds.
+      156 +1. Run **`latency.reset()`**. It drops the samples and measure
+          +s the clock offset again.                                     
+      157 +2. Wait **60 seconds**.                                       
+      158 +3. Run **`latency.report()`**. It prints the p50, the p95, the
+          + p99, and the max of each stage and of the total, in milliseco
+          +nds.                                                          
+      159  
+      160 -Run `copy(latency.report())` to put the values on the clipboar
+          -d as JSON. The client keeps the last 1,200 batches, which is 6
+          -0 seconds at the default settings. The test source has no serv
+          -er times, so `latency` does not exist with `source=frontend`. 
+          -The docs/results.md file gives the measured times.            
+      160 +Run `copy(latency.report())` to put the values on the clipboar
+          +d as JSON. The client keeps the last **1,200 batches**, which 
+          +is 60 seconds at the default settings. The test source has no 
+          +server times, so `latency` does not exist with `source=fronten
+          +d`. The docs/results.md file gives the measured times.        
+      161  
+      162  ## Deploy
+      163  
+      164 -The backend runs on AWS ECS Fargate at https://api.precision.j
+          -gangjee.com. The CDK app in infra/ defines the stack. The stac
+          -k names no account or region, so a deploy uses the ones in you
+          -r AWS profile. The stack makes these resources.               
+      164 +The backend runs on **AWS ECS Fargate** at https://api.precisi
+          +on.jgangjee.com. The **CDK app** in infra/ defines the stack. 
+          +The stack names no account or region, so a deploy uses the one
+          +s in your AWS profile. The stack makes these resources.       
+      165  
+      166 -- One Fargate task with 0.25 vCPU and 512 MiB on ARM64 runs th
+          -e image from backend/Dockerfile. `make docker` runs the same i
+          -mage.                                                         
+      167 -- An Application Load Balancer serves HTTPS on port 443, redir
+          -ects port 80 to HTTPS, and checks `GET /health`.              
+      168 -- The VPC has public subnets in 2 availability zones and no NA
+          -T gateway.                                                    
+      169 -- An ACM certificate and an A record give the load balancer th
+          -e name api.precision.jgangjee.com. The stack imports the Route
+          - 53 hosted zone for precision.jgangjee.com.                   
+      170 -- A CloudWatch log group keeps the container logs for one week
+          -.                                                             
+      171 -- A Secrets Manager secret holds a random 32-character value, 
+          -which the task gets as `ADMIN_TOKEN`.                         
+      166 +- One **Fargate task** with 0.25 vCPU and 512 MiB on ARM64 run
+          +s the image from backend/Dockerfile. `make docker` runs the sa
+          +me image.                                                     
+      167 +- An **Application Load Balancer** serves HTTPS on port 443, r
+          +edirects port 80 to HTTPS, and checks `GET /health`.          
+      168 +- The **VPC** has public subnets in 2 availability zones and n
+          +o NAT gateway.                                                
+      169 +- An **ACM certificate** and an **A record** give the load bal
+          +ancer the name api.precision.jgangjee.com. The stack imports t
+          +he Route 53 hosted zone for precision.jgangjee.com.           
+      170 +- A **CloudWatch log group** keeps the container logs for one 
+          +week.                                                         
+      171 +- A **Secrets Manager secret** holds a random 32-character val
+          +ue, which the task gets as `ADMIN_TOKEN`.                     
+      172  
+      173 -The task sets `CORS_ORIGINS` to `http://localhost:4200,http://
+          -127.0.0.1:4200`, so the local client can read the cloud stream
+          -. A deploy stops the old task before it starts the new one, so
+          - the stream is down for about a minute.                       
+      173 +The task sets `CORS_ORIGINS` to `http://localhost:4200,http://
+          +127.0.0.1:4200`, so the local client can read the cloud stream
+          +. A deploy stops the old task before it starts the new one, so
+          + the stream is **down for about a minute**.                   
+      174  
+      175  To deploy, do these steps.
+      176  
+      177 -1. Run `aws login`, or set up AWS credentials another way.    
+      178 -2. Run `cdk bootstrap` from infra/ one time for the account an
+          -d region of your profile.                                     
+      179 -3. Start Docker Desktop. CDK builds the image with Docker.    
+      180 -4. Run `make deploy` and approve the security changes in the t
+          -erminal.                                                      
+      177 +1. Run **`aws login`**, or set up AWS credentials another way.
+      178 +2. Run **`cdk bootstrap`** from infra/ one time for the accoun
+          +t and region of your profile.                                 
+      179 +3. Start **Docker Desktop**. CDK builds the image with Docker.
+      180 +4. Run **`make deploy`** and approve the security changes in t
+          +he terminal.                                                  
+      181  
+      182 -To call the cloud admin API, read the token from the secret. R
+          -un these commands with the same AWS profile as the deploy.    
+      182 +To call the cloud admin API, **read the token from the secret*
+          +*. Run these commands with the same AWS profile as the deploy.
+      183  
+      184  ```sh
+      185  ARN=$(aws cloudformation describe-stacks --stack-name Precisio
+           nStack \
+     ...
+      188  curl https://api.precision.jgangjee.com/admin/settings -H "Aut
+           horization: Bearer $CLOUD_ADMIN_TOKEN"
+      189  ```
+      190  
+      191 -The cloud targets of the Makefile read `CLOUD_ADMIN_TOKEN`, so
+          - they work in the same terminal after the export. The values i
+          -n the third command are the defaults.                         
+      191 +The cloud targets of the Makefile read **`CLOUD_ADMIN_TOKEN`**
+          +, so they work in the same terminal after the export. The valu
+          +es in the third command are the defaults.                     
+      192  
+      193  ```sh
+      194  make cloud-pause
+     ...
+      197  make cloud-cpu
+      198  ```
+      199  
+      200 -Run `make destroy` to remove the stack. The hosted zone stays,
+          - because the stack only imports it.                           
+      200 +Run **`make destroy`** to remove the stack. The hosted zone st
+          +ays, because the stack only imports it.                       
+      201  
+      202  ## Load test
+      203  
+      204 -The load test measures the limits of the cloud server. I chang
+          -e the settings between the steps with `make cloud-setting-upda
+          -te`, so the server needs no restart.                          
+      204 +The load test measures the limits of the **cloud server**. I c
+          +hange the settings between the steps with `make cloud-setting-
+          +update`, so the server needs no restart.                      
+      205  
+      206 -1. The first part raises the samples per second through 20,000
+          -, 250,000, 500,000, and 1,000,000, with one client and a batch
+          - interval of 50 ms.                                           
+      207 -2. The second part raises the number of clients through 2, 5, 
+          -10, 20, 50, and 100, at 20,000 samples per second. One Chrome 
+          -tab measures, and each other client is a curl process on the l
+          -aptop that reads the stream and drops the data.               
+      206 +1. The first part raises the **samples per second** through 20
+          +,000, 250,000, 500,000, and 1,000,000, with one client and a b
+          +atch interval of 50 ms.                                       
+      207 +2. The second part raises the **number of clients** through 2,
+          + 5, 10, 20, 50, and 100, at 20,000 samples per second. One Chr
+          +ome tab measures, and each other client is a curl process on t
+          +he laptop that reads the stream and drops the data.           
+      208  
+      209 -Each step has 3 runs of 30 seconds. A run passes when the p99 
+          -of the total latency is at most 100 ms and the frame rate stay
+          -s at 54 fps or more. A step passes when all 3 runs pass, and a
+          - part ends at its first step that fails. After each part, `mak
+          -e cloud-cpu` gives the CPU use of the server.                 
+      209 +Each step has **3 runs of 30 seconds**. A run passes when the 
+          +p99 of the total latency is **at most 100 ms** and the frame r
+          +ate stays at **54 fps or more**. A step passes when all 3 runs
+          + pass, and a part ends at its first step that fails. After eac
+          +h part, `make cloud-cpu` gives the CPU use of the server.     
+      210  
+      211  The docs/specs/features/09-load/validation.md file gives the m
+           ethod and the console snippet that times a run. The docs/resul
+           ts.md file records the limits.
+
+⏺ I added bold to docs/system.md. The words did not change.
+
+  - Each bullet and each numbered step has one or two bold terms, which are the
+    subject of the line or the command to run.
+  - Each paragraph has bold on the terms that a reader looks for, such as status
+    codes, limits, and time values.
+  - The tables and the eight timestamp bullets have no bold, because the code
+    text in their first column already stands out.
+
+✻ Crunched for 1m 2s · done 12:09 AM
+
+※ recap: The goal was to cut docs/system.md to its essentials in plain technical English, and that rewrite is done with bold added for scanning. The next action is for you to review the diff and commit it. (disable recaps in /config)

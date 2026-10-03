@@ -25,7 +25,7 @@ SETTINGS_BODY := {$(subst $(space),$(comma),$(strip $(SETTINGS)))}
 # Stop the Angular CLI from asking about usage data on the first run.
 export NG_CLI_ANALYTICS := false
 
-.PHONY: install backend frontend client devdocker-build docker test test-backend test-frontend test-infra lint lint-backend lint-frontend lint-infra synth deploy destroy cloud-pause cloud-resume cloud-setting-update cloud-cpu
+.PHONY: install backend frontend client dev docker-build docker test test-backend test-frontend test-infra lint lint-backend lint-frontend lint-infra synth deploy destroy cloud-pause cloud-resume cloud-setting-update cloud-cpu
 
 install:
 	cd backend && uv sync

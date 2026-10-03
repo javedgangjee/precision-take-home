@@ -4,20 +4,22 @@ Each heading after the summary gives the feature number, the feature name, and t
 
 ## Summary
 
-This list gives the assumptions that most affect the result. The sections below give every assumption.
+This table gives the assumptions that most affect the result. The sections below give every assumption.
 
-- The bin index is `(v - 1) mod N²`. This rule matches both brief examples and the example input (e) in the brief picture. The value 0 goes to cell`<N-1, N-1>`.
-- Row 0 is at the bottom of the grid and column 0 is at the left, as in the brief picture.
-- A count of 1 is full blue and the max count is full red. The colors of the brief picture are a sketch, so a cell with 5 of 10 hits is green on the client and not yellow.
-- Where the HTML design differs from the brief or the specs, the client follows the brief and the specs.
-- The reviewers are the only users. The client runs only on the local machine, in Chrome with Energy Saver off.
-- Accessibility is out of scope.
-- Each value is a uniform random integer from 0 to the maximum value minus 1.
-- The target frame rate is 60 fps. The client shows a warning when the reading is below 54 fps.
-- A live stream with no batch for 5 s counts as dropped, even when the connection reports no error.
-- The request and the response of `GET /time` take about the same time on the network. The latency numbers depend on this, and the error is at most half of the round trip.
-- The server clock does not step during a run.
-- The CPU of the task is what limits the server. The limits of about 1,200,000 samples per second with one client and about 130 clients at 20,000 samples per second come from a straight line through the measured CPU. I did not test above 1,000,000 samples per second or above 100 clients.
+| Assumption | Detail |
+| --- | --- |
+| The bin index is **`(v - 1) mod N²`**. | This rule matches both brief examples and the example input (e) in the brief picture. The value 0 goes to cell `<N-1, N-1>`. |
+| **Row 0 is at the bottom** of the grid and **column 0 is at the left**. | The brief picture shows the grid this way. |
+| A count of 1 is **full blue** and the max count is **full red**. | The colors of the brief picture are a sketch, so a cell with 5 of 10 hits is green on the client and not yellow. |
+| Each value is a **uniform random integer** from 0 to the maximum value minus 1. | The default maximum value is 10,000.  |
+| The **reviewers are the only users**, and the client runs only on the **local machine**. | The CORS rule of the cloud server allows only `http://localhost:4200` and `http://127.0.0.1:4200`. |
+| The client runs in **Chrome** with **Energy Saver off**. | Energy Saver caps the frame rate at 30 fps, which would show the frame rate warning on an idle page. |
+| Accessibility is **out of scope**. | A live color heat map cannot directly convey its data to a screen reader user. |
+| The target frame rate is **60 fps**. | The client shows a warning when the reading is below 54 fps, which is 90 percent of the target. |
+| A live stream with **no batch for 5 s** counts as dropped, even when the connection reports no error. | A batch arrives at least once each second at the lowest server settings. |
+| The request and the response of `GET /time` take **about the same time** on the network. | The latency numbers depend on this, and the error is at most half of the round trip. |
+| The server clock **does not step** during a run. | A time correction on the host would move the three server times of a batch. |
+| **Task CPU** limits the server. | The limits of about 1,200,000 samples per second with 1 client and about 130 clients at 20,000 samples per second come from a straight line through the measured CPU. |
 
 ## Constitution
 
